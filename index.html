@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V22 (Email Actif)</title>
+    <title>RBF - Planning V22 (Email Chauffeur + Dépôt)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -94,7 +94,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // INITIALISATION EMAILJS
     (function(){
       emailjs.init("q2ZFtf0rJf0I0jLbq");
     })();
@@ -114,7 +113,7 @@
     
     let currentWeek = realCurrentWeek;
     let currentUser = localStorage.getItem('rbf_user') || null;
-    let currentEditKey = null; // Important pour éviter les erreurs
+    let currentEditKey = null;
     const userAccess = { admin:"2026", depot:"5555", damien:"1111", cedric:"2222", jadiel:"3333", nicola:"4444" };
 
     window.onload = () => { if(currentUser) loginSuccess(currentUser); };
@@ -192,45 +191,33 @@
         try {
             const parts = key.split('_'); 
             const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-            
             const templateParams = {
                 chauffeur: parts[1].toUpperCase(),
                 jour: dayNames[parts[2]],
                 message: isDelete ? "MISSION SUPPRIMÉE" : text
             };
 
-            // 1. Envoi systématique à ton adresse (ton template actuel)
+            // 1. Envoi au Chauffeur (Template standard)
             emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams);
 
-            // 2. Envoi au Dépôt UNIQUEMENT si la case était cochée
+            // 2. Envoi au Dépôt (Template spécifique)
             if (isForDepot && !isDelete) {
-                // Remplace 'ID_TEMPLATE_DEPOT' par l'ID de ton nouveau modèle spécial dépôt
-                emailjs.send('service_1j5bpwf', 'ID_TEMPLATE_DEPOT', templateParams)
-                    .then(() => console.log("Dépôt notifié !"));
+                emailjs.send('service_1j5bpwf', 'template_8gqnnh7', templateParams)
+                    .then(() => console.log('Mail Dépôt envoyé avec succès !'));
             }
-
-        } catch(e) { console.log("Erreur notification:", e); }
+        } catch(e) { console.log("Erreur d'envoi mail:", e); }
     }
 
     function saveTask() {
         if(!currentEditKey) return;
-        
         let val = document.getElementById('edit-input').value;
-        let check = document.getElementById('edit-to-depot').checked; // On récupère l'état de la case
+        let check = document.getElementById('edit-to-depot').checked;
         let isDelete = val.trim() === "";
         
-        if (isDelete) {
-            db.ref('planning_v18/' + currentEditKey).remove();
-        } else {
-            db.ref('planning_v18/' + currentEditKey).set({ 
-                text: val, 
-                toDepot: check 
-            });
-        }
+        if (isDelete) db.ref('planning_v18/' + currentEditKey).remove();
+        else db.ref('planning_v18/' + currentEditKey).set({ text: val, toDepot: check });
         
-        // On envoie l'info "check" à la fonction de notification
         sendNotification(currentEditKey, val, isDelete, check);
-        
         closeEditor();
     }
 
