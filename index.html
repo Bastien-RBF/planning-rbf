@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V19</title>
+    <title>RBF - Planning V20</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -11,41 +11,25 @@
     <style>
         :root { --rbf-blue: #1b2e58; --rbf-yellow: #f9c311; --grey-bg: #f4f7fa; --success: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--grey-bg); margin: 0; color: #1e293b; }
-        
-        header { 
-            background: white; height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--rbf-yellow); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        header { background: white; height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--rbf-yellow); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .header-logo { height: 35px; }
-
-        /* Login Screen avec Logo */
         .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; padding: 20px; }
-        .login-logo { width: 180px; margin-bottom: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-        
+        .login-logo { width: 180px; margin-bottom: 30px; }
         .grid-users { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; }
-        .btn-user { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; transition: transform 0.1s; }
-        .btn-user:active { transform: scale(0.98); }
-
+        .btn-user { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
         .table-container { padding: 10px; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1300px; border-radius: 10px; overflow: hidden; }
         th { background: var(--rbf-blue); color: white; padding: 12px; font-size: 11px; border-right: 1px solid #2e4a8a; }
         td { border: 0.5px solid #e2e8f0; padding: 6px; vertical-align: top; width: 200px; }
         .row-name { font-weight: bold; font-size: 12px; background: #fff; position: sticky; left: 0; z-index: 5; border-right: 2px solid var(--rbf-yellow) !important; text-align: center; }
-
-        .slot { 
-            font-size: 11px; padding: 8px; margin-bottom: 5px; border-radius: 4px; 
-            background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 30px; 
-            position: relative; white-space: pre-wrap; line-height: 1.3;
-        }
+        .slot { font-size: 11px; padding: 8px; margin-bottom: 5px; border-radius: 4px; background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 30px; position: relative; white-space: pre-wrap; line-height: 1.3; }
         .filled { background: #eff6ff !important; border: 1px solid #3b82f6 !important; color: var(--rbf-blue); font-weight: 600; }
         .is-to-depot { border-left: 5px solid var(--success) !important; }
         .slot-num { position: absolute; right: 5px; top: 2px; font-size: 8px; color: #94a3b8; font-weight: bold; }
-
         .card-m { background: white; padding: 15px; border-radius: 12px; margin: 10px; border-left: 6px solid var(--rbf-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .row-m { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
         .idx-m { background: var(--rbf-yellow); color: var(--rbf-blue); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
         .text-m { font-weight: 600; font-size: 15px; white-space: pre-wrap; color: var(--rbf-blue); flex: 1; }
-
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(3px); }
         .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 450px; }
         textarea { width: 100%; height: 150px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin: 10px 0; box-sizing: border-box; font-size: 16px; font-family: inherit; resize: none; }
@@ -57,12 +41,11 @@
 <header>
     <img src="logo.png" class="header-logo" alt="RBF" onerror="this.src='https://via.placeholder.com/100x30?text=RBF'">
     <div id="user-display" style="font-size:11px; font-weight:bold; color:var(--rbf-blue);"></div>
-    <button onclick="location.reload()" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:5px; font-size:10px; font-weight:bold; cursor:pointer;">QUITTER</button>
+    <button onclick="logout()" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:5px; font-size:10px; font-weight:bold; cursor:pointer;">DÉCONNEXION</button>
 </header>
 
 <div id="login" class="login-screen">
     <img src="logo.png" class="login-logo" alt="Logo RBF" onerror="this.src='https://via.placeholder.com/200x60?text=RBF+TRANSPORT'">
-    
     <div class="grid-users">
         <button class="btn-user" style="background:var(--rbf-blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / EXPLOITATION</button>
         <button class="btn-user" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPARATION</button>
@@ -82,15 +65,9 @@
         </div>
         <button onclick="changeWeek(1)" style="border:none; background:#f1f5f9; width:35px; height:35px; border-radius:50%; cursor:pointer;">▶</button>
     </div>
-
     <div id="view-admin" class="table-container hidden">
         <table>
-            <thead>
-                <tr>
-                    <th style="position:sticky; left:0; z-index:10; width:120px;">NOM</th>
-                    <th id="th-0">LUN</th><th id="th-1">MAR</th><th id="th-2">MER</th><th id="th-3">JEU</th><th id="th-4">VEN</th>
-                </tr>
-            </thead>
+            <thead><tr><th style="position:sticky; left:0; z-index:10; width:120px;">NOM</th><th id="th-0"></th><th id="th-1"></th><th id="th-2"></th><th id="th-3"></th><th id="th-4"></th></tr></thead>
             <tbody id="admin-body"></tbody>
         </table>
     </div>
@@ -100,14 +77,13 @@
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="edit-header" style="margin:0; color:var(--rbf-blue);">Détails Mission</h3>
-        <textarea id="edit-input" placeholder="Client, articles, adresse..."></textarea>
+        <textarea id="edit-input"></textarea>
         <label id="depot-check-wrap" style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
-            <input type="checkbox" id="edit-to-depot" style="width:22px; height:22px;">
-            <span style="font-weight:bold; color:var(--success);">Informer le Dépôt</span>
+            <input type="checkbox" id="edit-to-depot" style="width:22px; height:22px;"><span style="font-weight:bold; color:var(--success);">Informer le Dépôt</span>
         </label>
         <div style="display:flex; gap:10px;">
-            <button onclick="saveTask()" style="background:var(--success); color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold; cursor:pointer;">VALIDER</button>
-            <button onclick="closeEditor()" style="background:#94a3b8; color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold; cursor:pointer;">ANNULER</button>
+            <button onclick="saveTask()" style="background:var(--success); color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold;">VALIDER</button>
+            <button onclick="closeEditor()" style="background:#94a3b8; color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold;">ANNULER</button>
         </div>
     </div>
 </div>
@@ -122,7 +98,6 @@
         const dayDiff = Math.floor((d - start) / 86400000);
         return Math.max(1, Math.floor(dayDiff / 7) + 1);
     }
-
     function getDateOfWeek(w, y, dIdx) {
         let res = new Date(2026, 0, 5);
         res.setDate(res.getDate() + ((w - 1) * 7) + dIdx);
@@ -130,59 +105,60 @@
     }
     
     let currentWeek = getWeekNumber(new Date());
-    let currentUser = null;
-    let currentEditKey = null;
+    let currentUser = localStorage.getItem('rbf_user') || null;
 
     const userAccess = { admin:"2026", depot:"5555", damien:"1111", cedric:"2222", jadiel:"3333", nicola:"4444" };
+
+    // Au chargement, on vérifie si quelqu'un était déjà connecté
+    window.onload = () => { if(currentUser) loginSuccess(currentUser); };
 
     function askCode(user) {
         let pin = prompt("Code " + user.toUpperCase());
         if (pin === userAccess[user]) {
-            currentUser = user;
-            document.getElementById('login').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            document.getElementById('user-display').textContent = user.toUpperCase();
-            db.ref('planning_v18').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
-        }
+            localStorage.setItem('rbf_user', user);
+            loginSuccess(user);
+        } else { alert("Code incorrect"); }
+    }
+
+    function loginSuccess(user) {
+        currentUser = user;
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        document.getElementById('user-display').textContent = user.toUpperCase();
+        db.ref('planning_v18').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
+    }
+
+    function logout() {
+        localStorage.removeItem('rbf_user');
+        location.reload();
     }
 
     function render() {
         document.getElementById('week-display').textContent = "Semaine " + (currentWeek < 10 ? '0'+currentWeek : currentWeek);
-        for(let i=0; i<5; i++) document.getElementById('th-'+i).innerHTML = `<div>${getDateOfWeek(currentWeek, 2026, i)}</div>`;
+        for(let i=0; i<5; i++) document.getElementById('th-'+i).textContent = getDateOfWeek(currentWeek, 2026, i);
         if (currentUser === 'admin' || currentUser === 'depot') renderTable();
         else renderUserView();
     }
 
     function renderTable() {
         document.getElementById('view-admin').classList.remove('hidden');
-        const tbody = document.getElementById('admin-body');
-        tbody.innerHTML = "";
-        
+        const tbody = document.getElementById('admin-body'); tbody.innerHTML = "";
         const allUsers = [
-            { id: 'damien', slots: 4, isDepotTarget: true },
-            { id: 'externe', slots: 4, isDepotTarget: true },
-            { id: 'cedric', slots: 4, isDepotTarget: true },
-            { id: 'divers', slots: 4, isDepotTarget: false },
-            { id: 'elec', slots: 4, isDepotTarget: false },
-            { id: 'jadiel', slots: 2, isDepotTarget: false },
-            { id: 'nicola', slots: 2, isDepotTarget: false }
+            { id: 'damien', slots: 4, isDepot: true }, { id: 'externe', slots: 4, isDepot: true },
+            { id: 'cedric', slots: 4, isDepot: true }, { id: 'divers', slots: 4, isDepot: false },
+            { id: 'elec', slots: 4, isDepot: false }, { id: 'jadiel', slots: 2, isDepot: false },
+            { id: 'nicola', slots: 2, isDepot: false }
         ];
-
         allUsers.forEach(uObj => {
-            if (currentUser === 'depot' && !uObj.isDepotTarget) return;
-
+            if (currentUser === 'depot' && !uObj.isDepot) return;
             let row = `<tr><td class="row-name">${uObj.id.toUpperCase()}</td>`;
             for (let d = 0; d < 5; d++) {
                 row += `<td>`;
                 for (let s = 1; s <= uObj.slots; s++) {
                     let key = `${currentWeek}_${uObj.id}_${d}_s${s}`;
                     let data = window.fullData[key] || { text: "", toDepot: false };
-                    if (currentUser === 'depot' && data.toDepot !== true) continue;
-
-                    row += `<div class="slot ${data.text?'filled':''} ${data.toDepot?'is-to-depot':''}" 
-                                 onclick="openEditor('${key}', ${s})">
-                                <span class="slot-num">${s}</span>${data.text || '...'}
-                            </div>`;
+                    if (currentUser === 'depot' && !data.toDepot) continue;
+                    row += `<div class="slot ${data.text?'filled':''} ${data.toDepot?'is-to-depot':''}" onclick="openEditor('${key}', ${s})"><span class="slot-num">${s}</span>${data.text || '...'}</div>`;
                 }
                 row += `</td>`;
             }
@@ -195,19 +171,13 @@
         view.classList.remove('hidden'); view.innerHTML = "";
         const days = ["LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI"];
         const maxSlots = (currentUser === 'jadiel' || currentUser === 'nicola') ? 2 : 4;
-        
         for (let d = 0; d < 5; d++) {
             let content = "";
             for (let s = 1; s <= maxSlots; s++) {
                 let data = window.fullData[`${currentWeek}_${currentUser}_${d}_s${s}`];
                 if (data && data.text) content += `<div class="row-m"><div class="idx-m">${s}</div><div class="text-m">${data.text}</div></div>`;
             }
-            view.innerHTML += `<div class="card-m">
-                <div style="font-weight:800; color:var(--rbf-blue); font-size:11px; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">
-                    ${days[d]} ${getDateOfWeek(currentWeek, 2026, d)}
-                </div>
-                ${content || '<div style="color:#94a3b8; font-style:italic; font-size:13px; padding-top:5px;">Aucune mission</div>'}
-            </div>`;
+            view.innerHTML += `<div class="card-m"><div style="font-weight:800; color:var(--rbf-blue); font-size:11px; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">${days[d]} ${getDateOfWeek(currentWeek, 2026, d)}</div>${content || '<div style="color:#94a3b8; font-style:italic; font-size:13px; padding-top:5px;">Aucune mission</div>'}</div>`;
         }
     }
 
@@ -220,7 +190,6 @@
         document.getElementById('edit-to-depot').checked = (data.toDepot === true);
         document.getElementById('editor-overlay').style.display = 'flex';
     }
-
     function saveTask() {
         let val = document.getElementById('edit-input').value;
         let check = document.getElementById('edit-to-depot').checked;
