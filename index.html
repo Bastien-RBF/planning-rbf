@@ -17,72 +17,76 @@
             --success: #10b981;
         }
 
-        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background: var(--grey-bg); margin: 0; color: var(--text-dark); -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--grey-bg); margin: 0; color: var(--text-dark); }
         
         header { 
-            background: white; 
-            height: 60px;
-            padding: 0 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-bottom: 3px solid var(--rbf-yellow);
+            background: white; height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; 
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 3px solid var(--rbf-yellow);
         }
         .header-logo { height: 40px; }
-        .user-tag { font-size: 12px; font-weight: bold; color: var(--rbf-blue); text-transform: uppercase; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
+        .user-tag { font-size: 11px; font-weight: bold; color: var(--rbf-blue); text-transform: uppercase; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
 
+        /* Login */
         .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; padding: 20px; }
         .login-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .login-logo { width: 200px; margin-bottom: 20px; }
-        
+        .login-logo { width: 180px; margin-bottom: 15px; }
         .grid-users { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 15px; }
-        .btn-user { padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; }
-        .btn-user:active { transform: scale(0.96); }
+        .btn-user { padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
 
+        /* Nav */
         .week-picker { background: white; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .nav-btn { background: var(--rbf-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .nav-btn { background: var(--rbf-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; }
         
+        /* Table Admin */
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1000px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        th { background: var(--rbf-blue); color: white; padding: 12px; font-size: 11px; font-weight: 500; }
-        td { border: 0.5px solid #edf2f7; padding: 12px; vertical-align: top; transition: 0.2s; }
-        .row-cat { background: #f8fafc; font-weight: 800; font-size: 11px; color: #64748b; padding: 8px 15px; text-transform: uppercase; letter-spacing: 1px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1000px; border-radius: 12px; overflow: hidden; }
+        th { background: var(--rbf-blue); color: white; padding: 12px; font-size: 11px; }
+        td { border: 0.5px solid #edf2f7; padding: 10px; vertical-align: top; }
+        .row-cat { background: #f8fafc; font-weight: 800; font-size: 10px; color: #64748b; padding: 8px 15px; text-transform: uppercase; }
         
-        .task-content { white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #334155; font-weight: 500; }
-        .depot-tag { background: var(--rbf-yellow); color: var(--rbf-blue); font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-top: 6px; display: inline-block; }
+        /* Affichage des livraisons multi-lignes */
+        .task-content { font-size: 13px; line-height: 1.4; color: #334155; }
+        .delivery-item { 
+            display: block; 
+            padding: 4px 0 4px 8px; 
+            border-left: 3px solid var(--rbf-yellow); 
+            margin-bottom: 6px; 
+            background: #fffdf5;
+            border-radius: 0 4px 4px 0;
+        }
 
-        .driver-card { background: white; padding: 20px; border-radius: 15px; border-left: 6px solid var(--rbf-yellow); margin: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
-        .day-badge { position: absolute; top: 15px; right: 15px; font-size: 10px; background: #f1f5f9; padding: 3px 8px; border-radius: 10px; color: #64748b; }
+        /* Vue Chauffeur - Cartes */
+        .driver-card { background: white; padding: 20px; border-radius: 15px; border-left: 8px solid var(--rbf-blue); margin: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
+        .day-title { color: var(--rbf-blue); font-weight: 800; font-size: 14px; letter-spacing: 1px; display: block; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        .driver-delivery { 
+            background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; 
+            border-left: 4px solid var(--rbf-yellow); font-size: 15px; font-weight: 600; color: var(--rbf-blue);
+        }
 
+        /* Editor */
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(27, 46, 88, 0.9); display:none; z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
         .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 450px; }
-        textarea { width: 100%; height: 160px; margin: 15px 0; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; resize: none; box-sizing: border-box; outline: none; }
+        textarea { width: 100%; height: 180px; margin: 15px 0; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; }
         
         .hidden { display: none; }
+        .logout-btn { background: #ef4444; border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <img src="logo.png" class="header-logo" alt="RBF Logo" onerror="this.src='https://via.placeholder.com/150x50?text=RBF+TRANSPORT'">
+    <img src="logo.png" class="header-logo" alt="RBF" onerror="this.src='https://via.placeholder.com/120x40?text=RBF'">
     <div id="user-info" class="user-tag hidden"></div>
-    <button id="logout" class="logout-btn hidden" onclick="location.reload()">Quitter</button>
+    <button id="logout" class="logout-btn hidden" onclick="location.reload()">DÉCONNEXION</button>
 </header>
 
 <div id="login" class="login-screen">
     <div class="login-card">
         <img src="logo.png" class="login-logo" alt="RBF" onerror="this.style.display='none'">
-        <h2 style="margin:0; color:var(--rbf-blue);">Planning Interne</h2>
-        <p style="color:#64748b; font-size:14px; margin-top:5px;">Rosset Boulon & Fils</p>
-        
-        <button class="btn-user" style="background:var(--rbf-blue); width:100%; margin-top:20px;" onclick="askCode('admin')">💼 BUREAU / EXPLOITATION</button>
-        <button class="btn-user" style="background:var(--success); width:100%; margin-top:10px;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPARATION</button>
-        
+        <h2 style="margin:0; color:var(--rbf-blue);">Planning Connect</h2>
         <div class="grid-users">
+            <button class="btn-user" style="background:var(--rbf-blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / EXPLOITATION</button>
+            <button class="btn-user" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPARATION</button>
             <button class="btn-user" style="background:#3b82f6" onclick="askCode('damien')">🚛 DAMIEN</button>
             <button class="btn-user" style="background:#f59e0b" onclick="askCode('cedric')">🚛 CÉDRIC</button>
             <button class="btn-user" style="background:#8b5cf6" onclick="askCode('jadiel')">👷 JADIEL</button>
@@ -96,7 +100,7 @@
         <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
         <div style="text-align:center;">
             <div id="week-display" style="font-weight:800; font-size:18px; color:var(--rbf-blue);">Semaine 01</div>
-            <div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Planning Hebdomadaire</div>
+            <div id="date-range" style="font-size:10px; color:#64748b;"></div>
         </div>
         <button class="nav-btn" onclick="changeWeek(1)">›</button>
     </div>
@@ -105,7 +109,7 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:140px; position:sticky; left:0; z-index:10; background:var(--rbf-blue);">RESSOURCE</th>
+                    <th style="width:120px; position:sticky; left:0; z-index:10; background:var(--rbf-blue);">RESSOURCE</th>
                     <th id="th-0"></th><th id="th-1"></th><th id="th-2"></th><th id="th-3"></th><th id="th-4"></th>
                 </tr>
             </thead>
@@ -117,10 +121,11 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 id="edit-title" style="margin:0; color:var(--rbf-blue);">Affectation Mission</h3>
-        <textarea id="edit-text" placeholder="Détails de la mission..."></textarea>
+        <h3 id="edit-title" style="margin:0; color:var(--rbf-blue);">Saisie Planning</h3>
+        <p style="font-size:11px; color:#64748b; margin:5px 0;">Astuce : Allez à la ligne pour chaque nouvelle livraison</p>
+        <textarea id="edit-text" placeholder="Livraison 1 : Client A&#10;Livraison 2 : Client B..."></textarea>
         <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
-            <input type="checkbox" id="edit-to-depot" style="width:20px; height:20px;">
+            <input type="checkbox" id="edit-to-depot" style="width:22px; height:22px;">
             <span style="font-weight:bold; color:var(--success);">Informer le Dépôt</span>
         </label>
         <div style="display:flex; gap:10px;">
@@ -135,7 +140,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // CALCUL SEMAINE 1 FIXÉ AU 05/01/2026
     function getWeekNumber(d) {
         const startSemaine1 = new Date(2026, 0, 5); 
         const diff = d - startSemaine1;
@@ -164,20 +168,27 @@
         nicola: { code: "4444", role: "driver" }
     };
 
-    function askCode(user) {
-        let pin = prompt("Code d'accès " + user.toUpperCase() + " :");
-        if (pin === userAccess[user].code) startApp(user);
-        else if (pin !== null) alert("Code incorrect.");
+    function formatText(text) {
+        if(!text) return "";
+        return text.split('\n').filter(line => line.trim() !== "").map(line => `<span class="delivery-item">${line}</span>`).join('');
     }
 
-    function startApp(user) {
-        currentUser = user;
-        document.getElementById('login').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        document.getElementById('logout').classList.remove('hidden');
-        document.getElementById('user-info').classList.remove('hidden');
-        document.getElementById('user-info').textContent = user;
-        db.ref('planning').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
+    function formatDriverText(text) {
+        if(!text) return "Aucune mission";
+        return text.split('\n').filter(line => line.trim() !== "").map(line => `<div class="driver-delivery">${line}</div>`).join('');
+    }
+
+    function askCode(user) {
+        let pin = prompt("Code " + user.toUpperCase() + " :");
+        if (pin === userAccess[user].code) {
+            currentUser = user;
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('logout').classList.remove('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-info').textContent = user;
+            db.ref('planning').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
+        } else if (pin !== null) alert("Erreur code");
     }
 
     function render() {
@@ -185,7 +196,7 @@
         const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         for(let i=0; i<5; i++) {
             const th = document.getElementById('th-'+i);
-            if(th) th.innerHTML = `<div style="font-weight:800;">${days[i]}</div><div style="font-weight:400; font-size:9px; opacity:0.8;">${getDateOfWeek(currentWeek, 2026, i)}</div>`;
+            if(th) th.innerHTML = `<div style="font-weight:800;">${days[i]}</div><div style="font-size:9px; opacity:0.7;">${getDateOfWeek(currentWeek, 2026, i)}</div>`;
         }
         if (userAccess[currentUser].role === 'manager' || userAccess[currentUser].role === 'depot') renderTable();
         else renderDriver();
@@ -198,19 +209,19 @@
         const structure = [
             { label: "Pôle Transport", ids: ['damien', 'cedric'] },
             { label: "Pôle Chantier", ids: ['jadiel', 'nicola'], hideFromDepot: true },
-            { label: "Logistique Externe / Elec", ids: ['elec', 'divers', 'externe'] }
+            { label: "Divers", ids: ['elec', 'divers', 'externe'] }
         ];
         structure.forEach(cat => {
             if (currentUser === 'depot' && cat.hideFromDepot) return;
             tbody.innerHTML += `<tr><td colspan="6" class="row-cat">${cat.label}</td></tr>`;
             cat.ids.forEach(id => {
-                let row = `<tr><td style="font-weight:700; color:var(--rbf-blue); background:#fff; position:sticky; left:0; border-right:2px solid var(--rbf-yellow);">${id.toUpperCase()}</td>`;
+                let row = `<tr><td style="font-weight:700; color:var(--rbf-blue); background:#fff; position:sticky; left:0; border-right:2px solid var(--rbf-yellow); font-size:12px;">${id.toUpperCase()}</td>`;
                 for (let d = 0; d < 5; d++) {
                     let key = `${currentWeek}_${id}_${d}`;
                     let data = window.fullData[key] || { text: "", toDepot: false };
-                    let content = (currentUser === 'depot' && !data.toDepot) ? "" : data.text;
+                    let content = (currentUser === 'depot' && !data.toDepot) ? "" : formatText(data.text);
                     row += `<td onclick="${userAccess[currentUser].role === 'manager' ? `openEditor('${key}')` : ''}">
-                                <div class="task-content">${content || '<span style="color:#e2e8f0;">---</span>'}</div>
+                                <div class="task-content">${content || '---'}</div>
                                 ${data.toDepot && content ? '<span class="depot-tag">DÉPÔT</span>' : ''}
                             </td>`;
                 }
@@ -225,11 +236,10 @@
         const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         for (let d = 0; d < 5; d++) {
             let key = `${currentWeek}_${currentUser}_${d}`;
-            let data = window.fullData[key] || { text: "Aucune mission planifiée" };
+            let data = window.fullData[key] || { text: "" };
             view.innerHTML += `<div class="driver-card">
-                <div class="day-badge">${getDateOfWeek(currentWeek, 2026, d)}</div>
-                <span style="color:var(--rbf-blue); font-weight:800; font-size:12px;">${days[d].toUpperCase()}</span>
-                <div class="task-content" style="margin-top:12px; font-size:16px;">${data.text}</div>
+                <span class="day-title">${days[d].toUpperCase()} ${getDateOfWeek(currentWeek, 2026, d)}</span>
+                <div class="task-content">${formatDriverText(data.text)}</div>
             </div>`;
         }
     }
