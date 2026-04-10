@@ -189,7 +189,7 @@
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
-   // NOUVELLE FONCTION EMAILJS
+// FONCTION EMAILJS PROPRE
     function sendNotification(key, text, isDelete) {
         const parts = key.split('_'); 
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
@@ -200,28 +200,11 @@
             message: isDelete ? "MISSION SUPPRIMÉE" : text
         };
 
-        // Envoi sans aucune condition de date
         emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams)
             .then(function() {
                 console.log('Notification envoyée !');
-            }, function(error) {
-                console.log('Erreur EmailJS...', error);
-            });
-    }
-
-        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        
-        const templateParams = {
-            chauffeur: parts[1].toUpperCase(),
-            jour: dayNames[parts[2]],
-            message: isDelete ? "MISSION SUPPRIMÉE" : text
-        };
-
-        // Envoi via tes codes EmailJS
-        emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams)
-            .then(function() {
-                console.log('Notification envoyée avec succès !');
-            }, function(error) {
+            })
+            .catch(function(error) {
                 console.log('Erreur EmailJS...', error);
             });
     }
@@ -234,7 +217,6 @@
         if (isDelete) db.ref('planning_v18/' + currentEditKey).remove();
         else db.ref('planning_v18/' + currentEditKey).set({ text: val, toDepot: check });
         
-        // Déclenche le mail
         sendNotification(currentEditKey, val, isDelete);
         closeEditor();
     }
