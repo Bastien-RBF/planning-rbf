@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V15</title>
+    <title>RBF - Planning V16</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -23,35 +23,31 @@
         .btn-user { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
 
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1200px; border-radius: 10px; overflow: hidden; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1300px; border-radius: 10px; overflow: hidden; }
         th { background: var(--rbf-blue); color: white; padding: 12px; font-size: 11px; border-right: 1px solid #2e4a8a; }
-        td { border: 0.5px solid #e2e8f0; padding: 8px; vertical-align: top; width: 180px; }
+        td { border: 0.5px solid #e2e8f0; padding: 6px; vertical-align: top; width: 200px; }
         .row-name { font-weight: bold; font-size: 12px; background: #fff; position: sticky; left: 0; z-index: 5; border-right: 2px solid var(--rbf-yellow) !important; }
-        .cat-bar { background: #f1f5f9; font-size: 10px; font-weight: 800; color: #64748b; padding: 5px 15px; text-transform: uppercase; }
+        .cat-bar { background: #f1f5f9; font-size: 10px; font-weight: 800; color: #64748b; padding: 8px 15px; text-transform: uppercase; }
 
-        /* Style des Cases Chauffeurs (Petites) */
-        .slot-c { 
-            font-size: 11px; padding: 6px; margin-bottom: 4px; border-radius: 4px; 
-            background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 18px; position: relative;
+        /* Style des Cases */
+        .slot { 
+            font-size: 11px; padding: 8px; margin-bottom: 5px; border-radius: 4px; 
+            background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 30px; 
+            position: relative; white-space: pre-wrap; line-height: 1.3;
         }
-        /* Style des Cases Maçons (Plus grandes) */
-        .slot-m { 
-            font-size: 12px; padding: 10px; margin-bottom: 6px; border-radius: 6px; 
-            background: #fffcf0; border: 1px solid #fde68a; cursor: pointer; min-height: 40px; position: relative; white-space: pre-wrap;
-        }
-        
         .filled { background: #eff6ff !important; border: 1px solid #3b82f6 !important; color: var(--rbf-blue); font-weight: 600; }
-        .to-depot { border-left: 5px solid var(--success) !important; }
+        .is-to-depot { border-left: 5px solid var(--success) !important; }
         .slot-num { position: absolute; right: 5px; top: 2px; font-size: 8px; color: #94a3b8; font-weight: bold; }
 
-        /* Vue Mobile */
+        /* Vue Mobile Chauffeurs/Maçons */
         .card-m { background: white; padding: 15px; border-radius: 12px; margin: 10px; border-left: 6px solid var(--rbf-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .row-m { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
-        .idx-m { background: var(--rbf-yellow); color: var(--rbf-blue); width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+        .row-m { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
+        .idx-m { background: var(--rbf-yellow); color: var(--rbf-blue); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
+        .text-m { font-weight: 600; font-size: 15px; white-space: pre-wrap; color: var(--rbf-blue); flex: 1; }
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(3px); }
-        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
-        textarea, input[type="text"] { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin: 10px 0; box-sizing: border-box; font-size: 16px; font-family: inherit; }
+        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 450px; }
+        textarea { width: 100%; height: 150px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin: 10px 0; box-sizing: border-box; font-size: 16px; font-family: inherit; resize: none; }
         
         .hidden { display: none; }
     </style>
@@ -60,8 +56,8 @@
 
 <header>
     <img src="logo.png" class="header-logo" alt="RBF" onerror="this.src='https://via.placeholder.com/100x30?text=RBF'">
-    <div id="user-display" style="font-size:10px; font-weight:bold; color:var(--rbf-blue);"></div>
-    <button onclick="location.reload()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; font-size:10px; font-weight:bold;">Quitter</button>
+    <div id="user-display" style="font-size:11px; font-weight:bold; color:var(--rbf-blue);"></div>
+    <button onclick="location.reload()" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:5px; font-size:10px; font-weight:bold; cursor:pointer;">QUITTER</button>
 </header>
 
 <div id="login" class="login-screen">
@@ -80,7 +76,7 @@
         <button onclick="changeWeek(-1)" style="border:none; background:#f1f5f9; width:35px; height:35px; border-radius:50%; cursor:pointer;">◀</button>
         <div style="text-align:center;">
             <b id="week-display" style="color:var(--rbf-blue); font-size:18px;">Semaine 01</b>
-            <div id="date-info" style="font-size:10px; color:#64748b;">Calendrier RBF</div>
+            <div style="font-size:10px; color:#64748b; font-weight:bold; text-transform:uppercase;">Planning RBF</div>
         </div>
         <button onclick="changeWeek(1)" style="border:none; background:#f1f5f9; width:35px; height:35px; border-radius:50%; cursor:pointer;">▶</button>
     </div>
@@ -90,7 +86,7 @@
             <thead>
                 <tr>
                     <th style="position:sticky; left:0; z-index:10; width:120px;">NOM</th>
-                    <th id="th-0"></th><th id="th-1"></th><th id="th-2"></th><th id="th-3"></th><th id="th-4"></th>
+                    <th id="th-0">LUN</th><th id="th-1">MAR</th><th id="th-2">MER</th><th id="th-3">JEU</th><th id="th-4">VEN</th>
                 </tr>
             </thead>
             <tbody id="admin-body"></tbody>
@@ -101,15 +97,15 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 id="edit-header" style="margin:0; color:var(--rbf-blue);">Mission</h3>
-        <div id="editor-content"></div>
-        <label id="depot-check-label" style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
-            <input type="checkbox" id="edit-to-depot" style="width:20px; height:20px;">
+        <h3 id="edit-header" style="margin:0; color:var(--rbf-blue);">Détails Mission</h3>
+        <textarea id="edit-input" placeholder="Client, articles, adresse..."></textarea>
+        <label id="depot-check-wrap" style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
+            <input type="checkbox" id="edit-to-depot" style="width:22px; height:22px;">
             <span style="font-weight:bold; color:var(--success);">Informer le Dépôt</span>
         </label>
         <div style="display:flex; gap:10px;">
-            <button onclick="saveTask()" style="background:var(--success); color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold;">Valider</button>
-            <button onclick="closeEditor()" style="background:#94a3b8; color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold;">Annuler</button>
+            <button onclick="saveTask()" style="background:var(--success); color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold; cursor:pointer;">VALIDER</button>
+            <button onclick="closeEditor()" style="background:#94a3b8; color:white; border:none; padding:12px; border-radius:8px; flex:1; font-weight:bold; cursor:pointer;">ANNULER</button>
         </div>
     </div>
 </div>
@@ -144,15 +140,15 @@
             document.getElementById('login').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('user-display').textContent = user.toUpperCase();
-            db.ref('planning_v15').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
+            db.ref('planning_v16').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
         }
     }
 
     function render() {
-        document.getElementById('week-display').textContent = "Semaine " + currentWeek;
+        document.getElementById('week-display').textContent = "Semaine " + (currentWeek < 10 ? '0'+currentWeek : currentWeek);
+        const dayNames = ["LUN","MAR","MER","JEU","VEN"];
         for(let i=0; i<5; i++) {
-            const days = ["LUN","MAR","MER","JEU","VEN"];
-            document.getElementById('th-'+i).innerHTML = `<div>${days[i]} ${getDateOfWeek(currentWeek, 2026, i)}</div>`;
+            document.getElementById('th-'+i).innerHTML = `<div>${dayNames[i]} ${getDateOfWeek(currentWeek, 2026, i)}</div>`;
         }
         if (currentUser === 'admin' || currentUser === 'depot') renderAdmin();
         else renderUserView();
@@ -164,12 +160,13 @@
         tbody.innerHTML = "";
         
         const structure = [
-            { cat: "Chauffeurs (4 slots/j)", users: ['damien', 'cedric'], slots: 4, type: 'C' },
-            { cat: "Maçons (2 slots/j)", users: ['jadiel', 'nicola'], slots: 2, type: 'M' }
+            { cat: "Chauffeurs", users: ['damien', 'cedric'], slots: 4, type: 'C' },
+            { cat: "Maçons", users: ['jadiel', 'nicola'], slots: 2, type: 'M' },
+            { cat: "Autres", users: ['elec', 'divers', 'externe'], slots: 2, type: 'A' }
         ];
 
         structure.forEach(group => {
-            if (currentUser === 'depot' && group.type === 'M') return;
+            if (currentUser === 'depot' && group.type !== 'C') return;
             tbody.innerHTML += `<tr><td colspan="6" class="cat-bar">${group.cat}</td></tr>`;
             group.users.forEach(u => {
                 let row = `<tr><td class="row-name">${u.toUpperCase()}</td>`;
@@ -178,8 +175,9 @@
                     for (let s = 1; s <= group.slots; s++) {
                         let key = `${currentWeek}_${u}_${d}_s${s}`;
                         let data = window.fullData[key] || { text: "", toDepot: false };
-                        row += `<div class="slot-${group.type.toLowerCase()} ${data.text?'filled':''} ${data.toDepot?'to-depot':''}" 
-                                     onclick="openEditor('${key}', '${group.type}', ${s})">
+                        let isToDepot = data.toDepot === true;
+                        row += `<div class="slot ${data.text?'filled':''} ${isToDepot?'is-to-depot':''}" 
+                                     onclick="openEditor('${key}', ${s})">
                                     <span class="slot-num">${s}</span>${data.text || '...'}
                                 </div>`;
                     }
@@ -202,39 +200,33 @@
             for (let s = 1; s <= maxSlots; s++) {
                 let data = window.fullData[`${currentWeek}_${currentUser}_${d}_s${s}`];
                 if (data && data.text) {
-                    content += `<div class="row-m"><div class="idx-m">${s}</div><div style="font-weight:600; font-size:16px;">${data.text}</div></div>`;
+                    content += `<div class="row-m"><div class="idx-m">${s}</div><div class="text-m">${data.text}</div></div>`;
                 }
             }
             view.innerHTML += `<div class="card-m">
-                <div style="font-weight:800; color:var(--rbf-blue); font-size:11px; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
+                <div style="font-weight:800; color:var(--rbf-blue); font-size:11px; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">
                     ${days[d]} ${getDateOfWeek(currentWeek, 2026, d)}
                 </div>
-                ${content || '<div style="color:#94a3b8; font-style:italic; font-size:13px;">Rien de prévu</div>'}
+                ${content || '<div style="color:#94a3b8; font-style:italic; font-size:13px; padding-top:5px;">Aucune mission</div>'}
             </div>`;
         }
     }
 
-    function openEditor(key, type, slotNum) {
+    function openEditor(key, slotNum) {
         if(currentUser !== 'admin') return;
         currentEditKey = key;
-        document.getElementById('edit-header').textContent = (type === 'M' ? "Chantier Maçon #" : "Livraison #") + slotNum;
-        
+        document.getElementById('edit-header').textContent = "Mission #" + slotNum;
         let data = window.fullData[key] || { text: "", toDepot: false };
-        let html = (type === 'M') ? 
-            `<textarea id="edit-input" placeholder="Détails du chantier...">${data.text}</textarea>` :
-            `<input type="text" id="edit-input" placeholder="Client, Ville..." value="${data.text}">`;
-        
-        document.getElementById('editor-content').innerHTML = html;
-        document.getElementById('depot-check-label').style.display = (type === 'M') ? 'none' : 'flex';
-        document.getElementById('edit-to-depot').checked = data.toDepot || false;
+        document.getElementById('edit-input').value = data.text;
+        document.getElementById('edit-to-depot').checked = (data.toDepot === true);
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function saveTask() {
         let val = document.getElementById('edit-input').value;
         let check = document.getElementById('edit-to-depot').checked;
-        if (val.trim() === "") db.ref('planning_v15/' + currentEditKey).remove();
-        else db.ref('planning_v15/' + currentEditKey).set({ text: val, toDepot: check });
+        if (val.trim() === "") db.ref('planning_v16/' + currentEditKey).remove();
+        else db.ref('planning_v16/' + currentEditKey).set({ text: val, toDepot: check });
         closeEditor();
     }
 
