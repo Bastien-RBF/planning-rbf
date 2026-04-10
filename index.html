@@ -7,7 +7,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <style>
@@ -91,12 +90,10 @@
 </div>
 
 <script>
-    // Configuration Firebase
     const firebaseConfig = { databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // INITIALISATION EMAILJS avec TA CLÉ
     (function(){
       emailjs.init("q2ZFtf0rJf0I0jLbq");
     })();
@@ -189,34 +186,25 @@
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
-// FONCTION EMAILJS PROPRE
     function sendNotification(key, text, isDelete) {
         const parts = key.split('_'); 
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        
         const templateParams = {
             chauffeur: parts[1].toUpperCase(),
             jour: dayNames[parts[2]],
             message: isDelete ? "MISSION SUPPRIMÉE" : text
         };
-
         emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams)
-            .then(function() {
-                console.log('Notification envoyée !');
-            })
-            .catch(function(error) {
-                console.log('Erreur EmailJS...', error);
-            });
+            .then(function() { console.log('Email envoyé !'); })
+            .catch(function(err) { console.log('Erreur EmailJS', err); });
     }
 
     function saveTask() {
         let val = document.getElementById('edit-input').value;
         let check = document.getElementById('edit-to-depot').checked;
         let isDelete = val.trim() === "";
-        
         if (isDelete) db.ref('planning_v18/' + currentEditKey).remove();
         else db.ref('planning_v18/' + currentEditKey).set({ text: val, toDepot: check });
-        
         sendNotification(currentEditKey, val, isDelete);
         closeEditor();
     }
