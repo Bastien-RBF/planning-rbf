@@ -3,114 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning Officiel</title>
+    <title>RBF - Planning Slots</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        :root { 
-            --rbf-blue: #1b2e58; 
-            --rbf-yellow: #f9c311; 
-            --grey-bg: #f4f7fa; 
-            --text-dark: #1e293b;
-            --success: #10b981;
-        }
-
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--grey-bg); margin: 0; color: var(--text-dark); }
+        :root { --rbf-blue: #1b2e58; --rbf-yellow: #f9c311; --grey-bg: #f4f7fa; --success: #10b981; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--grey-bg); margin: 0; }
         
         header { 
             background: white; height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-bottom: 3px solid var(--rbf-yellow);
+            sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--rbf-yellow);
         }
-        .header-logo { height: 40px; }
-        .user-tag { font-size: 11px; font-weight: bold; color: var(--rbf-blue); text-transform: uppercase; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
+        .header-logo { height: 35px; }
 
         /* Login */
-        .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; padding: 20px; }
-        .login-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .login-logo { width: 180px; margin-bottom: 15px; }
-        .grid-users { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 15px; }
-        .btn-user { padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px; }
+        .grid-users { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; }
+        .btn-user { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
 
-        /* Nav */
-        .week-picker { background: white; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .nav-btn { background: var(--rbf-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; }
-        
         /* Table Admin */
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1000px; border-radius: 12px; overflow: hidden; }
-        th { background: var(--rbf-blue); color: white; padding: 12px; font-size: 11px; }
-        td { border: 0.5px solid #edf2f7; padding: 10px; vertical-align: top; }
-        .row-cat { background: #f8fafc; font-weight: 800; font-size: 10px; color: #64748b; padding: 8px 15px; text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 1200px; }
+        th { background: var(--rbf-blue); color: white; padding: 10px; font-size: 11px; border: 1px solid #ddd; }
+        td { border: 1px solid #ddd; padding: 5px; vertical-align: top; width: 200px; }
         
-        /* Affichage des livraisons multi-lignes */
-        .task-content { font-size: 13px; line-height: 1.4; color: #334155; }
-        .delivery-item { 
-            display: block; 
-            padding: 4px 0 4px 8px; 
-            border-left: 3px solid var(--rbf-yellow); 
-            margin-bottom: 6px; 
-            background: #fffdf5;
-            border-radius: 0 4px 4px 0;
+        /* Cases de livraison (Slots) */
+        .slot { 
+            font-size: 11px; padding: 6px; margin-bottom: 4px; border-radius: 4px; 
+            background: #f9fafb; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 20px;
+            transition: 0.2s; position: relative;
         }
+        .slot:hover { border-color: var(--rbf-yellow); background: #fff; }
+        .slot.filled { background: #eff6ff; border: 1px solid #3b82f6; color: var(--rbf-blue); font-weight: 600; }
+        .slot.to-depot { border-left: 4px solid var(--success); }
+        .slot-num { position: absolute; right: 4px; top: 2px; font-size: 8px; color: #94a3b8; }
 
-        /* Vue Chauffeur - Cartes */
-        .driver-card { background: white; padding: 20px; border-radius: 15px; border-left: 8px solid var(--rbf-blue); margin: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
-        .day-title { color: var(--rbf-blue); font-weight: 800; font-size: 14px; letter-spacing: 1px; display: block; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
-        .driver-delivery { 
-            background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px; 
-            border-left: 4px solid var(--rbf-yellow); font-size: 15px; font-weight: 600; color: var(--rbf-blue);
-        }
+        /* Vue Chauffeur */
+        .driver-card { background: white; padding: 15px; border-radius: 12px; margin: 10px; border-left: 6px solid var(--rbf-blue); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .delivery-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .delivery-row:last-child { border: 0; }
+        .delivery-index { background: var(--rbf-yellow); color: var(--rbf-blue); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
 
         /* Editor */
-        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(27, 46, 88, 0.9); display:none; z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
-        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 450px; }
-        textarea { width: 100%; height: 180px; margin: 15px 0; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; outline: none; }
+        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; z-index:1000; align-items:center; justify-content:center; }
+        .editor-box { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
         
         .hidden { display: none; }
-        .logout-btn { background: #ef4444; border: none; color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; }
+        .row-name { font-weight: bold; font-size: 12px; background: #f1f5f9; position: sticky; left: 0; z-index: 5; }
     </style>
 </head>
 <body>
 
 <header>
-    <img src="logo.png" class="header-logo" alt="RBF" onerror="this.src='https://via.placeholder.com/120x40?text=RBF'">
-    <div id="user-info" class="user-tag hidden"></div>
-    <button id="logout" class="logout-btn hidden" onclick="location.reload()">DÉCONNEXION</button>
+    <img src="logo.png" class="header-logo" alt="RBF" onerror="this.src='https://via.placeholder.com/100x30?text=RBF'">
+    <button onclick="location.reload()" style="background:none; border:1px solid #ddd; padding:5px; border-radius:5px; font-size:10px;">Quitter</button>
 </header>
 
 <div id="login" class="login-screen">
-    <div class="login-card">
-        <img src="logo.png" class="login-logo" alt="RBF" onerror="this.style.display='none'">
-        <h2 style="margin:0; color:var(--rbf-blue);">Planning Connect</h2>
-        <div class="grid-users">
-            <button class="btn-user" style="background:var(--rbf-blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / EXPLOITATION</button>
-            <button class="btn-user" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPARATION</button>
-            <button class="btn-user" style="background:#3b82f6" onclick="askCode('damien')">🚛 DAMIEN</button>
-            <button class="btn-user" style="background:#f59e0b" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-            <button class="btn-user" style="background:#8b5cf6" onclick="askCode('jadiel')">👷 JADIEL</button>
-            <button class="btn-user" style="background:#64748b" onclick="askCode('nicola')">👷 NICOLA</button>
-        </div>
+    <div class="grid-users">
+        <button class="btn-user" style="background:var(--rbf-blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
+        <button class="btn-user" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT</button>
+        <button class="btn-user" style="background:#3b82f6" onclick="askCode('damien')">🚛 DAMIEN</button>
+        <button class="btn-user" style="background:#f59e0b" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+        <button class="btn-user" style="background:#8b5cf6" onclick="askCode('jadiel')">👷 JADIEL</button>
+        <button class="btn-user" style="background:#64748b" onclick="askCode('nicola')">👷 NICOLA</button>
     </div>
 </div>
 
 <div id="app" class="hidden">
-    <div class="week-picker">
-        <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
-        <div style="text-align:center;">
-            <div id="week-display" style="font-weight:800; font-size:18px; color:var(--rbf-blue);">Semaine 01</div>
-            <div id="date-range" style="font-size:10px; color:#64748b;"></div>
-        </div>
-        <button class="nav-btn" onclick="changeWeek(1)">›</button>
+    <div style="display:flex; justify-content:center; align-items:center; gap:20px; padding:10px; background:white;">
+        <button onclick="changeWeek(-1)" style="border:none; background:none; font-size:20px;">◀</button>
+        <b id="week-display">Semaine 01</b>
+        <button onclick="changeWeek(1)" style="border:none; background:none; font-size:20px;">▶</button>
     </div>
 
     <div id="view-admin" class="table-container hidden">
         <table>
             <thead>
                 <tr>
-                    <th style="width:120px; position:sticky; left:0; z-index:10; background:var(--rbf-blue);">RESSOURCE</th>
-                    <th id="th-0"></th><th id="th-1"></th><th id="th-2"></th><th id="th-3"></th><th id="th-4"></th>
+                    <th style="position:sticky; left:0; z-index:10;">NOM</th>
+                    <th id="th-0">Lundi</th><th id="th-1">Mardi</th><th id="th-2">Mercredi</th><th id="th-3">Jeudi</th><th id="th-4">Vendredi</th>
                 </tr>
             </thead>
             <tbody id="admin-body"></tbody>
@@ -121,16 +96,14 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 id="edit-title" style="margin:0; color:var(--rbf-blue);">Saisie Planning</h3>
-        <p style="font-size:11px; color:#64748b; margin:5px 0;">Astuce : Allez à la ligne pour chaque nouvelle livraison</p>
-        <textarea id="edit-text" placeholder="Livraison 1 : Client A&#10;Livraison 2 : Client B..."></textarea>
-        <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
-            <input type="checkbox" id="edit-to-depot" style="width:22px; height:22px;">
-            <span style="font-weight:bold; color:var(--success);">Informer le Dépôt</span>
+        <h3 style="margin:0; color:var(--rbf-blue);">Mission <span id="slot-id-display"></span></h3>
+        <input type="text" id="edit-text" placeholder="Ex: Livraison Dupont, Thonon">
+        <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <input type="checkbox" id="edit-to-depot"> <b>Informer le Dépôt</b>
         </label>
         <div style="display:flex; gap:10px;">
-            <button class="btn-user" style="background:var(--success); flex:1;" onclick="saveTask()">VALIDER</button>
-            <button class="btn-user" style="background:#94a3b8; flex:1;" onclick="closeEditor()">ANNULER</button>
+            <button onclick="saveTask()" style="background:var(--success); color:white; border:none; padding:10px; border-radius:5px; flex:1;">Valider</button>
+            <button onclick="closeEditor()" style="background:#94a3b8; color:white; border:none; padding:10px; border-radius:5px; flex:1;">Annuler</button>
         </div>
     </div>
 </div>
@@ -141,17 +114,14 @@
     const db = firebase.database();
 
     function getWeekNumber(d) {
-        const startSemaine1 = new Date(2026, 0, 5); 
-        const diff = d - startSemaine1;
-        const dayDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
-        let week = Math.floor(dayDiff / 7) + 1;
-        return (week < 1) ? 1 : week;
+        const start = new Date(2026, 0, 5); 
+        const dayDiff = Math.floor((d - start) / 86400000);
+        return Math.max(1, Math.floor(dayDiff / 7) + 1);
     }
 
     function getDateOfWeek(w, y, dIdx) {
-        let start = new Date(2026, 0, 5); 
-        let res = new Date(start);
-        res.setDate(start.getDate() + ((w - 1) * 7) + dIdx);
+        let res = new Date(2026, 0, 5);
+        res.setDate(res.getDate() + ((w - 1) * 7) + dIdx);
         return res.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
     }
     
@@ -159,93 +129,84 @@
     let currentUser = null;
     let currentEditKey = null;
 
-    const userAccess = {
-        admin:  { code: "2026", role: "manager" },
-        depot:  { code: "5555", role: "depot" },
-        damien: { code: "1111", role: "driver" },
-        cedric: { code: "2222", role: "driver" },
-        jadiel: { code: "3333", role: "driver" },
-        nicola: { code: "4444", role: "driver" }
-    };
-
-    function formatText(text) {
-        if(!text) return "";
-        return text.split('\n').filter(line => line.trim() !== "").map(line => `<span class="delivery-item">${line}</span>`).join('');
-    }
-
-    function formatDriverText(text) {
-        if(!text) return "Aucune mission";
-        return text.split('\n').filter(line => line.trim() !== "").map(line => `<div class="driver-delivery">${line}</div>`).join('');
-    }
+    const users = ['damien', 'cedric', 'jadiel', 'nicola'];
+    const userAccess = { admin:"2026", depot:"5555", damien:"1111", cedric:"2222", jadiel:"3333", nicola:"4444" };
 
     function askCode(user) {
-        let pin = prompt("Code " + user.toUpperCase() + " :");
-        if (pin === userAccess[user].code) {
+        let pin = prompt("Code " + user.toUpperCase());
+        if (pin === userAccess[user]) {
             currentUser = user;
             document.getElementById('login').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
-            document.getElementById('logout').classList.remove('hidden');
-            document.getElementById('user-info').classList.remove('hidden');
-            document.getElementById('user-info').textContent = user;
-            db.ref('planning').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
-        } else if (pin !== null) alert("Erreur code");
+            db.ref('planning_slots').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
+        }
     }
 
     function render() {
-        document.getElementById('week-display').textContent = "Semaine " + (currentWeek < 10 ? '0'+currentWeek : currentWeek);
-        const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        for(let i=0; i<5; i++) {
-            const th = document.getElementById('th-'+i);
-            if(th) th.innerHTML = `<div style="font-weight:800;">${days[i]}</div><div style="font-size:9px; opacity:0.7;">${getDateOfWeek(currentWeek, 2026, i)}</div>`;
-        }
-        if (userAccess[currentUser].role === 'manager' || userAccess[currentUser].role === 'depot') renderTable();
+        document.getElementById('week-display').textContent = "Semaine " + currentWeek;
+        for(let i=0; i<5; i++) document.getElementById('th-'+i).innerHTML = `<div>${getDateOfWeek(currentWeek, 2026, i)}</div>`;
+        
+        if (currentUser === 'admin' || currentUser === 'depot') renderAdmin();
         else renderDriver();
     }
 
-    function renderTable() {
+    function renderAdmin() {
         document.getElementById('view-admin').classList.remove('hidden');
         const tbody = document.getElementById('admin-body');
         tbody.innerHTML = "";
-        const structure = [
-            { label: "Pôle Transport", ids: ['damien', 'cedric'] },
-            { label: "Pôle Chantier", ids: ['jadiel', 'nicola'], hideFromDepot: true },
-            { label: "Divers", ids: ['elec', 'divers', 'externe'] }
-        ];
-        structure.forEach(cat => {
-            if (currentUser === 'depot' && cat.hideFromDepot) return;
-            tbody.innerHTML += `<tr><td colspan="6" class="row-cat">${cat.label}</td></tr>`;
-            cat.ids.forEach(id => {
-                let row = `<tr><td style="font-weight:700; color:var(--rbf-blue); background:#fff; position:sticky; left:0; border-right:2px solid var(--rbf-yellow); font-size:12px;">${id.toUpperCase()}</td>`;
-                for (let d = 0; d < 5; d++) {
-                    let key = `${currentWeek}_${id}_${d}`;
+        
+        users.forEach(u => {
+            let row = `<tr><td class="row-name">${u.toUpperCase()}</td>`;
+            for (let d = 0; d < 5; d++) {
+                row += `<td>`;
+                for (let s = 1; s <= 4; s++) { // 4 cases par jour
+                    let key = `${currentWeek}_${u}_${d}_${s}`;
                     let data = window.fullData[key] || { text: "", toDepot: false };
-                    let content = (currentUser === 'depot' && !data.toDepot) ? "" : formatText(data.text);
-                    row += `<td onclick="${userAccess[currentUser].role === 'manager' ? `openEditor('${key}')` : ''}">
-                                <div class="task-content">${content || '---'}</div>
-                                ${data.toDepot && content ? '<span class="depot-tag">DÉPÔT</span>' : ''}
-                            </td>`;
+                    let display = (currentUser === 'depot' && !data.toDepot) ? "" : data.text;
+                    
+                    row += `<div class="slot ${display?'filled':''} ${data.toDepot?'to-depot':''}" 
+                                 onclick="${currentUser==='admin'?`openEditor('${key}',${s})`:''}">
+                                <span class="slot-num">${s}</span>
+                                ${display || '...'}
+                            </div>`;
                 }
-                tbody.innerHTML += row + `</tr>`;
-            });
+                row += `</td>`;
+            }
+            tbody.innerHTML += row + `</tr>`;
         });
     }
 
     function renderDriver() {
         const view = document.getElementById('view-driver');
         view.classList.remove('hidden'); view.innerHTML = "";
-        const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+        const days = ["LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI"];
+        
         for (let d = 0; d < 5; d++) {
-            let key = `${currentWeek}_${currentUser}_${d}`;
-            let data = window.fullData[key] || { text: "" };
+            let cardContent = "";
+            let hasAny = false;
+            for (let s = 1; s <= 4; s++) {
+                let key = `${currentWeek}_${currentUser}_${d}_${s}`;
+                let data = window.fullData[key];
+                if (data && data.text) {
+                    hasAny = true;
+                    cardContent += `<div class="delivery-row">
+                        <div class="delivery-index">${s}</div>
+                        <div style="font-weight:600; font-size:15px;">${data.text}</div>
+                    </div>`;
+                }
+            }
             view.innerHTML += `<div class="driver-card">
-                <span class="day-title">${days[d].toUpperCase()} ${getDateOfWeek(currentWeek, 2026, d)}</span>
-                <div class="task-content">${formatDriverText(data.text)}</div>
+                <div style="font-weight:800; color:var(--rbf-blue); font-size:12px; margin-bottom:10px;">
+                    ${days[d]} ${getDateOfWeek(currentWeek, 2026, d)}
+                </div>
+                ${hasAny ? cardContent : '<div style="color:#94a3b8; font-style:italic; font-size:13px;">Aucune mission</div>'}
             </div>`;
         }
     }
 
-    function openEditor(key) {
+    function openEditor(key, slotNum) {
         currentEditKey = key;
+        document.getElementById('slot-id-display').textContent = "#" + slotNum;
         let data = window.fullData[key] || { text: "", toDepot: false };
         document.getElementById('edit-text').value = data.text;
         document.getElementById('edit-to-depot').checked = data.toDepot;
@@ -255,13 +216,13 @@
     function saveTask() {
         let txt = document.getElementById('edit-text').value;
         let check = document.getElementById('edit-to-depot').checked;
-        if (txt.trim() === "") db.ref('planning/' + currentEditKey).remove();
-        else db.ref('planning/' + currentEditKey).set({ text: txt, toDepot: check });
-        document.getElementById('editor-overlay').style.display = 'none';
+        if (txt.trim() === "") db.ref('planning_slots/' + currentEditKey).remove();
+        else db.ref('planning_slots/' + currentEditKey).set({ text: txt, toDepot: check });
+        closeEditor();
     }
 
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function changeWeek(v) { currentWeek = Math.max(1, Math.min(52, currentWeek + v)); render(); }
+    function changeWeek(v) { currentWeek = Math.max(1, currentWeek + v); render(); }
 </script>
 </body>
 </html>
