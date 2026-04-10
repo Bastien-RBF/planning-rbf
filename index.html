@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V22 (Notifs Active)</title>
+    <title>RBF - Planning V22 (EmailJS Active)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
     <style>
         :root { --rbf-blue: #1b2e58; --rbf-yellow: #f9c311; --grey-bg: #f4f7fa; --success: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--grey-bg); margin: 0; color: #1e293b; }
@@ -90,9 +91,15 @@
 </div>
 
 <script>
+    // Configuration Firebase
     const firebaseConfig = { databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // INITIALISATION EMAILJS avec TA CLÉ
+    (function(){
+      emailjs.init("q2ZFtf0rJf0I0jLbq");
+    })();
 
     function getWeekNumber(d) {
         const start = new Date(2026, 0, 5); 
@@ -182,30 +189,29 @@
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
-    // FONCTION WEBHOOK MISE A JOUR AVEC TON LIEN MAKE
+    // NOUVELLE FONCTION EMAILJS
     function sendNotification(key, text, isDelete) {
         const parts = key.split('_'); 
         const weekOfTask = parseInt(parts[0]);
         
+        // Sécurité : n'envoie que pour la semaine actuelle
         if (weekOfTask !== realCurrentWeek) return;
 
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        const payload = {
+        
+        const templateParams = {
             chauffeur: parts[1].toUpperCase(),
             jour: dayNames[parts[2]],
-            message: isDelete ? "Mission supprimée" : text,
-            action: isDelete ? "SUPPRESSION" : "MODIFICATION",
-            semaine: weekOfTask
+            message: isDelete ? "MISSION SUPPRIMÉE" : text
         };
 
-        const webhookURL = "https://hook.eu1.make.com/v9q19kcwlwfkqrgwq1ccwu42oh2fh8g9"; 
-
-        fetch(webhookURL, {
-            method: 'POST',
-            mode: 'no-cors', // Evite les erreurs de sécurité simples
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        // Envoi via tes codes EmailJS
+        emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams)
+            .then(function() {
+                console.log('Notification envoyée avec succès !');
+            }, function(error) {
+                console.log('Erreur EmailJS...', error);
+            });
     }
 
     function saveTask() {
@@ -216,6 +222,7 @@
         if (isDelete) db.ref('planning_v18/' + currentEditKey).remove();
         else db.ref('planning_v18/' + currentEditKey).set({ text: val, toDepot: check });
         
+        // Déclenche le mail
         sendNotification(currentEditKey, val, isDelete);
         closeEditor();
     }
