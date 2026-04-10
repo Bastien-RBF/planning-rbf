@@ -189,13 +189,25 @@
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
-    // NOUVELLE FONCTION EMAILJS
+   // NOUVELLE FONCTION EMAILJS
     function sendNotification(key, text, isDelete) {
         const parts = key.split('_'); 
-        const weekOfTask = parseInt(parts[0]);
+        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         
-        // Sécurité : n'envoie que pour la semaine actuelle
-        if (weekOfTask !== realCurrentWeek) return;
+        const templateParams = {
+            chauffeur: parts[1].toUpperCase(),
+            jour: dayNames[parts[2]],
+            message: isDelete ? "MISSION SUPPRIMÉE" : text
+        };
+
+        // Envoi sans aucune condition de date
+        emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams)
+            .then(function() {
+                console.log('Notification envoyée !');
+            }, function(error) {
+                console.log('Erreur EmailJS...', error);
+            });
+    }
 
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         
