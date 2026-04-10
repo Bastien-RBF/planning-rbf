@@ -9,7 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        /* Palette de couleurs basée sur le logo RBF */
         :root { 
             --rbf-blue: #1b2e58; 
             --rbf-yellow: #f9c311; 
@@ -20,7 +19,6 @@
 
         body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; background: var(--grey-bg); margin: 0; color: var(--text-dark); -webkit-tap-highlight-color: transparent; }
         
-        /* Header ultra pro */
         header { 
             background: white; 
             height: 60px;
@@ -37,7 +35,6 @@
         .header-logo { height: 40px; }
         .user-tag { font-size: 12px; font-weight: bold; color: var(--rbf-blue); text-transform: uppercase; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; }
 
-        /* Ecran de connexion stylisé */
         .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; padding: 20px; }
         .login-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
         .login-logo { width: 200px; margin-bottom: 20px; }
@@ -46,31 +43,24 @@
         .btn-user { padding: 15px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px; }
         .btn-user:active { transform: scale(0.96); }
 
-        /* Navigation semaines */
         .week-picker { background: white; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
         .nav-btn { background: var(--rbf-blue); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         
-        /* Tableaux Bureau */
         .table-container { padding: 10px; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; min-width: 1000px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         th { background: var(--rbf-blue); color: white; padding: 12px; font-size: 11px; font-weight: 500; }
         td { border: 0.5px solid #edf2f7; padding: 12px; vertical-align: top; transition: 0.2s; }
         .row-cat { background: #f8fafc; font-weight: 800; font-size: 11px; color: #64748b; padding: 8px 15px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Contenu des tâches */
         .task-content { white-space: pre-wrap; font-size: 13px; line-height: 1.5; color: #334155; font-weight: 500; }
-        . chantier-title { color: var(--rbf-blue); font-weight: 800; display: block; margin-bottom: 4px; border-bottom: 1px solid var(--rbf-yellow); }
         .depot-tag { background: var(--rbf-yellow); color: var(--rbf-blue); font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-top: 6px; display: inline-block; }
 
-        /* Vue Chauffeur (Mobile First) */
         .driver-card { background: white; padding: 20px; border-radius: 15px; border-left: 6px solid var(--rbf-yellow); margin: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
         .day-badge { position: absolute; top: 15px; right: 15px; font-size: 10px; background: #f1f5f9; padding: 3px 8px; border-radius: 10px; color: #64748b; }
 
-        /* Fenêtre d'édition */
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(27, 46, 88, 0.9); display:none; z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
-        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 450px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 450px; }
         textarea { width: 100%; height: 160px; margin: 15px 0; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; resize: none; box-sizing: border-box; outline: none; }
-        textarea:focus { border-color: var(--rbf-yellow); }
         
         .hidden { display: none; }
     </style>
@@ -87,7 +77,7 @@
     <div class="login-card">
         <img src="logo.png" class="login-logo" alt="RBF" onerror="this.style.display='none'">
         <h2 style="margin:0; color:var(--rbf-blue);">Planning Interne</h2>
-        <p style="color:#64748b; font-size:14px; margin-top:5px;">Espace sécurisé Rosset Boulon & Fils</p>
+        <p style="color:#64748b; font-size:14px; margin-top:5px;">Rosset Boulon & Fils</p>
         
         <button class="btn-user" style="background:var(--rbf-blue); width:100%; margin-top:20px;" onclick="askCode('admin')">💼 BUREAU / EXPLOITATION</button>
         <button class="btn-user" style="background:var(--success); width:100%; margin-top:10px;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPARATION</button>
@@ -105,7 +95,7 @@
     <div class="week-picker">
         <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
         <div style="text-align:center;">
-            <div id="week-display" style="font-weight:800; font-size:18px; color:var(--rbf-blue);">Semaine 03</div>
+            <div id="week-display" style="font-weight:800; font-size:18px; color:var(--rbf-blue);">Semaine 01</div>
             <div style="font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:1px;">Planning Hebdomadaire</div>
         </div>
         <button class="nav-btn" onclick="changeWeek(1)">›</button>
@@ -128,7 +118,7 @@
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="edit-title" style="margin:0; color:var(--rbf-blue);">Affectation Mission</h3>
-        <textarea id="edit-text" placeholder="NOM DU CHANTIER&#10;Détails de la mission..."></textarea>
+        <textarea id="edit-text" placeholder="Détails de la mission..."></textarea>
         <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
             <input type="checkbox" id="edit-to-depot" style="width:20px; height:20px;">
             <span style="font-weight:bold; color:var(--success);">Informer le Dépôt</span>
@@ -145,30 +135,25 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Remplace les fonctions correspondantes dans ton code par celles-ci :
-
+    // CALCUL SEMAINE 1 FIXÉ AU 05/01/2026
     function getWeekNumber(d) {
-        // Définit le début de la Semaine 1 au 05/01/2026
         const startSemaine1 = new Date(2026, 0, 5); 
         const diff = d - startSemaine1;
-        const oneDay = 1000 * 60 * 60 * 24;
-        const dayDiff = Math.floor(diff / oneDay);
-        // Calcule le numéro de semaine par rapport au 05/01
+        const dayDiff = Math.floor(diff / (1000 * 60 * 60 * 24));
         let week = Math.floor(dayDiff / 7) + 1;
-        return (week < 1) ? 1 : week; // Sécurité pour ne pas descendre sous 1
+        return (week < 1) ? 1 : week;
     }
 
     function getDateOfWeek(w, y, dIdx) {
-        // On repart du lundi 05/01/2026 pour le calcul des colonnes
         let start = new Date(2026, 0, 5); 
         let res = new Date(start);
-        // On ajoute le nombre de semaines (w-1) et le jour (dIdx)
         res.setDate(start.getDate() + ((w - 1) * 7) + dIdx);
         return res.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
     }
     
     let currentWeek = getWeekNumber(new Date());
     let currentUser = null;
+    let currentEditKey = null;
 
     const userAccess = {
         admin:  { code: "2026", role: "manager" },
@@ -179,12 +164,10 @@
         nicola: { code: "4444", role: "driver" }
     };
 
-  
-
     function askCode(user) {
         let pin = prompt("Code d'accès " + user.toUpperCase() + " :");
         if (pin === userAccess[user].code) startApp(user);
-        else if (pin !== null) alert("Accès refusé.");
+        else if (pin !== null) alert("Code incorrect.");
     }
 
     function startApp(user) {
@@ -245,13 +228,12 @@
             let data = window.fullData[key] || { text: "Aucune mission planifiée" };
             view.innerHTML += `<div class="driver-card">
                 <div class="day-badge">${getDateOfWeek(currentWeek, 2026, d)}</div>
-                <span style="color:var(--rbf-blue); font-weight:800; font-size:12px; letter-spacing:1px;">${days[d].toUpperCase()}</span>
+                <span style="color:var(--rbf-blue); font-weight:800; font-size:12px;">${days[d].toUpperCase()}</span>
                 <div class="task-content" style="margin-top:12px; font-size:16px;">${data.text}</div>
             </div>`;
         }
     }
 
-    let currentEditKey = null;
     function openEditor(key) {
         currentEditKey = key;
         let data = window.fullData[key] || { text: "", toDepot: false };
