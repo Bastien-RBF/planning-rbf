@@ -197,12 +197,14 @@
                 message: isDelete ? "MISSION SUPPRIMÉE" : text
             };
 
-            // 1. Envoi au Chauffeur (Template standard)
-            emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams);
-
-            // 2. Envoi au Dépôt (Template spécifique)
-            if (isForDepot && !isDelete) {
-                emailjs.send('service_1j5bpwf', 'template_8gqnnh7', templateParams)
+            // Test inversé : On envoie au dépôt d'abord
+    if (isForDepot && !isDelete) {
+        emailjs.send('service_1j5bpwf', 'template_8gqnnh7', templateParams)
+            .then(() => console.log('Mail Dépôt envoyé !'))
+            .catch((err) => console.log('Erreur Dépôt:', err));
+    }
+    // Puis au chauffeur
+    emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams);
                     .then(() => console.log('Mail Dépôt envoyé avec succès !'));
             }
         } catch(e) { console.log("Erreur d'envoi mail:", e); }
