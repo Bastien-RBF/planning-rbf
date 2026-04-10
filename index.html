@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V16</title>
+    <title>RBF - Planning V17</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -29,7 +29,6 @@
         .row-name { font-weight: bold; font-size: 12px; background: #fff; position: sticky; left: 0; z-index: 5; border-right: 2px solid var(--rbf-yellow) !important; }
         .cat-bar { background: #f1f5f9; font-size: 10px; font-weight: 800; color: #64748b; padding: 8px 15px; text-transform: uppercase; }
 
-        /* Style des Cases */
         .slot { 
             font-size: 11px; padding: 8px; margin-bottom: 5px; border-radius: 4px; 
             background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 30px; 
@@ -39,7 +38,6 @@
         .is-to-depot { border-left: 5px solid var(--success) !important; }
         .slot-num { position: absolute; right: 5px; top: 2px; font-size: 8px; color: #94a3b8; font-weight: bold; }
 
-        /* Vue Mobile Chauffeurs/Maçons */
         .card-m { background: white; padding: 15px; border-radius: 12px; margin: 10px; border-left: 6px solid var(--rbf-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .row-m { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
         .idx-m { background: var(--rbf-yellow); color: var(--rbf-blue); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0; }
@@ -140,7 +138,7 @@
             document.getElementById('login').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             document.getElementById('user-display').textContent = user.toUpperCase();
-            db.ref('planning_v16').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
+            db.ref('planning_v17').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
         }
     }
 
@@ -159,32 +157,39 @@
         const tbody = document.getElementById('admin-body');
         tbody.innerHTML = "";
         
-        const structure = [
-            { cat: "Chauffeurs", users: ['damien', 'cedric'], slots: 4, type: 'C' },
-            { cat: "Maçons", users: ['jadiel', 'nicola'], slots: 2, type: 'M' },
-            { cat: "Autres", users: ['elec', 'divers', 'externe'], slots: 2, type: 'A' }
+        // ORDRE DEMANDÉ : Damien, Externe, Cédric, Divers, Elec, Jadiel, Nicola
+        const finalOrder = [
+            { id: 'damien', slots: 4, type: 'C' },
+            { id: 'externe', slots: 4, type: 'C' },
+            { id: 'cedric', slots: 4, type: 'C' },
+            { id: 'divers', slots: 4, type: 'C' },
+            { id: 'elec', slots: 4, type: 'C' },
+            { id: 'jadiel', slots: 2, type: 'M' },
+            { id: 'nicola', slots: 2, type: 'M' }
         ];
 
-        structure.forEach(group => {
-            if (currentUser === 'depot' && group.type !== 'C') return;
-            tbody.innerHTML += `<tr><td colspan="6" class="cat-bar">${group.cat}</td></tr>`;
-            group.users.forEach(u => {
-                let row = `<tr><td class="row-name">${u.toUpperCase()}</td>`;
-                for (let d = 0; d < 5; d++) {
-                    row += `<td>`;
-                    for (let s = 1; s <= group.slots; s++) {
-                        let key = `${currentWeek}_${u}_${d}_s${s}`;
-                        let data = window.fullData[key] || { text: "", toDepot: false };
+        finalOrder.forEach(uObj => {
+            let row = `<tr><td class="row-name">${uObj.id.toUpperCase()}</td>`;
+            for (let d = 0; d < 5; d++) {
+                row += `<td>`;
+                for (let s = 1; s <= uObj.slots; s++) {
+                    let key = `${currentWeek}_${uObj.id}_${d}_s${s}`;
+                    let data = window.fullData[key] || { text: "", toDepot: false };
+                    
+                    // FILTRE DEPOT : Si user = depot, on n'affiche que si toDepot est vrai
+                    if (currentUser === 'depot' && data.toDepot !== true) {
+                        // On n'affiche rien du tout pour ce slot
+                    } else {
                         let isToDepot = data.toDepot === true;
                         row += `<div class="slot ${data.text?'filled':''} ${isToDepot?'is-to-depot':''}" 
                                      onclick="openEditor('${key}', ${s})">
                                     <span class="slot-num">${s}</span>${data.text || '...'}
                                 </div>`;
                     }
-                    row += `</td>`;
                 }
-                tbody.innerHTML += row + `</tr>`;
-            });
+                row += `</td>`;
+            }
+            tbody.innerHTML += row + `</tr>`;
         });
     }
 
@@ -215,7 +220,7 @@
     function openEditor(key, slotNum) {
         if(currentUser !== 'admin') return;
         currentEditKey = key;
-        document.getElementById('edit-header').textContent = "Mission #" + slotNum;
+        document.getElementById('edit-header').textContent = "Modifier Slot #" + slotNum;
         let data = window.fullData[key] || { text: "", toDepot: false };
         document.getElementById('edit-input').value = data.text;
         document.getElementById('edit-to-depot').checked = (data.toDepot === true);
@@ -225,8 +230,8 @@
     function saveTask() {
         let val = document.getElementById('edit-input').value;
         let check = document.getElementById('edit-to-depot').checked;
-        if (val.trim() === "") db.ref('planning_v16/' + currentEditKey).remove();
-        else db.ref('planning_v16/' + currentEditKey).set({ text: val, toDepot: check });
+        if (val.trim() === "") db.ref('planning_v17/' + currentEditKey).remove();
+        else db.ref('planning_v17/' + currentEditKey).set({ text: val, toDepot: check });
         closeEditor();
     }
 
