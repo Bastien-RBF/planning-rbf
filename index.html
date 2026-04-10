@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V22 (Email Chauffeur + Dépôt)</title>
+    <title>RBF - Planning V22 (Réparation Finale)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -197,17 +197,14 @@
                 message: isDelete ? "MISSION SUPPRIMÉE" : text
             };
 
-            // Test inversé : On envoie au dépôt d'abord
-    if (isForDepot && !isDelete) {
-        emailjs.send('service_1j5bpwf', 'template_8gqnnh7', templateParams)
-            .then(() => console.log('Mail Dépôt envoyé !'))
-            .catch((err) => console.log('Erreur Dépôt:', err));
-    }
-    // Puis au chauffeur
-    emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams);
-                    .then(() => console.log('Mail Dépôt envoyé avec succès !'));
+            // Envoi au Chauffeur
+            emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams);
+
+            // Envoi au Dépôt (si coché)
+            if (isForDepot && !isDelete) {
+                emailjs.send('service_1j5bpwf', 'template_8gqnnh7', templateParams);
             }
-        } catch(e) { console.log("Erreur d'envoi mail:", e); }
+        } catch(e) { console.error(e); }
     }
 
     function saveTask() {
