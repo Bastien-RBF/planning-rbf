@@ -145,10 +145,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Remplace les fonctions correspondantes dans ton code par celles-ci :
+
     function getWeekNumber(d) {
-        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-        return Math.ceil((((d - new Date(Date.UTC(d.getUTCFullYear(),0,1))) / 86400000) + 1)/7);
+        // Définit le début de la Semaine 1 au 05/01/2026
+        const startSemaine1 = new Date(2026, 0, 5); 
+        const diff = d - startSemaine1;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayDiff = Math.floor(diff / oneDay);
+        // Calcule le numéro de semaine par rapport au 05/01
+        let week = Math.floor(dayDiff / 7) + 1;
+        return (week < 1) ? 1 : week; // Sécurité pour ne pas descendre sous 1
+    }
+
+    function getDateOfWeek(w, y, dIdx) {
+        // On repart du lundi 05/01/2026 pour le calcul des colonnes
+        let start = new Date(2026, 0, 5); 
+        let res = new Date(start);
+        // On ajoute le nombre de semaines (w-1) et le jour (dIdx)
+        res.setDate(start.getDate() + ((w - 1) * 7) + dIdx);
+        return res.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
     }
     
     let currentWeek = getWeekNumber(new Date());
@@ -163,16 +179,7 @@
         nicola: { code: "4444", role: "driver" }
     };
 
-    function getDateOfWeek(w, y, dIdx) {
-        let simple = new Date(y, 0, 1 + (w - 1) * 7);
-        let dow = simple.getDay();
-        let start = simple;
-        if (dow <= 4) start.setDate(simple.getDate() - simple.getDay() + 1);
-        else start.setDate(simple.getDate() + 8 - simple.getDay());
-        let res = new Date(start);
-        res.setDate(res.getDate() + dIdx);
-        return res.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-    }
+  
 
     function askCode(user) {
         let pin = prompt("Code d'accès " + user.toUpperCase() + " :");
