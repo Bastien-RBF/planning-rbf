@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF - Planning V22 (Version Stable)</title>
+    <title>RBF - Planning V22 (Email Actif)</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <style>
         :root { --rbf-blue: #1b2e58; --rbf-yellow: #f9c311; --grey-bg: #f4f7fa; --success: #10b981; }
@@ -93,6 +94,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // INITIALISATION EMAILJS
+    (function(){
+      emailjs.init("q2ZFtf0rJf0I0jLbq");
+    })();
+
     function getWeekNumber(d) {
         const start = new Date(2026, 0, 5); 
         const dayDiff = Math.floor((d - start) / 86400000);
@@ -108,6 +114,7 @@
     
     let currentWeek = realCurrentWeek;
     let currentUser = localStorage.getItem('rbf_user') || null;
+    let currentEditKey = null; // Important pour éviter les erreurs
     const userAccess = { admin:"2026", depot:"5555", damien:"1111", cedric:"2222", jadiel:"3333", nicola:"4444" };
 
     window.onload = () => { if(currentUser) loginSuccess(currentUser); };
@@ -125,10 +132,7 @@
         document.getElementById('login').classList.add('hidden');
         document.getElementById('app').classList.remove('hidden');
         document.getElementById('user-display').textContent = user.toUpperCase();
-        db.ref('planning_v18').on('value', (snap) => { 
-            window.fullData = snap.val() || {}; 
-            render(); 
-        });
+        db.ref('planning_v18').on('value', (snap) => { window.fullData = snap.val() || {}; render(); });
     }
 
     function logout() { localStorage.removeItem('rbf_user'); location.reload(); }
@@ -144,7 +148,6 @@
         document.getElementById('view-admin').classList.remove('hidden');
         const tbody = document.getElementById('admin-body'); tbody.innerHTML = "";
         const allUsers = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
-        
         allUsers.forEach(u => {
             if (currentUser === 'depot' && !u.d) return;
             let row = `<tr><td class="row-name">${u.id.toUpperCase()}</td>`;
@@ -163,24 +166,16 @@
     }
 
     function renderUserView() {
-        const view = document.getElementById('view-driver'); 
-        view.classList.remove('hidden'); 
-        view.innerHTML = "";
+        const view = document.getElementById('view-driver'); view.classList.remove('hidden'); view.innerHTML = "";
         const days = ["LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI"];
         const maxSlots = (currentUser === 'jadiel' || currentUser === 'nicola') ? 2 : 4;
-        
         for (let d = 0; d < 5; d++) {
             let content = "";
             for (let s = 1; s <= maxSlots; s++) {
                 let data = window.fullData[`${currentWeek}_${currentUser}_${d}_s${s}`];
-                if (data && data.text) {
-                    content += `<div class="row-m"><div class="idx-m">${s}</div><div class="text-m">${data.text}</div></div>`;
-                }
+                if (data && data.text) content += `<div class="row-m"><div class="idx-m">${s}</div><div class="text-m">${data.text}</div></div>`;
             }
-            view.innerHTML += `<div class="card-m">
-                <div style="font-weight:800; color:var(--rbf-blue); font-size:11px; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">${days[d]} ${getDateOfWeek(currentWeek, 2026, d)}</div>
-                ${content || '<div style="color:#94a3b8; font-style:italic; font-size:13px; padding-top:5px;">Aucune mission</div>'}
-            </div>`;
+            view.innerHTML += `<div class="card-m"><div style="font-weight:800; color:var(--rbf-blue); font-size:11px; margin-bottom:5px; border-bottom:1px solid #eee; padding-bottom:5px;">${days[d]} ${getDateOfWeek(currentWeek, 2026, d)}</div>${content || '<div style="color:#94a3b8; font-style:italic; font-size:13px; padding-top:5px;">Aucune mission</div>'}</div>`;
         }
     }
 
@@ -193,16 +188,29 @@
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
+    function sendNotification(key, text, isDelete) {
+        try {
+            const parts = key.split('_'); 
+            const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+            const templateParams = {
+                chauffeur: parts[1].toUpperCase(),
+                jour: dayNames[parts[2]],
+                message: isDelete ? "MISSION SUPPRIMÉE" : text
+            };
+            emailjs.send('service_1j5bpwf', 'template_5xn3o8u', templateParams)
+                .then(function() { console.log('Mail envoyé !'); })
+                .catch(function(err) { console.log('Erreur EmailJS', err); });
+        } catch(e) { console.log(e); }
+    }
+
     function saveTask() {
+        if(!currentEditKey) return;
         let val = document.getElementById('edit-input').value;
         let check = document.getElementById('edit-to-depot').checked;
         let isDelete = val.trim() === "";
-        
-        if (isDelete) {
-            db.ref('planning_v18/' + currentEditKey).remove();
-        } else {
-            db.ref('planning_v18/' + currentEditKey).set({ text: val, toDepot: check });
-        }
+        if (isDelete) db.ref('planning_v18/' + currentEditKey).remove();
+        else db.ref('planning_v18/' + currentEditKey).set({ text: val, toDepot: check });
+        sendNotification(currentEditKey, val, isDelete);
         closeEditor();
     }
 
