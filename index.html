@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V48 - Correction Bleu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RBF Planning V49 - Mobile & Sauts de Ligne</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -11,47 +11,72 @@
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
         
-        header { background: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .header-logo { display: flex; align-items: center; gap: 15px; }
-        .header-logo img { height: 50px; }
+        header { background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; }
+        .header-logo img { height: 40px; }
         
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .table-container { padding: 20px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
-        th { background: var(--blue); color: white; padding: 10px; font-size: 11px; border-bottom: 2px solid var(--yellow); line-height: 1.4; }
-        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 10px; vertical-align: top; }
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; font-size: 13px; }
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 68px; z-index: 999; }
+        .wk-btn { padding: 12px 20px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; }
 
-        /* STYLE DES CASES */
-        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; position: relative; color: var(--blue); overflow: hidden; }
+        /* TABLEAU PC */
+        .table-container { padding: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
+        th { background: var(--blue); color: white; padding: 12px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 100px; font-size: 12px; }
+
+        /* CASES (SLOTS) - FIX SAUT DE LIGNE */
+        .slot { font-size: 11px; padding: 10px; margin-bottom: 6px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 35px; transition: 0.2s; position: relative; color: var(--blue); overflow: hidden; 
+                white-space: pre-wrap; word-wrap: break-word; line-height: 1.3; }
         
-        /* Bleu par défaut pour toute tâche remplie */
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; }
-        
-        /* Liserés prioritaires */
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
-        /* Palette éditeur */
-        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 12px; }
-        .color-opt { width: 100%; height: 30px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
-        .color-opt.active { border-color: var(--blue); transform: scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        /* VUE MOBILE (Cartes) */
+        #v-admin-mobile { display: none; padding: 10px; }
+        .mobile-card { background: white; border-radius: 15px; margin-bottom: 20px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .mobile-card-title { font-weight: 900; color: var(--blue); font-size: 16px; margin-bottom: 10px; border-bottom: 2px solid var(--yellow); display: inline-block; }
+        .mobile-day-box { margin-bottom: 12px; }
+        .mobile-day-label { font-weight: bold; font-size: 12px; color: #64748b; margin-bottom: 5px; display: block; }
 
-        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; }
+        /* Responsive */
+        @media (max-width: 850px) {
+            .table-container { display: none; }
+            #v-admin-mobile { display: block; }
+            header { padding: 10px; }
+            .header-logo b { display: none; }
+        }
+
+        /* Editeur & Connexion */
+        .login-card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; margin: 40px auto; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn-auth { padding: 18px 10px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 13px; }
+        
+        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; padding: 15px; }
+        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; max-height: 95vh; overflow-y: auto; }
+        
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
+        
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-logo"><img src="logo.png" alt="RBF"><div style="font-weight: 900; color: var(--blue); font-size: 18px;">ROSSET BOULON & FILS</div></div>
-    <div id="u-info" class="hidden"><span id="u-name" style="font-weight: bold; color: var(--blue); margin-right: 15px;"></span><button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">QUITTER</button></div>
+    <div class="header-logo" style="display:flex; align-items:center; gap:10px;">
+        <img src="logo.png" alt="RBF">
+        <b style="color: var(--blue); font-size: 16px;">ROSSET BOULON & FILS</b>
+    </div>
+    <div id="u-info" class="hidden">
+        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px;">QUITTER</button>
+    </div>
 </header>
 
-<div id="login-screen" class="login-container">
+<div id="login-screen">
     <div class="login-card">
-        <h2 style="color: var(--blue); margin-bottom: 20px;">Planning</h2>
+        <h2 style="color: var(--blue); margin: 0;">Planning</h2>
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
             <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT</button>
@@ -65,30 +90,34 @@
 
 <div id="app-content" class="hidden">
     <div class="week-nav">
-        <button onclick="changeWeek(-1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">◀</button>
-        <div style="font-size: 20px; font-weight: 800; color: var(--blue);" id="wk-disp"></div>
-        <button onclick="changeWeek(1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">▶</button>
+        <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
+        <div id="wk-disp" style="font-weight: 800; color: var(--blue); font-size: 16px;"></div>
+        <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
+
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead><tr><th style="width:120px;">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
+            <thead><tr><th style="width:100px;">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    <div id="v-driver" class="table-container hidden" style="max-width: 500px; margin: auto;"></div>
+
+    <div id="v-admin-mobile" class="hidden"></div>
+
+    <div id="v-driver" class="padding: 15px; hidden"></div>
 </div>
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 style="margin-top:0; color:var(--blue);">Détails Mission</h3>
+        <h3 id="ed-title" style="margin-top:0; color:var(--blue); font-size: 18px;">Mission</h3>
         <div id="ed-view-only" class="hidden">
-            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap;"></p>
+            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap; color: var(--blue);"></p>
             <div id="link-display"></div>
         </div>
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Mission..."></textarea>
+            <textarea id="e-input" style="width:100%; height:120px; padding:12px; border-radius:12px; border:1px solid #ddd; font-family:inherit; font-size: 14px; box-sizing: border-box;" placeholder="Saisir la mission..."></textarea>
             
-            <div style="font-size: 11px; font-weight: bold; color: var(--blue);">COULEUR PERSONNALISÉE :</div>
+            <div style="font-size: 11px; font-weight: bold; color: var(--blue); margin-top: 10px;">COULEUR :</div>
             <div class="color-picker">
                 <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default"></div>
                 <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2"></div>
@@ -104,12 +133,14 @@
 
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:1px dashed #cbd5e1; font-size:12px;">📎 JOINDRE FICHIER</div>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE DÉPÔT (Trait Vert)</span></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER</button>
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:15px; font-weight:bold; cursor:pointer;">📎 JOINDRE UN DOCUMENT</button>
+            
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor: pointer;"><input type="checkbox" id="e-depot" style="width:22px; height:22px;"><span style="color:var(--success); font-weight:bold;">VISIBLE AU DÉPÔT</span></label>
+            
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; font-size: 16px; cursor:pointer;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:15px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Fermer</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer; font-weight: bold; padding: 10px;">Fermer</button>
     </div>
 </div>
 
@@ -133,7 +164,7 @@
     });
 
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
-    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); document.getElementById('u-name').textContent = "👤 " + u.toUpperCase(); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
+    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function uploadFile(input) {
@@ -151,38 +182,52 @@
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
-        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `LUN MAR MER JEU VEN`.split(' ')[i] + `<br><span style="font-weight:normal; font-size:10px;">${getDayDate(curW, i)}</span>`;
+        const dayNames = ["LUN","MAR","MER","JEU","VEN"];
+        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${dayNames[i]}<br>${getDayDate(curW, i)}`;
+
+        const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
 
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
-            let h = "";
-            const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
+            let hTable = ""; let hMobile = "";
+
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
-                h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
+                
+                // Remplissage Table PC
+                hTable += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
+                // Remplissage Cartes Mobile
+                let mCard = `<div class="mobile-card"><div class="mobile-card-title">${u.id.toUpperCase()}</div>`;
+
                 for(let d=0; d<5; d++) {
-                    h += `<td>`;
+                    hTable += `<td>`;
+                    let mDay = `<div class="mobile-day-box"><span class="mobile-day-label">${dayNames[d]} ${getDayDate(curW, d)}</span>`;
+                    let hasDayContent = false;
+
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
-                        let hasF = dta.files && dta.files.length > 0;
                         
-                        let bgStyle = '';
-                        let fillClass = dta.text ? 'filled' : '';
-                        if (dta.text && dta.col && dta.col !== 'default') {
-                            bgStyle = `background: ${dta.col}; background-image: none !important; color: ${dta.col==='#000000'?'white':'var(--blue)'}; border: 1px solid rgba(0,0,0,0.1);`;
-                            fillClass = ''; 
-                        }
-
-                        h += `<div class="slot ${fillClass} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
-                                   style="${bgStyle}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
+                        let hasF = dta.files && dta.files.length > 0;
+                        let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; background-image:none; border:1px solid rgba(0,0,0,0.1); color:${dta.col==='#000000'?'#fff':'var(--blue)'}` : '';
+                        let slotHtml = `<div class="slot ${dta.text && (!dta.col || dta.col==='default')?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
+                        
+                        hTable += slotHtml;
+                        mDay += slotHtml;
+                        if(dta.text) hasDayContent = true;
                     }
-                    h += `</td>`;
+                    hTable += `</td>`;
+                    mDay += `</div>`;
+                    mCard += mDay;
                 }
-                h += `</tr>`;
+                hTable += `</tr>`;
+                mCard += `</div>`;
+                hMobile += mCard;
             });
-            document.getElementById('b-admin').innerHTML = h;
+            document.getElementById('b-admin').innerHTML = hTable;
+            document.getElementById('v-admin-mobile').innerHTML = hMobile;
         } else {
+            // Vue CHAUFFEUR UNIQUE (Déjà mobile-friendly)
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let d=0; d<5; d++) {
                 let c = "";
@@ -190,11 +235,11 @@
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
                         let bCol = (dta.col && dta.col !== 'default') ? dta.col : 'var(--blue)';
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Document</a>`; });
-                        c += `<div style="padding:15px; border-bottom:1px solid #eee; border-left:8px solid ${bCol}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
+                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold;">📄 Document</a>`; });
+                        c += `<div style="padding:15px; border-bottom:1px solid #eee; border-left:8px solid ${bCol}; white-space:pre-wrap;"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${getDayDate(curW, d)}</b><br>${c || '<i>Repos</i>'}</div>`;
+                v.innerHTML += `<div style="background:white; margin:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || '<i style="display:block;margin-top:10px;color:#999">Repos</i>'}</div>`;
             }
         }
     }
@@ -210,7 +255,7 @@
         } else {
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
             document.getElementById('txt-display').textContent = d.text || "Aucun détail";
-            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
+            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold;">📄 Ouvrir Document</a>`; });
             document.getElementById('link-display').innerHTML = h;
         }
         document.getElementById('editor-overlay').style.display = 'flex';
