@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V42 - Bleu par défaut</title>
+    <title>RBF Planning V43</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --blue-task: #3b82f6; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
         
         header { background: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
@@ -27,13 +27,15 @@
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 10px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; }
 
-        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; }
-        .filled { font-weight: 600; color: white; border: 1px solid rgba(0,0,0,0.1); text-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .is-to-depot { border-left: 5px solid #fff !important; }
-        .has-link { border-bottom: 3px solid rgba(255,255,255,0.5) !important; }
+        /* RETOUR DES STYLES ORIGINAUX */
+        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; color: #334155; }
+        .filled { font-weight: 600; color: white; border: 1px solid rgba(0,0,0,0.1); }
+        .is-to-depot { border-left: 6px solid var(--success) !important; }
+        .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
-        .color-picker { display: flex; gap: 10px; margin: 15px 0; justify-content: center; }
-        .color-opt { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: 0.2s; }
+        /* PALETTE COULEURS */
+        .color-picker { display: flex; gap: 8px; margin: 10px 0; justify-content: center; }
+        .color-opt { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px); }
@@ -56,7 +58,7 @@
 
 <div id="login-screen" class="login-container">
     <div class="login-card">
-        <h2 style="color: var(--blue); margin: 0;">Planning Connexion</h2>
+        <h2 style="color: var(--blue); margin: 0;">Planning</h2>
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
             <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT</button>
@@ -75,7 +77,7 @@
         <button onclick="changeWeek(1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
-        <table id="main-table">
+        <table>
             <thead>
                 <tr><th style="width:120px;">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr>
             </thead>
@@ -87,31 +89,26 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 style="margin-top:0; color:var(--blue);">Détails de la mission</h3>
+        <h3 style="margin-top:0; color:var(--blue);">Détails Mission</h3>
         <div id="ed-view-only" class="hidden">
             <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap;"></p>
             <div id="link-display"></div>
         </div>
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0; font-family:inherit;" placeholder="Écrivez la mission ici..."></textarea>
+            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Mission..."></textarea>
             
-            <div style="font-size: 11px; font-weight: bold; color: var(--blue); margin-bottom: 5px;">COULEUR SPÉCIFIQUE (Optionnel) :</div>
+            <div style="font-size: 11px; font-weight: bold; color: var(--blue);">COULEUR PERSONNALISÉE :</div>
             <div class="color-picker">
-                <div class="color-opt" style="background:#3b82f6;" data-col="#3b82f6" title="Bleu Normal"></div>
-                <div class="color-opt" style="background:#10b981;" data-col="#10b981" title="Livré / Vert"></div>
-                <div class="color-opt" style="background:#f59e0b;" data-col="#f59e0b" title="Congés / Jaune"></div>
-                <div class="color-opt" style="background:#ef4444;" data-col="#ef4444" title="Urgent / Rouge"></div>
-                <div class="color-opt" style="background:#64748b;" data-col="#64748b" title="Divers / Gris"></div>
-            </div>
+                <div class="color-opt" style="background:#3b82f6;" data-col="#3b82f6"></div> <div class="color-opt" style="background:#10b981;" data-col="#10b981"></div> <div class="color-opt" style="background:#f59e0b;" data-col="#f59e0b"></div> <div class="color-opt" style="background:#ef4444;" data-col="#ef4444"></div> <div class="color-opt" style="background:#64748b;" data-col="#64748b"></div> </div>
 
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:10px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:1px dashed #cbd5e1; font-size:12px;">📎 JOINDRE DOCUMENTS</div>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE DÉPÔT</span></label>
+            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:1px dashed #cbd5e1; font-size:12px;">📎 JOINDRE FICHIER</div>
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE DÉPÔT (Trait Vert)</span></label>
             <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER LA MISSION</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Annuler / Fermer</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Annuler</button>
     </div>
 </div>
 
@@ -121,11 +118,7 @@
     const db = firebase.database();
     (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
 
-    function getWeek(d) {
-        const s = new Date(2026, 0, 5);
-        return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1);
-    }
-
+    function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = null;
 
     document.querySelectorAll('.color-opt').forEach(opt => {
@@ -155,7 +148,6 @@
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
-        const days = ["LUN","MAR","MER","JEU","VEN"];
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = "";
@@ -172,7 +164,7 @@
                         let bgCol = dta.text ? (dta.col || '#3b82f6') : '#fcfcfc';
                         h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
                                    style="background:${bgCol}" onclick="openEd('${k}')">
-                                ${dta.text || '...'} ${hasF ? '📂' : ''}
+                                ${dta.text || '...'}
                               </div>`;
                     }
                     h += `</td>`;
@@ -187,11 +179,11 @@
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; border-radius:8px; text-decoration:none; margin-top:5px; font-size:12px; text-align:center;">📄 Doc: ${f.name}</a>`; });
-                        c += `<div style="padding:10px; border-bottom:1px solid #f1f5f9; border-left:4px solid ${dta.col || '#3b82f6'}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
+                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; border-radius:8px; text-decoration:none; margin-top:5px; font-size:12px; text-align:center;">📄 Voir Document</a>`; });
+                        c += `<div style="padding:10px; border-bottom:1px solid #f1f5f9; border-left:6px solid ${dta.col || '#3b82f6'}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin-bottom:10px; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${days[d]}</b><br>${c || '<i>Repos</i>'}</div>`;
+                v.innerHTML += `<div style="background:white; margin-bottom:10px; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>JOUR ${d+1}</b><br>${c || '<i>Repos</i>'}</div>`;
             }
         }
     }
@@ -200,11 +192,7 @@
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:null};
         currentFiles = d.files ? [...d.files] : [];
         selectedCol = d.col;
-        
-        document.querySelectorAll('.color-opt').forEach(o => {
-            o.classList.remove('active');
-            if(o.dataset.col === selectedCol) o.classList.add('active');
-        });
+        document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.col === selectedCol) o.classList.add('active'); });
 
         if(curU === 'admin') {
             document.getElementById('ed-view-only').classList.add('hidden');
@@ -216,7 +204,7 @@
             document.getElementById('ed-controls').classList.add('hidden');
             document.getElementById('ed-view-only').classList.remove('hidden');
             document.getElementById('txt-display').textContent = d.text || "Aucun détail";
-            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 ${f.name}</a>`; });
+            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
             document.getElementById('link-display').innerHTML = h;
         }
         document.getElementById('editor-overlay').style.display = 'flex';
@@ -225,10 +213,10 @@
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol});
-        const realWeek = getWeek(new Date());
-        if(curW === realWeek) {
+        const realW = getWeek(new Date());
+        if(curW === realW && v.trim() !== "") {
             const p = curK.split('_');
-            const params = { chauffeur: p[1].toUpperCase(), jour: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]], message: v + (currentFiles.length > 0 ? "\n(Docs joints sur le planning)" : "") };
+            const params = { chauffeur: p[1].toUpperCase(), jour: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]], message: v };
             emailjs.send('service_1j5bpwf', 'template_5xn3o8u', params);
             if (c) emailjs.send('service_1j5bpwf', 'template_8gqnnh7', params);
         }
