@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V47 - Palette Étendue</title>
+    <title>RBF Planning V48 - Correction Bleu</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -15,11 +15,6 @@
         .header-logo { display: flex; align-items: center; gap: 15px; }
         .header-logo img { height: 50px; }
         
-        .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px; }
-        .login-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
-        .btn-auth { padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; }
-        
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0; }
         .table-container { padding: 20px; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
@@ -27,40 +22,36 @@
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 10px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; font-size: 13px; }
 
-        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; position: relative; overflow: hidden; color: var(--blue); }
-        .filled { font-weight: 600; border: 1px solid rgba(0,0,0,0.1); }
+        /* STYLE DES CASES */
+        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; position: relative; color: var(--blue); overflow: hidden; }
         
-        /* Les liserés restent prioritaires */
+        /* Bleu par défaut pour toute tâche remplie */
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; }
+        
+        /* Liserés prioritaires */
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
-        /* PALETTE ÉTENDUE DANS L'ÉDITEUR */
-        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 12px; }
-        .color-opt { width: 100%; height: 35px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); transition: 0.2s; }
-        .color-opt.active { border-color: var(--blue); transform: scale(1.05); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Palette éditeur */
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 12px; }
+        .color-opt { width: 100%; height: 30px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+        .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-logo">
-        <img src="logo.png" alt="RBF">
-        <div style="font-weight: 900; color: var(--blue); font-size: 18px;">ROSSET BOULON & FILS</div>
-    </div>
-    <div id="u-info" class="hidden">
-        <span id="u-name" style="font-weight: bold; color: var(--blue); margin-right: 15px;"></span>
-        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">QUITTER</button>
-    </div>
+    <div class="header-logo"><img src="logo.png" alt="RBF"><div style="font-weight: 900; color: var(--blue); font-size: 18px;">ROSSET BOULON & FILS</div></div>
+    <div id="u-info" class="hidden"><span id="u-name" style="font-weight: bold; color: var(--blue); margin-right: 15px;"></span><button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">QUITTER</button></div>
 </header>
 
 <div id="login-screen" class="login-container">
     <div class="login-card">
-        <img src="logo.png" alt="RBF Logo" style="height: 60px; margin-bottom: 20px;">
-        <h2 style="color: var(--blue); margin: 0 0 20px 0;">Planning Connexion</h2>
+        <h2 style="color: var(--blue); margin-bottom: 20px;">Planning</h2>
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
             <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT</button>
@@ -74,18 +65,13 @@
 
 <div id="app-content" class="hidden">
     <div class="week-nav">
-        <button onclick="changeWeek(-1)" style="padding:10px 15px; border-radius:8px; border:1px solid #ddd; cursor:pointer; background:white; font-weight:bold;">◀ Préc.</button>
-        <div style="font-size: 19px; font-weight: 800; color: var(--blue); min-width: 160px; text-align: center;" id="wk-disp"></div>
-        <button onclick="changeWeek(1)" style="padding:10px 15px; border-radius:8px; border:1px solid #ddd; cursor:pointer; background:white; font-weight:bold;">Suiv. ▶</button>
+        <button onclick="changeWeek(-1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">◀</button>
+        <div style="font-size: 20px; font-weight: 800; color: var(--blue);" id="wk-disp"></div>
+        <button onclick="changeWeek(1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
-        <table id="main-table">
-            <thead>
-                <tr>
-                    <th style="width:120px;">CONDUCTEUR</th>
-                    <th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th>
-                </tr>
-            </thead>
+        <table>
+            <thead><tr><th style="width:120px;">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
@@ -94,40 +80,36 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 style="margin-top:0; color:var(--blue); text-align: center;">Mise à jour Mission</h3>
+        <h3 style="margin-top:0; color:var(--blue);">Détails Mission</h3>
         <div id="ed-view-only" class="hidden">
-            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap; color: var(--blue); font-size: 14px;"></p>
+            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap;"></p>
             <div id="link-display"></div>
         </div>
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:120px; padding:12px; border-radius:10px; border:1px solid #ddd; margin:10px 0; font-family:inherit; resize: none;" placeholder="Détails de la mission (Lieu, Client, Heure...)"></textarea>
+            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Mission..."></textarea>
             
-            <div style="font-size: 12px; font-weight: bold; color: var(--blue); text-align: center; margin-top: 10px;">CODE COULEUR DE LA MISSION</div>
+            <div style="font-size: 11px; font-weight: bold; color: var(--blue);">COULEUR PERSONNALISÉE :</div>
             <div class="color-picker">
-                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default" title="Bleu Standard RBF"></div>
-                <div class="color-opt" style="background:#fee2e2; color:#991b1b;" data-col="#fee2e2" title="Rouge / URGENCE"></div>
-                <div class="color-opt" style="background:#ffedd5; color:#9a3412;" data-col="#ffedd5" title="Orange / Important"></div>
-                <div class="color-opt" style="background:#fef3c7; color:#92400e;" data-col="#fef3c7" title="Jaune / CONGÉS"></div>
-                <div class="color-opt" style="background:#d1fae5; color:#065f46;" data-col="#d1fae5" title="Vert Clair / OK-Livré"></div>
-                <div class="color-opt" style="background:#a7f3d0; color:#047857;" data-col="#a7f3d0" title="Vert Dépôt / Interne"></div>
-                <div class="color-opt" style="background:#e9d5ff; color:#6b21a8;" data-col="#e9d5ff" title="Violet / ATELIER-Mines"></div>
-                <div class="color-opt" style="background:#fce7f3; color:#9d174d;" data-col="#fce7f3" title="Rose / Administratif"></div>
-                <div class="color-opt" style="background:#e2e8f0; color:#1e293b;" data-col="#e2e8f0" title="Gris / Divers"></div>
-                <div class="color-opt" style="background:#000000; color:#ffffff;" data-col="#000000" title="Noir / Arrêt"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default"></div>
+                <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2"></div>
+                <div class="color-opt" style="background:#ffedd5;" data-col="#ffedd5"></div>
+                <div class="color-opt" style="background:#fef3c7;" data-col="#fef3c7"></div>
+                <div class="color-opt" style="background:#d1fae5;" data-col="#d1fae5"></div>
+                <div class="color-opt" style="background:#a7f3d0;" data-col="#a7f3d0"></div>
+                <div class="color-opt" style="background:#e9d5ff;" data-col="#e9d5ff"></div>
+                <div class="color-opt" style="background:#fce7f3;" data-col="#fce7f3"></div>
+                <div class="color-opt" style="background:#e2e8f0;" data-col="#e2e8f0"></div>
+                <div class="color-opt" style="background:#000000;" data-col="#000000"></div>
             </div>
 
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:2px dashed #cbd5e1; font-size:12px; color: #475569;">📎 JOINDRE DOCUMENTS (PDF/Photo)</div>
-            
-            <div style="background: #ecfdf5; padding: 10px; border-radius: 10px; border: 1px solid #a7f3d0; margin-bottom: 15px;">
-                <label style="display:flex; align-items:center; gap:10px; cursor: pointer;"><input type="checkbox" id="e-depot" style="width:22px; height:22px; accent-color: var(--success);"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE ÉQUIPE DÉPÔT (Liseré Vert)</span></label>
-            </div>
-
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:16px; border-radius:12px; border:none; font-weight:bold; cursor:pointer; font-size: 15px; box-shadow: 0 4px 6px rgba(27, 46, 88, 0.2);">ENREGISTRER LA MISSION</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER DÉFINITIVEMENT</button>
+            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:1px dashed #cbd5e1; font-size:12px;">📎 JOINDRE FICHIER</div>
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE DÉPÔT (Trait Vert)</span></label>
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#94a3b8; cursor:pointer; font-weight: bold;">Annuler / Fermer</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Fermer</button>
     </div>
 </div>
 
@@ -138,15 +120,10 @@
     (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
 
     function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
-    function getDayDate(w, dIdx) {
-        let date = new Date(2026, 0, 5); 
-        date.setDate(date.getDate() + (w - 1) * 7 + dIdx);
-        return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
-    }
+    function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
-    // Gestion de la sélection de couleur
     document.querySelectorAll('.color-opt').forEach(opt => {
         opt.onclick = () => {
             document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
@@ -156,7 +133,7 @@
     });
 
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
-    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').style.display='flex'; document.getElementById('u-name').textContent = "👤 " + u.toUpperCase(); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
+    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); document.getElementById('u-name').textContent = "👤 " + u.toUpperCase(); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function uploadFile(input) {
@@ -169,13 +146,12 @@
 
     function renderFileListAdmin() {
         const div = document.getElementById('file-list-admin'); div.innerHTML = "";
-        currentFiles.forEach((f, idx) => { div.innerHTML += `<div style="background:#f1f5f9; padding:6px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:11px; color: var(--blue);"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:90%;">📄 ${f.name}</span><b onclick="currentFiles.splice(${idx},1);renderFileListAdmin()" style="color:var(--danger); cursor:pointer; margin-left:10px;">✕</b></div>`; });
+        currentFiles.forEach((f, idx) => { div.innerHTML += `<div style="background:#f1f5f9; padding:5px; border-radius:5px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:11px;"><span>📄 ${f.name}</span><b onclick="currentFiles.splice(${idx},1);renderFileListAdmin()" style="color:var(--danger); cursor:pointer;">X</b></div>`; });
     }
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
-        const days = ["LUN","MAR","MER","JEU","VEN"];
-        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br><span style="font-weight:normal; font-size:10px; opacity:0.8;">${getDayDate(curW, i)}</span>`;
+        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `LUN MAR MER JEU VEN`.split(' ')[i] + `<br><span style="font-weight:normal; font-size:10px;">${getDayDate(curW, i)}</span>`;
 
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
@@ -191,21 +167,15 @@
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let hasF = dta.files && dta.files.length > 0;
                         
-                        // Application de la couleur personnalisée
-                        let customStyle = '';
-                        let textClass = '';
-                        if (dta.text) {
-                            if (dta.col && dta.col !== 'default') {
-                                customStyle = `background-color: ${dta.col};`;
-                                // Si fond noir, texte blanc
-                                if(dta.col === '#000000') customStyle += 'color: white;';
-                            } else {
-                                textClass = 'filled'; // Style par défaut bleu dégradé
-                            }
+                        let bgStyle = '';
+                        let fillClass = dta.text ? 'filled' : '';
+                        if (dta.text && dta.col && dta.col !== 'default') {
+                            bgStyle = `background: ${dta.col}; background-image: none !important; color: ${dta.col==='#000000'?'white':'var(--blue)'}; border: 1px solid rgba(0,0,0,0.1);`;
+                            fillClass = ''; 
                         }
 
-                        h += `<div class="slot ${textClass} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
-                                   style="${customStyle}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
+                        h += `<div class="slot ${fillClass} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
+                                   style="${bgStyle}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -214,23 +184,17 @@
             document.getElementById('b-admin').innerHTML = h;
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
-            const dayNames = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
             for(let d=0; d<5; d++) {
                 let c = "";
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
-                        // Trait de couleur à gauche pour le chauffeur aussi
-                        let borderColor = (dta.col && dta.col !== 'default') ? dta.col : 'var(--blue)';
-                        let customBorder = `border-left:8px solid ${borderColor}`;
-                        
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold; font-size:13px;">📄 Voir Document joint</a>`; });
-                        c += `<div style="padding:15px; border-bottom:1px solid #eee; ${customBorder}"><b>Mission ${s}:</b><br><span style="color:var(--blue); white-space:pre-wrap;">${dta.text}</span>${btns}</div>`;
+                        let bCol = (dta.col && dta.col !== 'default') ? dta.col : 'var(--blue)';
+                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Document</a>`; });
+                        c += `<div style="padding:15px; border-bottom:1px solid #eee; border-left:8px solid ${bCol}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-top: 3px solid #e2e8f0;">
-                                  <b style="color:var(--blue); font-size:16px;">${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || '<i style="color:#94a3b8; display:block; margin-top:10px;">Repos</i>'}
-                                </div>`;
+                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${getDayDate(curW, d)}</b><br>${c || '<i>Repos</i>'}</div>`;
             }
         }
     }
@@ -239,24 +203,14 @@
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : [];
         selectedCol = d.col || 'default';
-        
-        // Activer la bonne pastille dans la palette
-        document.querySelectorAll('.color-opt').forEach(o => {
-            o.classList.remove('active');
-            if(o.dataset.col === selectedCol) o.classList.add('active');
-        });
-
+        document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.col === selectedCol) o.classList.add('active'); });
         if(curU === 'admin') {
-            document.getElementById('ed-view-only').classList.add('hidden');
-            document.getElementById('ed-controls').classList.remove('hidden');
-            document.getElementById('e-input').value = d.text;
-            document.getElementById('e-depot').checked = !!d.toDepot;
-            renderFileListAdmin();
+            document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
+            document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         } else {
-            document.getElementById('ed-controls').classList.add('hidden');
-            document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi pour cette mission.";
-            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold;">📄 Ouvrir Document joint</a>`; });
+            document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
+            document.getElementById('txt-display').textContent = d.text || "Aucun détail";
+            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
             document.getElementById('link-display').innerHTML = h;
         }
         document.getElementById('editor-overlay').style.display = 'flex';
@@ -265,16 +219,9 @@
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol});
-        const realW = getWeek(new Date());
-        if(curW === realW && v.trim() !== "") {
-            const p = curK.split('_');
-            const params = { chauffeur: p[1].toUpperCase(), jour: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]], message: v };
-            emailjs.send('service_1j5bpwf', 'template_5xn3o8u', params);
-            if (c) emailjs.send('service_1j5bpwf', 'template_8gqnnh7', params);
-        }
         closeEditor();
     }
-    function deleteTask() { if(confirm("Supprimer définitivement cette mission ?")) { db.ref('planning_v18/'+curK).remove(); closeEditor(); } }
+    function deleteTask() { if(confirm("Supprimer ?")) { db.ref('planning_v18/'+curK).remove(); closeEditor(); } }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
     if(curU) login(curU);
