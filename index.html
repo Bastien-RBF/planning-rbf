@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V43</title>
+    <title>RBF Planning V44 - Version Officielle</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -14,6 +14,7 @@
         header { background: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .header-logo { display: flex; align-items: center; gap: 15px; }
         .header-logo img { height: 50px; }
+        .header-title b { color: var(--blue); font-size: 18px; display: block; }
         
         .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px; }
         .login-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
@@ -21,25 +22,22 @@
         .btn-auth { padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; }
         
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .week-label { font-size: 20px; font-weight: 800; color: var(--blue); }
         .table-container { padding: 20px; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: var(--blue); color: white; padding: 15px; font-size: 12px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 10px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; }
 
-        /* RETOUR DES STYLES ORIGINAUX */
-        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; color: #334155; }
-        .filled { font-weight: 600; color: white; border: 1px solid rgba(0,0,0,0.1); }
+        /* STYLE DES CASES (LOGIQUE VISUELLE V40) */
+        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: #334155; }
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; color: var(--blue); }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
-        /* PALETTE COULEURS */
-        .color-picker { display: flex; gap: 8px; margin: 10px 0; justify-content: center; }
-        .color-opt { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; }
-        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
-
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px); }
         .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; }
+        
         .hidden { display: none !important; }
     </style>
 </head>
@@ -48,7 +46,7 @@
 <header>
     <div class="header-logo">
         <img src="logo.png" alt="RBF">
-        <div style="font-weight: 900; color: var(--blue); font-size: 18px;">ROSSET BOULON & FILS</div>
+        <div class="header-title"><b>ROSSET BOULON & FILS</b></div>
     </div>
     <div id="u-info" class="hidden" style="display: flex; align-items: center; gap: 15px;">
         <span id="u-name" style="font-weight: bold; color: var(--blue);"></span>
@@ -58,7 +56,7 @@
 
 <div id="login-screen" class="login-container">
     <div class="login-card">
-        <h2 style="color: var(--blue); margin: 0;">Planning</h2>
+        <h2 style="color: var(--blue); margin: 0;">Planning Connexion</h2>
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
             <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT</button>
@@ -73,9 +71,10 @@
 <div id="app-content" class="hidden">
     <div class="week-nav">
         <button onclick="changeWeek(-1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">◀</button>
-        <div style="font-size: 20px; font-weight: 800; color: var(--blue);" id="wk-disp"></div>
+        <div class="week-label" id="wk-disp"></div>
         <button onclick="changeWeek(1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">▶</button>
     </div>
+
     <div id="v-admin" class="table-container hidden">
         <table>
             <thead>
@@ -89,26 +88,21 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 style="margin-top:0; color:var(--blue);">Détails Mission</h3>
+        <h3 id="ed-title" style="margin-top:0; color:var(--blue);">Détails Mission</h3>
         <div id="ed-view-only" class="hidden">
             <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap;"></p>
             <div id="link-display"></div>
         </div>
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Mission..."></textarea>
-            
-            <div style="font-size: 11px; font-weight: bold; color: var(--blue);">COULEUR PERSONNALISÉE :</div>
-            <div class="color-picker">
-                <div class="color-opt" style="background:#3b82f6;" data-col="#3b82f6"></div> <div class="color-opt" style="background:#10b981;" data-col="#10b981"></div> <div class="color-opt" style="background:#f59e0b;" data-col="#f59e0b"></div> <div class="color-opt" style="background:#ef4444;" data-col="#ef4444"></div> <div class="color-opt" style="background:#64748b;" data-col="#64748b"></div> </div>
-
+            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Saisir la mission..."></textarea>
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:1px dashed #cbd5e1; font-size:12px;">📎 JOINDRE FICHIER</div>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE DÉPÔT (Trait Vert)</span></label>
+            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:15px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:2px dashed #cbd5e1;">📎 AJOUTER UN DOCUMENT</div>
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold;">VISIBLE AU DÉPÔT</span></label>
             <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold;">🗑 SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Annuler</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#999; cursor:pointer;">Annuler</button>
     </div>
 </div>
 
@@ -119,18 +113,19 @@
     (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
 
     function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
-    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = null;
-
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        opt.onclick = () => {
-            document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            selectedCol = opt.dataset.col;
-        };
-    });
+    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [];
 
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
-    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); document.getElementById('u-name').textContent = "👤 " + u.toUpperCase(); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
+    
+    function login(u) {
+        curU = u;
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-content').classList.remove('hidden');
+        document.getElementById('u-info').classList.remove('hidden');
+        document.getElementById('u-name').textContent = "👤 " + u.toUpperCase();
+        db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); });
+    }
+
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function uploadFile(input) {
@@ -158,14 +153,10 @@
                 for(let d=0; d<5; d++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", col:null};
+                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[]};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let hasF = dta.files && dta.files.length > 0;
-                        let bgCol = dta.text ? (dta.col || '#3b82f6') : '#fcfcfc';
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
-                                   style="background:${bgCol}" onclick="openEd('${k}')">
-                                ${dta.text || '...'}
-                              </div>`;
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -174,26 +165,24 @@
             document.getElementById('b-admin').innerHTML = h;
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
+            const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
             for(let d=0; d<5; d++) {
                 let c = "";
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; border-radius:8px; text-decoration:none; margin-top:5px; font-size:12px; text-align:center;">📄 Voir Document</a>`; });
-                        c += `<div style="padding:10px; border-bottom:1px solid #f1f5f9; border-left:6px solid ${dta.col || '#3b82f6'}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
+                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Voir Document</a>`; });
+                        c += `<div style="padding:15px; border-bottom:1px solid #eee;"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin-bottom:10px; padding:15px; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>JOUR ${d+1}</b><br>${c || '<i>Repos</i>'}</div>`;
+                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; border-left:8px solid var(--blue); box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${days[d]}</b><br>${c || '<i>Repos</i>'}</div>`;
             }
         }
     }
 
     function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:null};
+        curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false};
         currentFiles = d.files ? [...d.files] : [];
-        selectedCol = d.col;
-        document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.col === selectedCol) o.classList.add('active'); });
-
         if(curU === 'admin') {
             document.getElementById('ed-view-only').classList.add('hidden');
             document.getElementById('ed-controls').classList.remove('hidden');
@@ -204,7 +193,7 @@
             document.getElementById('ed-controls').classList.add('hidden');
             document.getElementById('ed-view-only').classList.remove('hidden');
             document.getElementById('txt-display').textContent = d.text || "Aucun détail";
-            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
+            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
             document.getElementById('link-display').innerHTML = h;
         }
         document.getElementById('editor-overlay').style.display = 'flex';
@@ -212,7 +201,7 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol});
+        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c});
         const realW = getWeek(new Date());
         if(curW === realW && v.trim() !== "") {
             const p = curK.split('_');
