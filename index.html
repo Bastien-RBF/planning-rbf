@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V45 - Dates Fixées</title>
+    <title>RBF Planning V46 - Style V40 + Couleurs</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -27,10 +27,14 @@
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 10px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; font-size: 13px; }
 
-        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; }
-        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; color: var(--blue); }
+        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; position: relative; overflow: hidden; }
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid rgba(59, 130, 246, 0.5); font-weight: 600; color: var(--blue); }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
+
+        .color-picker { display: flex; gap: 10px; margin: 10px 0; justify-content: center; }
+        .color-opt { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px); }
         .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; }
@@ -71,7 +75,7 @@
         <button onclick="changeWeek(1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
-        <table>
+        <table id="main-table">
             <thead>
                 <tr>
                     <th style="width:120px;">NOM</th>
@@ -93,10 +97,20 @@
         </div>
         <div id="ed-controls">
             <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Détails de la mission..."></textarea>
+            
+            <div style="font-size: 11px; font-weight: bold; color: var(--blue); margin-bottom: 5px;">COULEUR DE LA CASE :</div>
+            <div class="color-picker">
+                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default" title="Bleu Standard"></div>
+                <div class="color-opt" style="background:#fef3c7;" data-col="#fef3c7" title="Jaune / Attention"></div>
+                <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2" title="Rouge / Urgent"></div>
+                <div class="color-opt" style="background:#d1fae5;" data-col="#d1fae5" title="Vert / Ok"></div>
+                <div class="color-opt" style="background:#f1f5f9;" data-col="#f1f5f9" title="Gris / Divers"></div>
+            </div>
+
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
             <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:2px dashed #cbd5e1; font-size:12px;">📎 JOINDRE UN DOCUMENT</div>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold;">VISIBLE AU DÉPÔT</span></label>
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold;">VISIBLE AU DÉPÔT (Trait Vert)</span></label>
             <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
             <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold;">Supprimer</button>
         </div>
@@ -110,7 +124,6 @@
     const db = firebase.database();
     (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
 
-    // Calcul de la semaine et des dates
     function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
     function getDayDate(w, dIdx) {
         let date = new Date(2026, 0, 5); 
@@ -118,7 +131,15 @@
         return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
     }
 
-    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [];
+    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
+
+    document.querySelectorAll('.color-opt').forEach(opt => {
+        opt.onclick = () => {
+            document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            selectedCol = opt.dataset.col;
+        };
+    });
 
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').style.display='flex'; document.getElementById('u-name').textContent = "👤 " + u.toUpperCase(); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
@@ -140,11 +161,7 @@
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
         const days = ["LUN","MAR","MER","JEU","VEN"];
-        
-        // Mise à jour des en-têtes avec les dates
-        for(let i=0; i<5; i++) {
-            document.getElementById('h'+i).innerHTML = `${days[i]}<br><span style="font-weight:normal; font-size:10px;">${getDayDate(curW, i)}</span>`;
-        }
+        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br><span style="font-weight:normal; font-size:10px;">${getDayDate(curW, i)}</span>`;
 
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
@@ -156,10 +173,12 @@
                 for(let d=0; d<5; d++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[]};
+                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let hasF = dta.files && dta.files.length > 0;
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
+                        let customBg = (dta.col && dta.col !== 'default') ? `background:${dta.col}` : '';
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
+                                   style="${customBg}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -173,18 +192,26 @@
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
+                        let customBorder = (dta.col && dta.col !== 'default') ? `border-left:8px solid ${dta.col}` : `border-left:8px solid var(--blue)`;
                         let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Voir Document</a>`; });
-                        c += `<div style="padding:15px; border-bottom:1px solid #eee;"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
+                        c += `<div style="padding:15px; border-bottom:1px solid #eee; ${customBorder}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; border-left:8px solid var(--blue); box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<i>Repos</i>'}</div>`;
+                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<i>Repos</i>'}</div>`;
             }
         }
     }
 
     function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false};
+        curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : [];
+        selectedCol = d.col || 'default';
+        
+        document.querySelectorAll('.color-opt').forEach(o => {
+            o.classList.remove('active');
+            if(o.dataset.col === selectedCol) o.classList.add('active');
+        });
+
         if(curU === 'admin') {
             document.getElementById('ed-view-only').classList.add('hidden');
             document.getElementById('ed-controls').classList.remove('hidden');
@@ -203,7 +230,7 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c});
+        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol});
         const realW = getWeek(new Date());
         if(curW === realW && v.trim() !== "") {
             const p = curK.split('_');
