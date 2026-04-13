@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V46 - Style V40 + Couleurs</title>
+    <title>RBF Planning V47 - Palette Étendue</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -27,17 +27,20 @@
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 10px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; font-size: 13px; }
 
-        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; position: relative; overflow: hidden; }
-        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid rgba(59, 130, 246, 0.5); font-weight: 600; color: var(--blue); }
+        .slot { font-size: 11px; padding: 12px; margin-bottom: 8px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; transition: 0.2s; position: relative; overflow: hidden; color: var(--blue); }
+        .filled { font-weight: 600; border: 1px solid rgba(0,0,0,0.1); }
+        
+        /* Les liserés restent prioritaires */
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
-        .color-picker { display: flex; gap: 10px; margin: 10px 0; justify-content: center; }
-        .color-opt { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); }
-        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
+        /* PALETTE ÉTENDUE DANS L'ÉDITEUR */
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; padding: 10px; background: #f1f5f9; border-radius: 12px; }
+        .color-opt { width: 100%; height: 35px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; box-shadow: inset 0 0 5px rgba(0,0,0,0.1); transition: 0.2s; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.05); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; }
+        .editor-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -56,6 +59,7 @@
 
 <div id="login-screen" class="login-container">
     <div class="login-card">
+        <img src="logo.png" alt="RBF Logo" style="height: 60px; margin-bottom: 20px;">
         <h2 style="color: var(--blue); margin: 0 0 20px 0;">Planning Connexion</h2>
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
@@ -70,15 +74,15 @@
 
 <div id="app-content" class="hidden">
     <div class="week-nav">
-        <button onclick="changeWeek(-1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">◀</button>
-        <div style="font-size: 20px; font-weight: 800; color: var(--blue);" id="wk-disp"></div>
-        <button onclick="changeWeek(1)" style="padding:10px; border-radius:8px; border:1px solid #ddd; cursor:pointer;">▶</button>
+        <button onclick="changeWeek(-1)" style="padding:10px 15px; border-radius:8px; border:1px solid #ddd; cursor:pointer; background:white; font-weight:bold;">◀ Préc.</button>
+        <div style="font-size: 19px; font-weight: 800; color: var(--blue); min-width: 160px; text-align: center;" id="wk-disp"></div>
+        <button onclick="changeWeek(1)" style="padding:10px 15px; border-radius:8px; border:1px solid #ddd; cursor:pointer; background:white; font-weight:bold;">Suiv. ▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
         <table id="main-table">
             <thead>
                 <tr>
-                    <th style="width:120px;">NOM</th>
+                    <th style="width:120px;">CONDUCTEUR</th>
                     <th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th>
                 </tr>
             </thead>
@@ -90,31 +94,40 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 style="margin-top:0; color:var(--blue);">Mission</h3>
+        <h3 style="margin-top:0; color:var(--blue); text-align: center;">Mise à jour Mission</h3>
         <div id="ed-view-only" class="hidden">
-            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap;"></p>
+            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #eee; white-space: pre-wrap; color: var(--blue); font-size: 14px;"></p>
             <div id="link-display"></div>
         </div>
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:100px; padding:10px; border-radius:10px; border:1px solid #ddd; margin:10px 0;" placeholder="Détails de la mission..."></textarea>
+            <textarea id="e-input" style="width:100%; height:120px; padding:12px; border-radius:10px; border:1px solid #ddd; margin:10px 0; font-family:inherit; resize: none;" placeholder="Détails de la mission (Lieu, Client, Heure...)"></textarea>
             
-            <div style="font-size: 11px; font-weight: bold; color: var(--blue); margin-bottom: 5px;">COULEUR DE LA CASE :</div>
+            <div style="font-size: 12px; font-weight: bold; color: var(--blue); text-align: center; margin-top: 10px;">CODE COULEUR DE LA MISSION</div>
             <div class="color-picker">
-                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default" title="Bleu Standard"></div>
-                <div class="color-opt" style="background:#fef3c7;" data-col="#fef3c7" title="Jaune / Attention"></div>
-                <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2" title="Rouge / Urgent"></div>
-                <div class="color-opt" style="background:#d1fae5;" data-col="#d1fae5" title="Vert / Ok"></div>
-                <div class="color-opt" style="background:#f1f5f9;" data-col="#f1f5f9" title="Gris / Divers"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default" title="Bleu Standard RBF"></div>
+                <div class="color-opt" style="background:#fee2e2; color:#991b1b;" data-col="#fee2e2" title="Rouge / URGENCE"></div>
+                <div class="color-opt" style="background:#ffedd5; color:#9a3412;" data-col="#ffedd5" title="Orange / Important"></div>
+                <div class="color-opt" style="background:#fef3c7; color:#92400e;" data-col="#fef3c7" title="Jaune / CONGÉS"></div>
+                <div class="color-opt" style="background:#d1fae5; color:#065f46;" data-col="#d1fae5" title="Vert Clair / OK-Livré"></div>
+                <div class="color-opt" style="background:#a7f3d0; color:#047857;" data-col="#a7f3d0" title="Vert Dépôt / Interne"></div>
+                <div class="color-opt" style="background:#e9d5ff; color:#6b21a8;" data-col="#e9d5ff" title="Violet / ATELIER-Mines"></div>
+                <div class="color-opt" style="background:#fce7f3; color:#9d174d;" data-col="#fce7f3" title="Rose / Administratif"></div>
+                <div class="color-opt" style="background:#e2e8f0; color:#1e293b;" data-col="#e2e8f0" title="Gris / Divers"></div>
+                <div class="color-opt" style="background:#000000; color:#ffffff;" data-col="#000000" title="Noir / Arrêt"></div>
             </div>
 
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:2px dashed #cbd5e1; font-size:12px;">📎 JOINDRE UN DOCUMENT</div>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"><span style="color:var(--success); font-weight:bold;">VISIBLE AU DÉPÔT (Trait Vert)</span></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold;">Supprimer</button>
+            <div onclick="document.getElementById('e-file').click()" style="background:#f1f5f9; padding:12px; text-align:center; border-radius:10px; cursor:pointer; font-weight:bold; margin-bottom:10px; border:2px dashed #cbd5e1; font-size:12px; color: #475569;">📎 JOINDRE DOCUMENTS (PDF/Photo)</div>
+            
+            <div style="background: #ecfdf5; padding: 10px; border-radius: 10px; border: 1px solid #a7f3d0; margin-bottom: 15px;">
+                <label style="display:flex; align-items:center; gap:10px; cursor: pointer;"><input type="checkbox" id="e-depot" style="width:22px; height:22px; accent-color: var(--success);"><span style="color:var(--success); font-weight:bold; font-size: 13px;">VISIBLE ÉQUIPE DÉPÔT (Liseré Vert)</span></label>
+            </div>
+
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:16px; border-radius:12px; border:none; font-weight:bold; cursor:pointer; font-size: 15px; box-shadow: 0 4px 6px rgba(27, 46, 88, 0.2);">ENREGISTRER LA MISSION</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; cursor:pointer; font-weight:bold; font-size:12px;">🗑 SUPPRIMER DÉFINITIVEMENT</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Fermer</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#94a3b8; cursor:pointer; font-weight: bold;">Annuler / Fermer</button>
     </div>
 </div>
 
@@ -133,6 +146,7 @@
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
+    // Gestion de la sélection de couleur
     document.querySelectorAll('.color-opt').forEach(opt => {
         opt.onclick = () => {
             document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
@@ -155,13 +169,13 @@
 
     function renderFileListAdmin() {
         const div = document.getElementById('file-list-admin'); div.innerHTML = "";
-        currentFiles.forEach((f, idx) => { div.innerHTML += `<div style="background:#f1f5f9; padding:5px; border-radius:5px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:11px;"><span>📄 ${f.name}</span><b onclick="currentFiles.splice(${idx},1);renderFileListAdmin()" style="color:var(--danger); cursor:pointer;">X</b></div>`; });
+        currentFiles.forEach((f, idx) => { div.innerHTML += `<div style="background:#f1f5f9; padding:6px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:11px; color: var(--blue);"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:90%;">📄 ${f.name}</span><b onclick="currentFiles.splice(${idx},1);renderFileListAdmin()" style="color:var(--danger); cursor:pointer; margin-left:10px;">✕</b></div>`; });
     }
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
         const days = ["LUN","MAR","MER","JEU","VEN"];
-        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br><span style="font-weight:normal; font-size:10px;">${getDayDate(curW, i)}</span>`;
+        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br><span style="font-weight:normal; font-size:10px; opacity:0.8;">${getDayDate(curW, i)}</span>`;
 
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
@@ -176,9 +190,22 @@
                         let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let hasF = dta.files && dta.files.length > 0;
-                        let customBg = (dta.col && dta.col !== 'default') ? `background:${dta.col}` : '';
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
-                                   style="${customBg}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
+                        
+                        // Application de la couleur personnalisée
+                        let customStyle = '';
+                        let textClass = '';
+                        if (dta.text) {
+                            if (dta.col && dta.col !== 'default') {
+                                customStyle = `background-color: ${dta.col};`;
+                                // Si fond noir, texte blanc
+                                if(dta.col === '#000000') customStyle += 'color: white;';
+                            } else {
+                                textClass = 'filled'; // Style par défaut bleu dégradé
+                            }
+                        }
+
+                        h += `<div class="slot ${textClass} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" 
+                                   style="${customStyle}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -187,17 +214,23 @@
             document.getElementById('b-admin').innerHTML = h;
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
+            const dayNames = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
             for(let d=0; d<5; d++) {
                 let c = "";
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
-                        let customBorder = (dta.col && dta.col !== 'default') ? `border-left:8px solid ${dta.col}` : `border-left:8px solid var(--blue)`;
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Voir Document</a>`; });
-                        c += `<div style="padding:15px; border-bottom:1px solid #eee; ${customBorder}"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
+                        // Trait de couleur à gauche pour le chauffeur aussi
+                        let borderColor = (dta.col && dta.col !== 'default') ? dta.col : 'var(--blue)';
+                        let customBorder = `border-left:8px solid ${borderColor}`;
+                        
+                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold; font-size:13px;">📄 Voir Document joint</a>`; });
+                        c += `<div style="padding:15px; border-bottom:1px solid #eee; ${customBorder}"><b>Mission ${s}:</b><br><span style="color:var(--blue); white-space:pre-wrap;">${dta.text}</span>${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<i>Repos</i>'}</div>`;
+                v.innerHTML += `<div style="background:white; margin-bottom:15px; padding:20px; border-radius:15px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border-top: 3px solid #e2e8f0;">
+                                  <b style="color:var(--blue); font-size:16px;">${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || '<i style="color:#94a3b8; display:block; margin-top:10px;">Repos</i>'}
+                                </div>`;
             }
         }
     }
@@ -207,6 +240,7 @@
         currentFiles = d.files ? [...d.files] : [];
         selectedCol = d.col || 'default';
         
+        // Activer la bonne pastille dans la palette
         document.querySelectorAll('.color-opt').forEach(o => {
             o.classList.remove('active');
             if(o.dataset.col === selectedCol) o.classList.add('active');
@@ -221,8 +255,8 @@
         } else {
             document.getElementById('ed-controls').classList.add('hidden');
             document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('txt-display').textContent = d.text || "Aucun détail";
-            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
+            document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi pour cette mission.";
+            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold;">📄 Ouvrir Document joint</a>`; });
             document.getElementById('link-display').innerHTML = h;
         }
         document.getElementById('editor-overlay').style.display = 'flex';
@@ -240,7 +274,7 @@
         }
         closeEditor();
     }
-    function deleteTask() { if(confirm("Supprimer ?")) { db.ref('planning_v18/'+curK).remove(); closeEditor(); } }
+    function deleteTask() { if(confirm("Supprimer définitivement cette mission ?")) { db.ref('planning_v18/'+curK).remove(); closeEditor(); } }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
     if(curU) login(curU);
