@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V37 - Multi-fichiers</title>
+    <title>RBF Planning V38 - Notifications Filtrées</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -108,8 +108,14 @@
     const UPLOAD_PRESET = "rbf-preset"; 
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    let curW = 16, curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [];
+    (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
 
+    function getWeek(d) {
+        const s = new Date(2026, 0, 5);
+        return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1);
+    }
+
+    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [];
     const access = { admin:"2026", depot:"5555", damien:"1111", cedric:"2222", jadiel:"3333", nicola:"4444" };
 
     function askCode(u) {
@@ -131,7 +137,6 @@
         if (!input.files[0]) return;
         const name = input.files[0].name;
         document.getElementById('btn-trigger-file').textContent = "⌛ Envoi...";
-        
         const fd = new FormData();
         fd.append('file', input.files[0]);
         fd.append('upload_preset', UPLOAD_PRESET);
@@ -151,18 +156,11 @@
         const div = document.getElementById('file-list-admin');
         div.innerHTML = "";
         currentFiles.forEach((f, idx) => {
-            div.innerHTML += `
-                <div class="file-item">
-                    <a href="${f.url}" target="_blank" style="font-size:12px; color:var(--blue); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">📄 ${f.name}</a>
-                    <button onclick="removeFile(${idx})" style="background:var(--danger); color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">X</button>
-                </div>`;
+            div.innerHTML += `<div class="file-item"><a href="${f.url}" target="_blank" style="font-size:12px; color:var(--blue); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%;">📄 ${f.name}</a><button onclick="removeFile(${idx})" style="background:var(--danger); color:white; border:none; border-radius:4px; padding:4px 8px; cursor:pointer;">X</button></div>`;
         });
     }
 
-    function removeFile(idx) {
-        currentFiles.splice(idx, 1);
-        renderFileListAdmin();
-    }
+    function removeFile(idx) { currentFiles.splice(idx, 1); renderFileListAdmin(); }
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
@@ -186,9 +184,7 @@
                         let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[]};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let hasF = dta.files && dta.files.length > 0;
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" onclick="openEd('${k}')">
-                                ${dta.text || '...'} ${hasF ? '📂('+dta.files.length+')' : ''}
-                              </div>`;
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${hasF?'has-link':''}" onclick="openEd('${k}')">${dta.text || '...'} ${hasF ? '📂('+dta.files.length+')' : ''}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -217,7 +213,6 @@
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false};
         currentFiles = d.files ? [...d.files] : [];
-        
         if(curU === 'admin') {
             document.getElementById('ed-view-only').classList.add('hidden');
             document.getElementById('ed-controls').classList.remove('hidden');
@@ -229,9 +224,7 @@
             document.getElementById('ed-view-only').classList.remove('hidden');
             document.getElementById('txt-display').textContent = d.text || "Aucun détail";
             let h = "";
-            currentFiles.forEach(f => {
-                h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:12px; text-align:center; text-decoration:none; font-weight:bold; margin-top:10px;">📄 ${f.name}</a>`;
-            });
+            currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:12px; text-align:center; text-decoration:none; font-weight:bold; margin-top:10px;">📄 ${f.name}</a>`; });
             document.getElementById('link-display').innerHTML = h;
         }
         document.getElementById('editor-overlay').style.display = 'flex';
@@ -240,6 +233,19 @@
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c});
+        
+        // --- LOGIQUE FILTRE EMAIL ---
+        const realWeek = getWeek(new Date());
+        if(curW === realWeek) {
+            const p = curK.split('_');
+            const params = { 
+                chauffeur: p[1].toUpperCase(), 
+                jour: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]], 
+                message: v + (currentFiles.length > 0 ? "\n(Documents joints disponibles sur le planning)" : "")
+            };
+            emailjs.send('service_1j5bpwf', 'template_5xn3o8u', params);
+            if (c) emailjs.send('service_1j5bpwf', 'template_8gqnnh7', params);
+        }
         closeEditor();
     }
 
