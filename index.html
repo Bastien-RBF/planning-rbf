@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V29</title>
+    <title>RBF Planning V31</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -11,7 +11,6 @@
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7fa; margin: 0; }
         header { background: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--yellow); }
-        .logo-img { height: 40px; }
         .login-screen { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
         .grid-users { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; }
         .btn-user { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
@@ -20,38 +19,32 @@
         th { background: var(--blue); color: white; padding: 12px; font-size: 12px; }
         th span { display: block; font-size: 10px; color: var(--yellow); }
         td { border: 1px solid #e2e8f0; padding: 8px; vertical-align: top; }
-        .slot { font-size: 11px; padding: 10px; margin-bottom: 5px; border-radius: 6px; background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 30px; position: relative; }
+        .slot { font-size: 11px; padding: 10px; margin-bottom: 5px; border-radius: 6px; background: #f8fafc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 35px; position: relative; }
         .filled { background: #eff6ff; border: 1px solid #3b82f6; font-weight: 600; color: var(--blue); }
         .is-to-depot { border-left: 5px solid var(--success); }
         .has-link { border-bottom: 3px solid #8b5cf6; }
         .card-m { background: white; padding: 15px; border-radius: 12px; margin: 10px; border-left: 6px solid var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(4px); }
         .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
-        textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; box-sizing: border-box; font-family: inherit; }
+        textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
         .file-status { font-size: 11px; color: var(--success); font-weight: bold; margin-bottom: 10px; display: none; text-align: center; }
-        .btn-file { background: #e2e8f0; color: #475569; border: 2px dashed #94a3b8; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; text-align: center; display: block; box-sizing: border-box; }
+        .btn-file { background: #f1f5f9; color: #475569; border: 2px dashed #cbd5e1; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 15px; text-align: center; display: block; box-sizing: border-box; }
         .btn-save { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
         .hidden { display: none; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 <header>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div style="font-weight:bold; color:var(--blue); font-size:20px;">RBF</div>
-    </div>
-    <div id="u-disp" style="font-size:14px; font-weight:bold; color:var(--blue);"></div>
-    <button onclick="logout()" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">DÉCONNEXION</button>
+    <div style="font-weight:bold; color:var(--blue); font-size:20px;">RBF TRANSPORT</div>
+    <div id="u-disp" style="font-size:14px; font-weight:bold;"></div>
+    <button onclick="logout()" style="background:#ef4444; color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;">DÉCONNEXION</button>
 </header>
 
 <div id="login" class="login-screen">
-    <div style="margin-bottom:30px; text-align:center;">
-        <h2 style="color:var(--blue); margin-bottom:5px;">PLANNING TRANSPORT</h2>
-        <div style="width:50px; hieght:4px; background:var(--yellow); margin:auto;"></div>
-    </div>
     <div class="grid-users">
-        <button class="btn-user" style="background:var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / EXPLOITATION</button>
+        <button class="btn-user" style="background:var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / EXPLOIT'</button>
         <button class="btn-user" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
         <button class="btn-user" style="background:#3b82f6" onclick="askCode('damien')">🚛 DAMIEN</button>
         <button class="btn-user" style="background:#f59e0b" onclick="askCode('cedric')">🚛 CÉDRIC</button>
@@ -63,19 +56,15 @@
 <div id="app" class="hidden">
     <div style="text-align:center; padding:15px; background:white; display:flex; align-items:center; justify-content:center; gap:20px;">
         <button onclick="changeWeek(-1)" style="border:none; padding:10px 20px; border-radius:10px; background:#f1f5f9; cursor:pointer;">◀</button>
-        <span id="wk-disp" style="font-weight:bold; font-size:18px; min-width:150px;"></span>
+        <span id="wk-disp" style="font-weight:bold; font-size:18px;"></span>
         <button onclick="changeWeek(1)" style="border:none; padding:10px 20px; border-radius:10px; background:#f1f5f9; cursor:pointer;">▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
         <table>
             <thead>
                 <tr>
-                    <th style="width:120px;">RESSOURCE</th>
-                    <th id="h0">LUNDI</th>
-                    <th id="h1">MARDI</th>
-                    <th id="h2">MERCREDI</th>
-                    <th id="h3">JEUDI</th>
-                    <th id="h4">VENDREDI</th>
+                    <th style="width:120px;">NOM</th>
+                    <th id="h0">LUNDI</th><th id="h1">MARDI</th><th id="h2">MERCREDI</th><th id="h3">JEUDI</th><th id="h4">VENDREDI</th>
                 </tr>
             </thead>
             <tbody id="b-admin"></tbody>
@@ -86,32 +75,33 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 style="margin-top:0; color:var(--blue); border-bottom:2px solid var(--yellow); padding-bottom:10px;">Mission</h3>
-        <textarea id="e-input" placeholder="Saisir les détails de la livraison..."></textarea>
-        
-        <div id="file-loading" class="hidden" style="text-align:center; margin-bottom:10px;"><div class="loader"></div> <span style="font-size:12px;">Téléchargement...</span></div>
-        <div id="file-ok" class="file-status">✓ FICHIER JOINT AVEC SUCCÈS</div>
-        
-        <label class="btn-file" id="label-file">
-            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            📎 JOINDRE UNE PHOTO OU UN PDF
-        </label>
-        
-        <input type="hidden" id="e-link">
-        
-        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; background:#f0fdf4; padding:10px; border-radius:8px;">
-            <input type="checkbox" id="e-depot" style="width:22px; height:22px;">
-            <span style="color:var(--success); font-weight:bold; font-size:14px;">VISIBLE PAR LE DÉPÔT</span>
-        </label>
-        
-        <button id="btn-submit" onclick="saveTask()" class="btn-save">ENREGISTRER ET ENVOYER</button>
-        <button onclick="closeEditor()" style="width:100%; background:none; color:#94a3b8; border:none; padding:15px; cursor:pointer; font-weight:bold;">ANNULER</button>
+        <h3 id="ed-title" style="margin-top:0; color:var(--blue);">Mission</h3>
+        <div id="ed-view-only" class="hidden">
+            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; min-height:50px; white-space:pre-wrap;"></p>
+            <div id="link-display"></div>
+        </div>
+        <div id="ed-controls">
+            <textarea id="e-input" placeholder="Détails de la mission..."></textarea>
+            <div id="file-loading" class="hidden" style="text-align:center; margin-bottom:10px;"><div class="loader"></div></div>
+            <div id="file-ok" class="file-status">✓ DOCUMENT PRÊT</div>
+            <label class="btn-file" id="label-file">
+                <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+                📎 JOINDRE PHOTO / PDF
+            </label>
+            <input type="hidden" id="e-link">
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
+                <input type="checkbox" id="e-depot" style="width:20px; height:20px;">
+                <span style="color:var(--success); font-weight:bold;">Visible par le Dépôt</span>
+            </label>
+            <button id="btn-submit" onclick="saveTask()" class="btn-save">VALIDER</button>
+        </div>
+        <button onclick="closeEditor()" style="width:100%; background:none; color:#94a3b8; border:none; padding:15px; cursor:pointer;">FERMER</button>
     </div>
 </div>
 
 <script>
     const CLOUD_NAME = "dixdmejal"; 
-    const UPLOAD_PRESET = "rbf-preset"; // CRÉEZ-LE DANS CLOUDINARY EN MODE "UNSIGNED"
+    const UPLOAD_PRESET = "rbf-preset"; 
 
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
@@ -132,7 +122,7 @@
     const access = { admin:"2026", depot:"5555", damien:"1111", cedric:"2222", jadiel:"3333", nicola:"4444" };
 
     function askCode(u) {
-        let p = prompt("Code accès " + u.toUpperCase());
+        let p = prompt("Code " + u.toUpperCase());
         if (p === access[u]) { localStorage.setItem('rbf_u', u); login(u); }
     }
 
@@ -149,7 +139,6 @@
     function uploadFile(input) {
         if (input.files.length === 0) return;
         document.getElementById('file-loading').classList.remove('hidden');
-        document.getElementById('label-file').classList.add('hidden');
         document.getElementById('btn-submit').disabled = true;
 
         const formData = new FormData();
@@ -161,40 +150,33 @@
         .then(data => {
             if(data.secure_url) {
                 document.getElementById('e-link').value = data.secure_url;
-                document.getElementById('file-loading').classList.add('hidden');
                 document.getElementById('file-ok').style.display = 'block';
-            } else {
-                alert("Erreur: Vérifiez que 'rbf_preset' est bien créé en mode UNSIGNED dans Cloudinary.");
-                document.getElementById('label-file').classList.remove('hidden');
-            }
+                document.getElementById('label-file').classList.add('hidden');
+            } else { alert("Erreur Cloudinary : " + (data.error ? data.error.message : "Inconnue")); }
+            document.getElementById('file-loading').classList.add('hidden');
             document.getElementById('btn-submit').disabled = false;
-        })
-        .catch(err => { alert("Erreur d'envoi !"); document.getElementById('label-file').classList.remove('hidden'); });
+        }).catch(err => alert("Erreur de connexion"));
     }
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
-        const days = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"];
-        
         for(let i=0; i<5; i++) {
-            document.getElementById('h'+i).innerHTML = days[i] + `<span>${getDayDate(curW, i)}</span>`;
+            document.getElementById('h'+i).innerHTML = ["LUN","MAR","MER","JEU","VEN"][i] + ` <span>${getDayDate(curW, i)}</span>`;
         }
-
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = "";
             const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
-                h += `<tr><td style="font-weight:bold; background:#fff; text-align:center; border-right:2px solid #eee;">${u.id.toUpperCase()}</td>`;
+                h += `<tr><td style="font-weight:bold; text-align:center; background:white;">${u.id.toUpperCase()}</td>`;
                 for(let d=0; d<5; d++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:""};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.link?'has-link':''}" onclick="openEd('${k}')">
-                                ${dta.text || '...'}
-                                ${dta.link?'<span style="position:absolute; right:5px; bottom:2px;">🔗</span>':''}
+                                ${dta.text || '...'} ${dta.link?'🔗':''}
                               </div>`;
                     }
                     h += `</td>`;
@@ -209,27 +191,33 @@
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
-                        c += `<div style="padding:12px; border-bottom:1px solid #eee;">
-                                <div style="color:#64748b; font-size:10px; font-weight:bold;">MISSION ${s}</div>
-                                <div style="font-size:15px; margin:5px 0;">${dta.text}</div>
-                                ${dta.link ? `<a href="${dta.link}" target="_blank" style="display:inline-block; background:var(--blue); color:white; text-decoration:none; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold; margin-top:8px;">📄 OUVRIR LE DOCUMENT</a>` : ''}
+                        c += `<div style="padding:10px; border-bottom:1px solid #eee;">
+                                <b>${s}.</b> ${dta.text}
+                                ${dta.link ? `<br><a href="${dta.link}" target="_blank" style="color:var(--blue); font-weight:bold; font-size:12px; display:inline-block; margin-top:5px; border:1px solid var(--blue); padding:5px 10px; border-radius:5px; text-decoration:none;">📄 VOIR LE DOCUMENT</a>` : ''}
                               </div>`;
                     }
                 }
-                v.innerHTML += `<div class="card-m"><div style="display:flex; justify-content:space-between;"><b>${days[d].toUpperCase()}</b> <span style="color:var(--yellow)">${getDayDate(curW, d)}</span></div><div style="margin-top:10px;">${c || '<i style="color:#94a3b8; font-size:13px;">Aucune mission prévue</i>'}</div></div>`;
+                v.innerHTML += `<div class="card-m"><b>${["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][d]}</b> - ${getDayDate(curW, d)}<br>${c || 'Repos'}</div>`;
             }
         }
     }
 
     function openEd(k) { 
-        if(curU!=='admin') return; 
-        curK=k; 
-        let d=window.data[k]||{text:"", link:"", toDepot:false}; 
-        document.getElementById('e-input').value=d.text; 
-        document.getElementById('e-link').value=d.link || ""; 
-        document.getElementById('e-depot').checked=!!d.toDepot; 
-        document.getElementById('file-ok').style.display = 'none';
-        document.getElementById('label-file').classList.remove('hidden');
+        curK=k; let d=window.data[k]||{text:"", link:"", toDepot:false};
+        if(curU === 'admin') {
+            document.getElementById('ed-view-only').classList.add('hidden');
+            document.getElementById('ed-controls').classList.remove('hidden');
+            document.getElementById('e-input').value=d.text;
+            document.getElementById('e-link').value=d.link || "";
+            document.getElementById('e-depot').checked=!!d.toDepot;
+            document.getElementById('file-ok').style.display = 'none';
+            document.getElementById('label-file').classList.remove('hidden');
+        } else {
+            document.getElementById('ed-controls').classList.add('hidden');
+            document.getElementById('ed-view-only').classList.remove('hidden');
+            document.getElementById('txt-display').textContent = d.text || "Aucun détail";
+            document.getElementById('link-display').innerHTML = d.link ? `<a href="${d.link}" target="_blank" style="display:block; text-align:center; background:var(--blue); color:white; padding:15px; border-radius:10px; text-decoration:none; font-weight:bold; margin-top:10px;">📄 VOIR LE DOCUMENT</a>` : '';
+        }
         document.getElementById('editor-overlay').style.display='flex'; 
     }
 
@@ -237,18 +225,13 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, l = document.getElementById('e-link').value, c = document.getElementById('e-depot').checked;
-        if (!v.trim() && !l) { db.ref('planning_v18/'+curK).remove(); }
-        else { db.ref('planning_v18/'+curK).set({text:v, link:l, toDepot:c}); }
+        if (!v.trim() && !l) db.ref('planning_v18/'+curK).remove();
+        else db.ref('planning_v18/'+curK).set({text:v, link:l, toDepot:c});
         
         const p = curK.split('_');
-        const dayName = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]];
-        const fullMsg = l ? v + "\n\nDOCUMENT JOINT : " + l : v;
-        const params = { chauffeur: p[1].toUpperCase(), jour: dayName, message: fullMsg };
-        
+        const params = { chauffeur: p[1].toUpperCase(), jour: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]], message: l ? v + "\n\nDOC : " + l : v };
         emailjs.send('service_1j5bpwf', 'template_5xn3o8u', params);
-        if (c && (v.trim() || l)) {
-            emailjs.send('service_1j5bpwf', 'template_8gqnnh7', params);
-        }
+        if (c && (v.trim() || l)) emailjs.send('service_1j5bpwf', 'template_8gqnnh7', params);
         closeEditor();
     }
 
