@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RBF Planning V27 - OneDrive</title>
+    <title>RBF Planning V28 - Express</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7fa; margin: 0; color: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7fa; margin: 0; }
         header { background: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--yellow); }
         .login-screen { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
         .grid-users { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 400px; }
@@ -25,10 +25,13 @@
         .card-m { background: white; padding: 15px; border-radius: 12px; margin: 10px; border-left: 6px solid var(--blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:9999; backdrop-filter: blur(4px); }
         .editor-box { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; }
-        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
-        .btn-save { background: var(--success); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
+        .file-status { font-size: 11px; color: var(--success); font-weight: bold; margin-bottom: 10px; display: none; }
+        .btn-file { background: #e2e8f0; color: #475569; border: 2px dashed #94a3b8; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; text-align: center; }
+        .btn-save { background: var(--success); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
         .hidden { display: none; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -67,23 +70,34 @@
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 style="margin-top:0; color:var(--blue);">Modifier Mission</h3>
-        <label style="font-size:12px; font-weight:bold;">Texte de la mission :</label>
-        <textarea id="e-input" placeholder="Ex: Livraison Client Machin..."></textarea>
+        <textarea id="e-input" placeholder="Détails de la mission..."></textarea>
         
-        <label style="font-size:12px; font-weight:bold;">Lien OneDrive / Document (Optionnel) :</label>
-        <input type="text" id="e-link" placeholder="Coller le lien ici...">
+        <div id="file-loading" class="hidden"><div class="loader"></div> Envoi du fichier...</div>
+        <div id="file-ok" class="file-status">✓ Fichier prêt</div>
+        
+        <label class="btn-file">
+            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+            📎 JOINDRE PHOTO / PDF
+        </label>
+        
+        <input type="hidden" id="e-link">
         
         <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; cursor:pointer;">
             <input type="checkbox" id="e-depot" style="width:20px; height:20px;">
             <span style="color:var(--success); font-weight:bold;">Informer le Dépôt</span>
         </label>
         
-        <button onclick="saveTask()" class="btn-save">ENREGISTRER ET ENVOYER</button>
-        <button onclick="closeEditor()" style="width:100%; background:#94a3b8; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">ANNULER</button>
+        <button id="btn-submit" onclick="saveTask()" class="btn-save">VALIDER</button>
+        <button onclick="closeEditor()" style="width:100%; background:none; color:#64748b; border:none; padding:10px; cursor:pointer; font-size:12px;">ANNULER</button>
     </div>
 </div>
 
 <script>
+    // --- CONFIGURATION À REMPLIR ---
+    const CLOUD_NAME = "TON_CLOUD_NAME"; 
+    const UPLOAD_PRESET = "rbf_preset"; 
+    // ------------------------------
+
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
@@ -109,6 +123,26 @@
     }
 
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
+
+    function uploadFile(input) {
+        if (input.files.length === 0) return;
+        document.getElementById('file-loading').classList.remove('hidden');
+        document.getElementById('btn-submit').disabled = true;
+
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('e-link').value = data.secure_url;
+            document.getElementById('file-loading').classList.add('hidden');
+            document.getElementById('file-ok').style.display = 'block';
+            document.getElementById('btn-submit').disabled = false;
+        })
+        .catch(err => { alert("Erreur d'envoi !"); console.log(err); });
+    }
 
     function render() {
         document.getElementById('wk-disp').textContent = "Semaine " + curW;
@@ -140,7 +174,7 @@
                     if(dta && dta.text) {
                         c += `<div style="padding:10px; border-bottom:1px solid #eee;">
                                 <b>${s}.</b> ${dta.text}
-                                ${dta.link ? `<br><a href="${dta.link}" target="_blank" style="color:#8b5cf6; font-weight:bold; font-size:12px;">📄 VOIR LE DOCUMENT</a>` : ''}
+                                ${dta.link ? `<br><a href="${dta.link}" target="_blank" style="color:#8b5cf6; font-weight:bold; font-size:12px; display:inline-block; margin-top:5px; border:1px solid #8b5cf6; padding:5px 10px; border-radius:5px;">📄 VOIR LE DOCUMENT</a>` : ''}
                               </div>`;
                     }
                 }
@@ -156,6 +190,7 @@
         document.getElementById('e-input').value=d.text; 
         document.getElementById('e-link').value=d.link || ""; 
         document.getElementById('e-depot').checked=!!d.toDepot; 
+        document.getElementById('file-ok').style.display = 'none';
         document.getElementById('editor-overlay').style.display='flex'; 
     }
 
@@ -166,15 +201,12 @@
         if (!v.trim()) db.ref('planning_v18/'+curK).remove();
         else db.ref('planning_v18/'+curK).set({text:v, link:l, toDepot:c});
         
-        // Notification
         const p = curK.split('_');
-        const day = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]];
         const msg = l ? v + "\n\nLien document : " + l : v;
-        const params = { chauffeur: p[1].toUpperCase(), jour: day, message: msg };
+        const params = { chauffeur: p[1].toUpperCase(), jour: ["Lundi","Mardi","Mercredi","Jeudi","Vendredi"][p[2]], message: msg };
         
         emailjs.send('service_1j5bpwf', 'template_5xn3o8u', params);
         if (c && v.trim()) emailjs.send('service_1j5bpwf', 'template_8gqnnh7', params);
-        
         closeEditor();
     }
 
