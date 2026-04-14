@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V52 - Stable & Notifications</title>
+    <title>RBF Planning V53 - Notifications Fix</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -123,11 +123,14 @@
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function sendNotif(action, content) {
-        const parts = curK.split('_'); // [semaine, nom, jourIdx, slot]
+        if (!curK) return;
+        const parts = curK.split('_'); 
         const userName = parts[1].toUpperCase();
         emailjs.send('service_rbf', 'template_rbf', {
-            message: `ACTION : ${action}\nCONCERNÉ : ${userName}\nSEMAINE : ${parts[0]}\nCONTENU : ${content || 'Vide'}`
-        }).catch(e => console.log("Erreur notif", e));
+            to_name: "RBF Transport",
+            from_name: "Système Planning",
+            message: `ACTION : ${action}\nCONDUCTEUR : ${userName}\nSEMAINE : ${parts[0]}\nINFO : ${content || 'Aucun texte'}`
+        }).catch(e => console.log("Erreur MailJS", e));
     }
 
     function uploadFile(input) {
@@ -203,15 +206,16 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
+        const isNew = !window.data[curK] || !window.data[curK].text;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => {
-            sendNotif("MODIFICATION / AJOUT", v);
+            sendNotif(isNew ? "NOUVELLE TÂCHE" : "MODIFICATION", v);
             closeEditor();
         });
     }
     function deleteTask() {
         if(confirm("Supprimer ?")) {
             db.ref('planning_v18/'+curK).remove().then(() => {
-                sendNotif("SUPPRESSION", "Tâche effacée");
+                sendNotif("SUPPRESSION", "La tâche a été effacée");
                 closeEditor();
             });
         }
