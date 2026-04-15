@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V67 - Restauration Complète</title>
+    <title>RBF Planning V69 - Notifications Précises</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -11,10 +11,9 @@
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header-logo img { height: 35px; }
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 16px; }
-        .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-container { padding: 10px; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 800px; }
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
@@ -38,7 +37,7 @@
 <body>
 
 <header>
-    <div class="header-logo" style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING</b></div>
+    <div style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING</b></div>
     <div id="u-info" class="hidden"><button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px;">QUITTER</button></div>
 </header>
 
@@ -96,7 +95,7 @@
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
             <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #ccc; margin-bottom:10px; font-weight:bold; font-size:12px;">📎 JOINDRE FICHIER</button>
             <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; font-size:13px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>VISIBLE DÉPÔT</b></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:12px; border-radius:10px; border:none; font-weight:bold;">ENREGISTRER & ENVOYER</button>
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:12px; border-radius:10px; border:none; font-weight:bold;">ENREGISTRER</button>
             <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:11px;">SUPPRIMER</button>
         </div>
         <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer; font-weight: bold;">FERMER</button>
@@ -104,7 +103,6 @@
 </div>
 
 <script>
-    // --- CONFIGURATION ---
     const SERVICE_ID = "service_1j5bpwf";
     const PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
     const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
@@ -121,23 +119,33 @@
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        opt.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedCol = opt.dataset.col; };
-    });
-
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function sendMails(msg) {
         if(!curK) return;
+        const now = new Date();
+        const realCurrentWeek = getWeek(now);
+        const realCurrentDay = Math.max(0, now.getDay() - 1); // 0=Lundi, 4=Vendredi
         const p = curK.split('_');
+        const taskDayIdx = parseInt(p[2]);
+
+        // CONDITION 1 : On doit être dans la semaine actuelle affichée
+        if (curW !== realCurrentWeek) {
+            console.log("Email bloqué : Pas la semaine actuelle.");
+            return;
+        }
+
+        // CONDITION 2 : Ne pas envoyer pour les jours passés de la semaine
+        if (taskDayIdx < realCurrentDay) {
+            console.log("Email bloqué : Jour déjà passé.");
+            return;
+        }
+
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        const params = {
-            chauffeur: p[1].toUpperCase(),
-            jour: dayNames[parseInt(p[2])] + " " + getDayDate(p[0], parseInt(p[2])),
-            message: msg
-        };
+        const params = { chauffeur: p[1].toUpperCase(), jour: dayNames[taskDayIdx] + " " + getDayDate(p[0], taskDayIdx), message: msg };
+        
         emailjs.send(SERVICE_ID, TEMPLATE_CHAUFFEUR, params);
         if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, TEMPLATE_DEPOT, params);
     }
@@ -198,18 +206,10 @@
     }
 
     function openEd(k) {
+        if(curU !== 'admin') return;
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : []; selectedCol = d.col || 'default';
-        document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.col === selectedCol) o.classList.add('active'); });
-        if(curU === 'admin') {
-            document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
-            document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
-        } else {
-            document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('txt-display').textContent = d.text || "Aucun détail";
-            let h = ""; currentFiles.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
-            document.getElementById('link-display').innerHTML = h;
-        }
+        document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
