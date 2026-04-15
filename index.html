@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V64 - Correct Service ID</title>
+    <title>RBF Planning V66 - IDs Corrigés</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -32,7 +32,7 @@
 <body>
 
 <header>
-    <div style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING V64</b></div>
+    <div style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING V66</b></div>
     <div id="u-info" class="hidden"><button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px;">QUITTER</button></div>
 </header>
 
@@ -60,7 +60,6 @@
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    <div id="v-driver" class="hidden"></div>
 </div>
 
 <div id="editor-overlay">
@@ -74,9 +73,11 @@
 </div>
 
 <script>
-    // CONFIGURATION FIXE
-    const SERVICE_ID = "service_1j5bpwf"; // TON VRAI ID
+    // --- CONFIGURATION FINALE ---
+    const SERVICE_ID = "service_1j5bpwf";
     const PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
+    const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
+    const TEMPLATE_DEPOT = "template_8gqnnh7";
 
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
@@ -97,23 +98,18 @@
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         const dStr = dayNames[parseInt(p[2])] + " " + getDayDate(p[0], parseInt(p[2]));
         
-        // On utilise les noms exacts de tes templates Gmail (minuscules)
         const params = {
             chauffeur: p[1].toUpperCase(),
             jour: dStr,
             message: m
         };
 
-        // Envoi au chauffeur
-        emailjs.send(SERVICE_ID, "template_rbf", params)
-            .then(() => console.log("Email Chauffeur OK"))
-            .catch(err => alert("Erreur Chauffeur: " + err.text));
+        // Envoi Chauffeur
+        emailjs.send(SERVICE_ID, TEMPLATE_CHAUFFEUR, params);
 
-        // Envoi au dépôt si coché
+        // Envoi Dépôt
         if(document.getElementById('e-depot').checked) {
-            emailjs.send(SERVICE_ID, "template_66r6v9h", params)
-                .then(() => console.log("Email Dépôt OK"))
-                .catch(err => console.log("Erreur Dépôt"));
+            emailjs.send(SERVICE_ID, TEMPLATE_DEPOT, params);
         }
     }
 
