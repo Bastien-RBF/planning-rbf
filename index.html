@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V81</title>
+    <title>RBF Planning V82</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -37,7 +37,7 @@
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
         .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
@@ -63,10 +63,11 @@
     </div>
 </div>
 <div id="app-content" class="hidden">
-    <div id="search-bar" class="search-container hidden">
+    <div id="admin-search-zone" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button id="btn-global-hist" class="btn-hist hidden" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
+        <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
     </div>
+    
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
         <div id="wk-disp" style="font-weight:800; color:var(--blue); font-size:16px;"></div>
@@ -80,6 +81,7 @@
     </div>
     <div id="v-driver" class="hidden"></div>
 </div>
+
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
@@ -100,6 +102,7 @@
         <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">FERMER</button>
     </div>
 </div>
+
 <script>
     const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
     const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
@@ -124,11 +127,8 @@
         curU = u; document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
         document.getElementById('u-info').classList.remove('hidden'); 
-        if(u==='admin'||u==='depot') {
-            document.getElementById('search-bar').classList.remove('hidden');
-            // SEUL L'ADMIN voit le bouton d'historique global
-            if(u==='admin') document.getElementById('btn-global-hist').classList.remove('hidden');
-        }
+        // BARRE DE RECHERCHE UNIQUEMENT POUR ADMIN
+        if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
