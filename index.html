@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>RBF Planning</title>
 
-    <link rel="icon" type="image/png" href="logo.png?v=2">
-    <link rel="apple-touch-icon" href="logo.png?v=2">
+    <link rel="icon" type="image/png" href="icon.png.png">
+    <link rel="apple-touch-icon" href="icon.png.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon.png.png">
+    
     <meta name="theme-color" content="#1b2e58">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,27 +19,9 @@
     
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         
-        body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background: var(--bg); 
-            margin: 0; 
-            color: #334155; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        
-        header { 
-            background: white; 
-            padding: 10px 15px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 4px solid var(--yellow); 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-        }
+        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .header-logo { display: flex; align-items: center; gap: 12px; }
         .header-logo img { height: 40px; width: auto; object-fit: contain; }
         
@@ -49,41 +33,10 @@
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         
-        .user-cell { 
-            background: #fdfdfd; 
-            font-weight: 800; 
-            color: var(--blue); 
-            text-align: center; 
-            width: 95px; 
-            font-size: 11px; 
-            position: sticky; 
-            left: 0; 
-            z-index: 10; 
-            border-right: 3px solid var(--yellow) !important;
-        }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
 
-        /* REGLAGE DES COULEURS DES CASES COMME AVANT */
-        .slot { 
-            font-size: 11px; 
-            padding: 10px; 
-            margin-bottom: 6px; 
-            border-radius: 8px; 
-            background: #fcfcfc; 
-            border: 1px dashed #cbd5e1; 
-            cursor: pointer; 
-            min-height: 42px; 
-            position: relative; 
-            color: var(--blue); 
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
-            line-height: 1.4;
-        }
-        /* La fameuse couleur bleue quand c'est rempli */
-        .filled { 
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; 
-            border: 1px solid #3b82f6 !important; 
-            font-weight: 600; 
-        }
+        .slot { font-size: 11px; padding: 10px; margin-bottom: 6px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 42px; position: relative; color: var(--blue); white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; }
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
@@ -94,11 +47,9 @@
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(4px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
-        
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
-        
         .file-action-btn { background: #f1f5f9; color: #475569; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .hidden { display: none !important; }
     </style>
@@ -209,13 +160,9 @@
         const realCurrentDay = Math.max(0, now.getDay() - 1); 
         const p = curK.split('_');
         const taskDayIdx = parseInt(p[2]);
-
-        if (curW !== realCurrentWeek) return;
-        if (taskDayIdx < realCurrentDay) return;
-
+        if (curW !== realCurrentWeek || taskDayIdx < realCurrentDay) return;
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         const params = { chauffeur: p[1].toUpperCase(), jour: dayNames[taskDayIdx] + " " + getDayDate(p[0], taskDayIdx), message: msg };
-        
         emailjs.send(SERVICE_ID, TEMPLATE_CHAUFFEUR, params);
         if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, TEMPLATE_DEPOT, params);
     }
@@ -239,7 +186,6 @@
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
         const dayNames = ["LUN","MAR","MER","JEU","VEN"];
         for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${dayNames[i]}<br>${getDayDate(curW, i)}`;
-        
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
@@ -281,7 +227,7 @@
         if(curU !== 'admin' && curU !== 'depot') {
             curK = k; let d = window.data[k] || {text:"", files:[]};
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi pour cette mission.";
+            document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi.";
             let h = ""; if(d.files) d.files.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:12px; text-align:center; font-weight:bold;">📄 OUVRIR LE FICHIER</a>`; });
             document.getElementById('link-display').innerHTML = h;
             document.getElementById('editor-overlay').style.display = 'flex';
@@ -297,16 +243,11 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => {
-            sendMails(v);
-            closeEditor();
-        });
+        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { sendMails(v); closeEditor(); });
     }
 
     function deleteTask() {
-        if(confirm("Confirmer la suppression ?")) {
-            db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); });
-        }
+        if(confirm("Supprimer ?")) { db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
     }
 
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
