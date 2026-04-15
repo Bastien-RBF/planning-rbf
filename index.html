@@ -3,14 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V69 - Notifications Précises</title>
+    <title>RBF Planning V71 - Logo Local</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
-        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        
+        /* HEADER AVEC LOGO LOCAL */
+        header { 
+            background: white; 
+            padding: 10px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 4px solid var(--yellow); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        .header-logo { display: flex; align-items: center; gap: 12px; }
+        .header-logo img { height: 45px; width: auto; object-fit: contain; }
+        
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 16px; }
         .table-container { padding: 10px; overflow-x: auto; }
@@ -37,12 +53,18 @@
 <body>
 
 <header>
-    <div style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING</b></div>
-    <div id="u-info" class="hidden"><button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px;">QUITTER</button></div>
+    <div class="header-logo">
+        <img src="logo.png" alt="RBF" onerror="this.src='https://via.placeholder.com/45x45?text=RBF'">
+        <b style="color: var(--blue); font-size: 14px;">PLANNING TRANSPORT</b>
+    </div>
+    <div id="u-info" class="hidden">
+        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px;">QUITTER</button>
+    </div>
 </header>
 
 <div id="login-screen">
     <div class="login-card">
+        <img src="logo.png" style="width:140px; margin-bottom:20px;" onerror="this.style.display='none'">
         <h3 style="color: var(--blue); margin: 0;">Connexion</h3>
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
@@ -119,6 +141,10 @@
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
+    document.querySelectorAll('.color-opt').forEach(opt => {
+        opt.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedCol = opt.dataset.col; };
+    });
+
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
@@ -127,21 +153,13 @@
         if(!curK) return;
         const now = new Date();
         const realCurrentWeek = getWeek(now);
-        const realCurrentDay = Math.max(0, now.getDay() - 1); // 0=Lundi, 4=Vendredi
+        const realCurrentDay = Math.max(0, now.getDay() - 1); 
         const p = curK.split('_');
         const taskDayIdx = parseInt(p[2]);
 
-        // CONDITION 1 : On doit être dans la semaine actuelle affichée
-        if (curW !== realCurrentWeek) {
-            console.log("Email bloqué : Pas la semaine actuelle.");
-            return;
-        }
-
-        // CONDITION 2 : Ne pas envoyer pour les jours passés de la semaine
-        if (taskDayIdx < realCurrentDay) {
-            console.log("Email bloqué : Jour déjà passé.");
-            return;
-        }
+        // Bloque si on n'est pas sur la semaine en cours OU si le jour est déjà passé
+        if (curW !== realCurrentWeek) return;
+        if (taskDayIdx < realCurrentDay) return;
 
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         const params = { chauffeur: p[1].toUpperCase(), jour: dayNames[taskDayIdx] + " " + getDayDate(p[0], taskDayIdx), message: msg };
@@ -206,9 +224,19 @@
     }
 
     function openEd(k) {
+        if(curU !== 'admin' && curU !== 'depot') {
+            curK = k; let d = window.data[k] || {text:"", files:[]};
+            document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
+            document.getElementById('txt-display').textContent = d.text || "Aucun détail";
+            let h = ""; if(d.files) d.files.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
+            document.getElementById('link-display').innerHTML = h;
+            document.getElementById('editor-overlay').style.display = 'flex';
+            return;
+        }
         if(curU !== 'admin') return;
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : []; selectedCol = d.col || 'default';
+        document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
         document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
