@@ -3,19 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning</title>
-
+    <title>RBF Planning V80</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
-    
     <meta name="theme-color" content="#1b2e58">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
@@ -49,12 +45,10 @@
     </style>
 </head>
 <body>
-
 <header>
     <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING TRANSPORT</b></div>
     <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
 </header>
-
 <div id="login-screen">
     <div class="login-card">
         <img src="logo.png" style="width:140px; margin-bottom:10px;">
@@ -68,7 +62,6 @@
         </div>
     </div>
 </div>
-
 <div id="app-content" class="hidden">
     <div id="search-bar" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
@@ -87,7 +80,6 @@
     </div>
     <div id="v-driver" class="hidden"></div>
 </div>
-
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="ed-title" style="text-align:center; color:var(--blue);">Détails Mission</h3>
@@ -108,34 +100,26 @@
         <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-weight:bold; cursor:pointer;">FERMER</button>
     </div>
 </div>
-
 <script>
     const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
     const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
-
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     (function(){ emailjs.init(PUBLIC_KEY); })();
-
     function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
     function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
-
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
-
-    // COULEURS
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colors.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'#dbeafe':c;
         d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
         document.getElementById('cp').appendChild(d);
     });
-
     function askCode(u) { 
         let p = prompt("Code " + u.toUpperCase()); 
         let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
     }
-    
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
@@ -144,12 +128,10 @@
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-
     function applySearch() {
         const q = document.getElementById('search-input').value.toLowerCase();
         document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
     }
-
     function showFullHistory() {
         const q = document.getElementById('search-input').value.trim().toLowerCase();
         if (q.length < 2) return alert("Tapez 2 lettres.");
@@ -169,7 +151,6 @@
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
-    // --- CODE EMAIL V69 (REPRIS EXACTEMENT) ---
     function sendMails(msg) {
         if(!curK) return;
         const now = new Date();
@@ -179,19 +160,17 @@
         const taskWeek = parseInt(p[0]);
         const taskDayIdx = parseInt(p[2]);
 
-        // On bloque si c'est une semaine passée OU si c'est le passé de cette semaine
-        if (taskWeek < realCurrentWeek) return;
-        if (taskWeek === realCurrentWeek && taskDayIdx < realCurrentDay) return;
+        // SÉCURITÉ V80 : Bloque si c'est une autre semaine que l'actuelle
+        if (taskWeek !== realCurrentWeek) return;
+        // Bloque si c'est déjà passé dans la semaine actuelle
+        if (taskDayIdx < realCurrentDay) return;
 
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
         const dateStr = dayNames[taskDayIdx] + " " + getDayDate(taskWeek, taskDayIdx);
-        
         const params = { chauffeur: p[1].toUpperCase(), jour: dateStr, message: msg };
-        
         emailjs.send(SERVICE_ID, T_CHAUFFEUR, params);
         if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, T_DEPOT, params);
     }
-    // ------------------------------------------
 
     function uploadFile(input) {
         if (!input.files[0]) return;
@@ -200,12 +179,10 @@
             if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
         });
     }
-
     function renderFileListAdmin() {
         let d = document.getElementById('file-list-admin'); d.innerHTML = "";
         currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#eee; padding:5px; border-radius:5px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
     }
-
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
         const days = ["LUN","MAR","MER","JEU","VEN"];
@@ -244,7 +221,6 @@
             }
         }
     }
-
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
@@ -260,14 +236,12 @@
         document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
-
     function saveTask() {
         let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
             sendMails("["+ch.toUpperCase()+"] " + v); closeEditor(); 
         });
     }
-
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
