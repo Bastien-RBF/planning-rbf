@@ -26,8 +26,8 @@
         .header-logo img { height: 40px; width: auto; object-fit: contain; }
         
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        #search-input { flex: 1; min-width: 200px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
-        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        #search-input { flex: 1; min-width: 180px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
+        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
 
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
@@ -51,7 +51,7 @@
         .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
 
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
@@ -107,25 +107,21 @@
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
-        
         <div id="ed-view-only" class="hidden"></div>
-
         <div id="ed-controls">
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;" placeholder="ex: MAIRIE, BASTILLE...">
-            
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
-            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none;"></textarea>
-            
+            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box;"></textarea>
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom: 12px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
             <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px;">📎 AJOUTER UN DOCUMENT</button>
             <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
             <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold;">SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">FERMER</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold;">FERMER</button>
     </div>
 </div>
 
@@ -177,7 +173,7 @@
 
     function showFullHistory() {
         const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if (q.length < 2) return alert("Tapez au moins 2 lettres du chantier.");
+        if (q.length < 2) return alert("Tapez au moins 2 lettres.");
         let res = [];
         Object.keys(window.data).forEach(k => {
             let item = window.data[k];
@@ -196,6 +192,25 @@
         document.getElementById('ed-view-only').classList.remove('hidden');
         document.getElementById('ed-controls').classList.add('hidden');
         document.getElementById('editor-overlay').style.display = 'flex';
+    }
+
+    function sendMails(msg) {
+        if(!curK) return;
+        const now = new Date();
+        const realCurrentWeek = getWeek(now);
+        const realCurrentDay = Math.max(0, now.getDay() - 1); 
+        const p = curK.split('_');
+        const taskWeek = parseInt(p[0]);
+        const taskDayIdx = parseInt(p[2]);
+
+        // VERIFICATION : On envoie seulement si c'est cette semaine (ou futur) et pas dans le passé de la semaine
+        if (taskWeek < realCurrentWeek || (taskWeek === realCurrentWeek && taskDayIdx < realCurrentDay)) return;
+
+        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+        const params = { chauffeur: p[1].toUpperCase(), jour: dayNames[taskDayIdx] + " " + getDayDate(taskWeek, taskDayIdx), message: msg };
+        
+        emailjs.send(SERVICE_ID, T_CHAUFFEUR, params);
+        if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, T_DEPOT, params);
     }
 
     function uploadFile(input) {
@@ -272,12 +287,12 @@
     function saveTask() {
         let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
-            emailjs.send(SERVICE_ID, T_CHAUFFEUR, {chauffeur: curK.split('_')[1], message: "["+ch+"] "+v});
+            sendMails("["+ch.toUpperCase()+"] " + v);
             closeEditor(); 
         });
     }
 
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(closeEditor); }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
     if(curU) login(curU);
