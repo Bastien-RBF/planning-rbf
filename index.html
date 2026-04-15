@@ -3,15 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V71 - Logo Local</title>
+    <title>RBF Planning</title>
+
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#1b2e58">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         
-        /* HEADER AVEC LOGO LOCAL */
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            color: #334155; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        /* HEADER PROFESSIONNEL */
         header { 
             background: white; 
             padding: 10px 15px; 
@@ -25,28 +40,93 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
         }
         .header-logo { display: flex; align-items: center; gap: 12px; }
-        .header-logo img { height: 45px; width: auto; object-fit: contain; }
+        .header-logo img { height: 40px; width: auto; object-fit: contain; }
         
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .wk-btn { padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 16px; }
-        .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 800px; }
+        /* NAVIGATION SEMAINE */
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; transition: 0.2s; }
+        .wk-btn:active { background: #f1f5f9; transform: scale(0.95); }
+
+        /* TABLEAU ADMIN */
+        .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 850px; }
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 90px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 2px solid var(--yellow) !important; }
-        .slot { font-size: 11px; padding: 10px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; position: relative; color: var(--blue); white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; }
+        
+        .user-cell { 
+            background: #fdfdfd; 
+            font-weight: 800; 
+            color: var(--blue); 
+            text-align: center; 
+            width: 95px; 
+            font-size: 11px; 
+            position: sticky; 
+            left: 0; 
+            z-index: 10; 
+            border-right: 3px solid var(--yellow) !important;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.02);
+        }
+
+        /* CASES MISSIONS */
+        .slot { 
+            font-size: 11px; 
+            padding: 10px; 
+            margin-bottom: 6px; 
+            border-radius: 8px; 
+            background: #fcfcfc; 
+            border: 1px dashed #cbd5e1; 
+            cursor: pointer; 
+            min-height: 42px; 
+            position: relative; 
+            color: var(--blue); 
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            line-height: 1.4;
+            transition: 0.2s;
+        }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
-        .login-card { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; margin: 30px auto; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn-auth { padding: 15px 5px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; font-size: 12px; }
-        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; }
-        .editor-box { background: white; padding: 20px; border-radius: 15px; width: 90%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
-        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
-        .color-opt { height: 32px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
-        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
-        .file-action-btn { background: #e2e8f0; color: #475569; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; }
+
+        /* ECRAN CONNEXION AMELIORE */
+        #login-screen { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #f1f5f9;
+        }
+        .login-card { 
+            background: white; 
+            padding: 35px 25px; 
+            border-radius: 24px; 
+            width: 90%; 
+            max-width: 380px; 
+            text-align: center; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
+        .btn-auth { 
+            padding: 16px 8px; 
+            border: none; 
+            border-radius: 14px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            color: white; 
+            font-size: 12px; 
+            text-transform: uppercase;
+            transition: 0.2s;
+        }
+        .btn-auth:active { transform: scale(0.95); opacity: 0.8; }
+
+        /* EDITEUR OVERLAY */
+        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(4px); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        
+        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .file-action-btn { background: #f1f5f9; color: #475569; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -54,21 +134,21 @@
 
 <header>
     <div class="header-logo">
-        <img src="logo.png" alt="RBF" onerror="this.src='https://via.placeholder.com/45x45?text=RBF'">
-        <b style="color: var(--blue); font-size: 14px;">PLANNING TRANSPORT</b>
+        <img src="logo.png" alt="RBF" onerror="this.style.display='none'">
+        <b style="color: var(--blue); font-size: 14px; letter-spacing: 0.5px;">PLANNING TRANSPORT</b>
     </div>
     <div id="u-info" class="hidden">
-        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px;">QUITTER</button>
+        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px;">QUITTER</button>
     </div>
 </header>
 
 <div id="login-screen">
     <div class="login-card">
-        <img src="logo.png" style="width:140px; margin-bottom:20px;" onerror="this.style.display='none'">
-        <h3 style="color: var(--blue); margin: 0;">Connexion</h3>
+        <img src="logo.png" style="width:160px; margin-bottom:15px;" onerror="this.src='https://via.placeholder.com/150x50?text=RBF+TRANSPORT'">
+        <p style="color: #64748b; font-weight: 500; margin-top: 0;">Gestion Interne</p>
         <div class="grid-auth">
-            <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU</button>
-            <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT</button>
+            <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+            <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
             <button class="btn-auth" style="background: #3b82f6;" onclick="askCode('damien')">🚛 DAMIEN</button>
             <button class="btn-auth" style="background: #f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
             <button class="btn-auth" style="background: #8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
@@ -80,7 +160,7 @@
 <div id="app-content" class="hidden">
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
-        <div id="wk-disp" style="font-weight: 800; color: var(--blue);"></div>
+        <div id="wk-disp" style="font-weight: 800; color: var(--blue); font-size: 16px;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
@@ -94,15 +174,15 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h4 style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Mission</h4>
+        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center; font-size: 18px;">Détails Mission</h3>
         <div id="ed-view-only" class="hidden">
-            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:10px; border:1px solid #eee; white-space: pre-wrap; font-size: 14px;"></p>
+            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; white-space: pre-wrap; font-size: 15px; color: var(--blue); line-height: 1.5;"></p>
             <div id="link-display"></div>
         </div>
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:120px; padding:10px; border-radius:10px; border:1px solid #ddd; font-family:inherit; font-size: 14px; box-sizing: border-box;" placeholder="Détails..."></textarea>
+            <textarea id="e-input" style="width:100%; height:130px; padding:12px; border-radius:12px; border:1px solid #ddd; font-family:inherit; font-size: 14px; box-sizing: border-box; outline: none;" placeholder="Saisir la mission..."></textarea>
             <div class="color-picker">
-                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default"></div>
+                <div class="color-opt" style="background:#dbeafe;" data-col="default"></div>
                 <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2"></div>
                 <div class="color-opt" style="background:#ffedd5;" data-col="#ffedd5"></div>
                 <div class="color-opt" style="background:#fef3c7;" data-col="#fef3c7"></div>
@@ -113,14 +193,14 @@
                 <div class="color-opt" style="background:#e2e8f0;" data-col="#e2e8f0"></div>
                 <div class="color-opt" style="background:#000000;" data-col="#000000"></div>
             </div>
-            <div id="file-list-admin" style="margin-bottom: 10px;"></div>
+            <div id="file-list-admin" style="margin-bottom: 12px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #ccc; margin-bottom:10px; font-weight:bold; font-size:12px;">📎 JOINDRE FICHIER</button>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; font-size:13px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>VISIBLE DÉPÔT</b></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:12px; border-radius:10px; border:none; font-weight:bold;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; cursor:pointer; font-weight:bold; font-size:11px;">SUPPRIMER</button>
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; color: #475569; font-size:12px;">📎 AJOUTER UN DOCUMENT OU PHOTO</button>
+            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px; color: var(--blue); cursor: pointer;"><input type="checkbox" id="e-depot" style="width:22px; height:22px;"> <b>SIGNALER AU DÉPÔT</b></label>
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold; font-size: 15px; cursor: pointer;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; cursor:pointer; font-weight:bold; font-size:12px;">SUPPRIMER LA MISSION</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer; font-weight: bold;">FERMER</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; cursor:pointer; font-weight: 700; font-size: 13px;">RETOUR</button>
     </div>
 </div>
 
@@ -145,7 +225,7 @@
         opt.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedCol = opt.dataset.col; };
     });
 
-    function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
+    function askCode(u) { let p = prompt("Code pour " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
@@ -157,7 +237,6 @@
         const p = curK.split('_');
         const taskDayIdx = parseInt(p[2]);
 
-        // Bloque si on n'est pas sur la semaine en cours OU si le jour est déjà passé
         if (curW !== realCurrentWeek) return;
         if (taskDayIdx < realCurrentDay) return;
 
@@ -179,7 +258,7 @@
     function renderFileListAdmin() {
         const div = document.getElementById('file-list-admin'); div.innerHTML = "";
         currentFiles.forEach((f, idx) => { 
-            div.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><div style="display:flex; gap:5px;"><button class="file-action-btn" onclick="window.open('${f.url}', '_blank')">👁</button><button class="file-action-btn" style="color:red;" onclick="currentFiles.splice(${idx},1);renderFileListAdmin()">X</button></div></div>`; 
+            div.innerHTML += `<div style="background:#f1f5f9; padding:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:11px;"><span>📄 ${f.name}</span><div style="display:flex; gap:8px;"><button class="file-action-btn" onclick="window.open('${f.url}', '_blank')">👁</button><button class="file-action-btn" style="color:var(--danger);" onclick="currentFiles.splice(${idx},1);renderFileListAdmin()">Suppr.</button></div></div>`; 
         });
     }
 
@@ -187,6 +266,7 @@
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
         const dayNames = ["LUN","MAR","MER","JEU","VEN"];
         for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${dayNames[i]}<br>${getDayDate(curW, i)}`;
+        
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
@@ -214,11 +294,11 @@
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && dta.text) {
                         let bCol = (dta.col && dta.col !== 'default') ? dta.col : 'var(--blue)';
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Fichier</a>`; });
-                        c += `<div style="padding:15px; border-bottom:1px solid #eee; border-left:8px solid ${bCol};"><b>Mission ${s}:</b><br>${dta.text}${btns}</div>`;
+                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold; font-size:14px;">👁 VOIR DOCUMENT</a>`; });
+                        c += `<div style="padding:15px; border-bottom:1px solid #f1f5f9; border-left:8px solid ${bCol}; margin-bottom:10px;"><b>Mission ${s}:</b><br><span style="font-size:15px;">${dta.text}</span>${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin:10px; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.05);"><b>${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || 'Repos'}</div>`;
+                v.innerHTML += `<div style="background:white; margin:15px; padding:15px; border-radius:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);"><b>${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8; margin:10px 0;">Repos ou pas de mission</p>'}</div>`;
             }
         }
     }
@@ -227,8 +307,8 @@
         if(curU !== 'admin' && curU !== 'depot') {
             curK = k; let d = window.data[k] || {text:"", files:[]};
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('txt-display').textContent = d.text || "Aucun détail";
-            let h = ""; if(d.files) d.files.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center;">📄 Ouvrir Document</a>`; });
+            document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi pour cette mission.";
+            let h = ""; if(d.files) d.files.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:12px; text-align:center; font-weight:bold;">📄 OUVRIR LE FICHIER</a>`; });
             document.getElementById('link-display').innerHTML = h;
             document.getElementById('editor-overlay').style.display = 'flex';
             return;
@@ -250,7 +330,7 @@
     }
 
     function deleteTask() {
-        if(confirm("Supprimer ?")) {
+        if(confirm("Confirmer la suppression ?")) {
             db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); });
         }
     }
