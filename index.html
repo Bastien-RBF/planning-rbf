@@ -25,6 +25,11 @@
         .header-logo { display: flex; align-items: center; gap: 12px; }
         .header-logo img { height: 40px; width: auto; object-fit: contain; }
         
+        /* BARRE DE RECHERCHE */
+        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
+        #search-input { flex: 1; padding: 10px 15px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; transition: 0.3s; }
+        #search-input:focus { border-color: var(--blue); background: white; }
+
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
 
@@ -35,7 +40,8 @@
         
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
 
-        .slot { font-size: 11px; padding: 10px; margin-bottom: 6px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 42px; position: relative; color: var(--blue); white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; }
+        .slot { font-size: 11px; padding: 10px; margin-bottom: 6px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 42px; position: relative; color: var(--blue); white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; transition: opacity 0.2s; }
+        .slot.filtered-out { opacity: 0.1; pointer-events: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
@@ -82,6 +88,10 @@
 </div>
 
 <div id="app-content" class="hidden">
+    <div id="search-bar" class="search-container hidden">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier (ex: Mairie)..." oninput="applySearch()">
+    </div>
+
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
         <div id="wk-disp" style="font-weight: 800; color: var(--blue); font-size: 16px;"></div>
@@ -99,12 +109,20 @@
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center; font-size: 18px;">Détails Mission</h3>
+        
         <div id="ed-view-only" class="hidden">
+            <div id="chantier-display" style="color:var(--blue); font-weight:bold; margin-bottom:10px; font-size:16px; border-left:4px solid var(--yellow); padding-left:10px;"></div>
             <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; white-space: pre-wrap; font-size: 15px; color: var(--blue); line-height: 1.5;"></p>
             <div id="link-display"></div>
         </div>
+
         <div id="ed-controls">
-            <textarea id="e-input" style="width:100%; height:130px; padding:12px; border-radius:12px; border:1px solid #ddd; font-family:inherit; font-size: 14px; box-sizing: border-box; outline: none;" placeholder="Saisir la mission..."></textarea>
+            <label style="font-size:11px; font-weight:bold; color:var(--blue); margin-bottom:4px; display:block;">NOM DU CHANTIER :</label>
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box; font-size:14px;" placeholder="ex: MAIRIE, BASTILLE, DEPOT...">
+            
+            <label style="font-size:11px; font-weight:bold; color:var(--blue); margin-bottom:4px; display:block;">DÉTAILS DE LA MISSION :</label>
+            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; font-family:inherit; font-size: 14px; box-sizing: border-box; outline: none;" placeholder="Saisir la mission..."></textarea>
+            
             <div class="color-picker">
                 <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default"></div>
                 <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2"></div>
@@ -150,21 +168,28 @@
     });
 
     function askCode(u) { let p = prompt("Code pour " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
-    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
+    
+    function login(u) { 
+        curU = u; 
+        document.getElementById('login-screen').classList.add('hidden'); 
+        document.getElementById('app-content').classList.remove('hidden'); 
+        document.getElementById('u-info').classList.remove('hidden'); 
+        if(u === 'admin' || u === 'depot') document.getElementById('search-bar').classList.remove('hidden');
+        db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); 
+    }
+    
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    function sendMails(msg) {
-        if(!curK) return;
-        const now = new Date();
-        const realCurrentWeek = getWeek(now);
-        const realCurrentDay = Math.max(0, now.getDay() - 1); 
-        const p = curK.split('_');
-        const taskDayIdx = parseInt(p[2]);
-        if (curW !== realCurrentWeek || taskDayIdx < realCurrentDay) return;
-        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        const params = { chauffeur: p[1].toUpperCase(), jour: dayNames[taskDayIdx] + " " + getDayDate(p[0], taskDayIdx), message: msg };
-        emailjs.send(SERVICE_ID, TEMPLATE_CHAUFFEUR, params);
-        if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, TEMPLATE_DEPOT, params);
+    function applySearch() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const slots = document.querySelectorAll('.slot');
+        slots.forEach(slot => {
+            if (query === "" || slot.innerText.toLowerCase().includes(query)) {
+                slot.classList.remove('filtered-out');
+            } else {
+                slot.classList.add('filtered-out');
+            }
+        });
     }
 
     function uploadFile(input) {
@@ -195,27 +220,30 @@
                 for(let d=0; d<5; d++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", files:[], col:'default'};
+                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let isFilled = dta.text && (!dta.col || dta.col === 'default');
                         let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
-                        h += `<div class="slot ${isFilled ? 'filled' : ''} ${dta.toDepot?'is-to-depot':''} ${dta.files && dta.files.length > 0?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${dta.text || '...'}</div>`;
+                        let displayTxt = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                        h += `<div class="slot ${isFilled ? 'filled' : ''} ${dta.toDepot?'is-to-depot':''} ${dta.files && dta.files.length > 0?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${displayTxt}</div>`;
                     }
                     h += `</td>`;
                 }
                 h += `</tr>`;
             });
             document.getElementById('b-admin').innerHTML = h;
+            applySearch(); // Réappliquer la recherche si du texte est présent
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let d=0; d<5; d++) {
                 let c = "";
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
-                    if(dta && dta.text) {
+                    if(dta && (dta.text || dta.chantier)) {
                         let bCol = (dta.col && dta.col !== 'default') ? dta.col : '#3b82f6';
                         let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold; font-size:14px;">👁 VOIR DOCUMENT</a>`; });
-                        c += `<div style="padding:15px; border-bottom:1px solid #f1f5f9; border-left:8px solid ${bCol}; margin-bottom:10px;"><b>Mission ${s}:</b><br><span style="font-size:15px;">${dta.text}</span>${btns}</div>`;
+                        let chTxt = dta.chantier ? `<span style="color:var(--blue); font-weight:800; font-size:16px;">🚧 ${dta.chantier.toUpperCase()}</span><br>` : "";
+                        c += `<div style="padding:15px; border-bottom:1px solid #f1f5f9; border-left:8px solid ${bCol}; margin-bottom:10px;">${chTxt}<b>Mission ${s}:</b><br><span style="font-size:15px;">${dta.text || ''}</span>${btns}</div>`;
                     }
                 }
                 v.innerHTML += `<div style="background:white; margin:15px; padding:15px; border-radius:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);"><b>${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8; margin:10px 0;">Repos ou pas de mission</p>'}</div>`;
@@ -224,9 +252,10 @@
     }
 
     function openEd(k) {
+        curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
-            curK = k; let d = window.data[k] || {text:"", files:[]};
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
+            document.getElementById('chantier-display').textContent = d.chantier ? "🚧 " + d.chantier.toUpperCase() : "SANS CHANTIER";
             document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi.";
             let h = ""; if(d.files) d.files.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:12px; text-align:center; font-weight:bold;">📄 OUVRIR LE FICHIER</a>`; });
             document.getElementById('link-display').innerHTML = h;
@@ -234,16 +263,22 @@
             return;
         }
         if(curU !== 'admin') return;
-        curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : []; selectedCol = d.col || 'default';
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
-        document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
+        document.getElementById('e-chantier').value = d.chantier || "";
+        document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function saveTask() {
-        let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { sendMails(v); closeEditor(); });
+        let v = document.getElementById('e-input').value;
+        let ch = document.getElementById('e-chantier').value;
+        let c = document.getElementById('e-depot').checked;
+        db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
+            sendMails((ch ? "["+ch+"] " : "") + v); 
+            closeEditor(); 
+        });
     }
 
     function deleteTask() {
