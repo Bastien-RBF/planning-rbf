@@ -25,10 +25,9 @@
         .header-logo { display: flex; align-items: center; gap: 12px; }
         .header-logo img { height: 40px; width: auto; object-fit: contain; }
         
-        /* BARRE DE RECHERCHE */
-        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
-        #search-input { flex: 1; padding: 10px 15px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; transition: 0.3s; }
-        #search-input:focus { border-color: var(--blue); background: white; }
+        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #search-input { flex: 1; min-width: 200px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
+        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; white-space: nowrap; }
 
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
@@ -40,8 +39,8 @@
         
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
 
-        .slot { font-size: 11px; padding: 10px; margin-bottom: 6px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 42px; position: relative; color: var(--blue); white-space: pre-wrap; word-wrap: break-word; line-height: 1.4; transition: opacity 0.2s; }
-        .slot.filtered-out { opacity: 0.1; pointer-events: none; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: opacity 0.2s; }
+        .slot.filtered-out { opacity: 0.15; pointer-events: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
@@ -51,12 +50,11 @@
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
         .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
 
-        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(4px); }
-        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
-        .file-action-btn { background: #f1f5f9; color: #475569; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -64,18 +62,17 @@
 
 <header>
     <div class="header-logo">
-        <img src="logo.png" alt="RBF" onerror="this.style.display='none'">
-        <b style="color: var(--blue); font-size: 14px; letter-spacing: 0.5px;">PLANNING TRANSPORT</b>
+        <img src="logo.png" alt="RBF">
+        <b style="color: var(--blue); font-size: 14px;">PLANNING TRANSPORT</b>
     </div>
     <div id="u-info" class="hidden">
-        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px;">QUITTER</button>
+        <button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 11px;">QUITTER</button>
     </div>
 </header>
 
 <div id="login-screen">
     <div class="login-card">
-        <img src="logo.png" style="width:160px; margin-bottom:15px;" onerror="this.src='https://via.placeholder.com/150x50?text=RBF+TRANSPORT'">
-        <p style="color: #64748b; font-weight: 500; margin-top: 0;">Gestion Interne</p>
+        <img src="logo.png" style="width:160px; margin-bottom:15px;">
         <div class="grid-auth">
             <button class="btn-auth" style="background: var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
             <button class="btn-auth" style="background: var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
@@ -89,7 +86,8 @@
 
 <div id="app-content" class="hidden">
     <div id="search-bar" class="search-container hidden">
-        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier (ex: Mairie)..." oninput="applySearch()">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
+        <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
     </div>
 
     <div class="week-nav">
@@ -108,51 +106,32 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center; font-size: 18px;">Détails Mission</h3>
+        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
         
-        <div id="ed-view-only" class="hidden">
-            <div id="chantier-display" style="color:var(--blue); font-weight:bold; margin-bottom:10px; font-size:16px; border-left:4px solid var(--yellow); padding-left:10px;"></div>
-            <p id="txt-display" style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; white-space: pre-wrap; font-size: 15px; color: var(--blue); line-height: 1.5;"></p>
-            <div id="link-display"></div>
-        </div>
+        <div id="ed-view-only" class="hidden"></div>
 
         <div id="ed-controls">
-            <label style="font-size:11px; font-weight:bold; color:var(--blue); margin-bottom:4px; display:block;">NOM DU CHANTIER :</label>
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box; font-size:14px;" placeholder="ex: MAIRIE, BASTILLE, DEPOT...">
+            <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;" placeholder="ex: MAIRIE, BASTILLE...">
             
-            <label style="font-size:11px; font-weight:bold; color:var(--blue); margin-bottom:4px; display:block;">DÉTAILS DE LA MISSION :</label>
-            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; font-family:inherit; font-size: 14px; box-sizing: border-box; outline: none;" placeholder="Saisir la mission..."></textarea>
+            <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
+            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none;"></textarea>
             
-            <div class="color-picker">
-                <div class="color-opt" style="background:linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);" data-col="default"></div>
-                <div class="color-opt" style="background:#fee2e2;" data-col="#fee2e2"></div>
-                <div class="color-opt" style="background:#ffedd5;" data-col="#ffedd5"></div>
-                <div class="color-opt" style="background:#fef3c7;" data-col="#fef3c7"></div>
-                <div class="color-opt" style="background:#d1fae5;" data-col="#d1fae5"></div>
-                <div class="color-opt" style="background:#a7f3d0;" data-col="#a7f3d0"></div>
-                <div class="color-opt" style="background:#e9d5ff;" data-col="#e9d5ff"></div>
-                <div class="color-opt" style="background:#fce7f3;" data-col="#fce7f3"></div>
-                <div class="color-opt" style="background:#e2e8f0;" data-col="#e2e8f0"></div>
-                <div class="color-opt" style="background:#000000;" data-col="#000000"></div>
-            </div>
+            <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom: 12px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; color: #475569; font-size:12px;">📎 AJOUTER UN DOCUMENT OU PHOTO</button>
-            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px; color: var(--blue); cursor: pointer;"><input type="checkbox" id="e-depot" style="width:22px; height:22px;"> <b>SIGNALER AU DÉPÔT</b></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold; font-size: 15px; cursor: pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; cursor:pointer; font-weight:bold; font-size:12px;">SUPPRIMER LA MISSION</button>
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px;">📎 AJOUTER UN DOCUMENT</button>
+            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; cursor:pointer; font-weight: 700; font-size: 13px;">RETOUR</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">FERMER</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf";
-    const PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
-    const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
-    const TEMPLATE_DEPOT = "template_8gqnnh7";
-    const CLOUD_NAME = "dixdmejal";
-    const UPLOAD_PRESET = "rbf-preset";
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
+    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
 
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
@@ -163,54 +142,79 @@
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        opt.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedCol = opt.dataset.col; };
+    const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    let cp = document.getElementById('cp');
+    colors.forEach(c => {
+        let div = document.createElement('div'); div.className = 'color-opt';
+        div.style.background = c === 'default' ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : c;
+        div.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); div.classList.add('active'); selectedCol = c; };
+        cp.appendChild(div);
     });
 
-    function askCode(u) { let p = prompt("Code pour " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
+    function askCode(u) { 
+        let p = prompt("Code pour " + u.toUpperCase()); 
+        let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
+        if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
+    }
     
     function login(u) { 
         curU = u; 
         document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
         document.getElementById('u-info').classList.remove('hidden'); 
-        if(u === 'admin' || u === 'depot') document.getElementById('search-bar').classList.remove('hidden');
-        db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); 
+        if(u==='admin'||u==='depot') document.getElementById('search-bar').classList.remove('hidden');
+        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
     
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function applySearch() {
-        const query = document.getElementById('search-input').value.toLowerCase();
-        const slots = document.querySelectorAll('.slot');
-        slots.forEach(slot => {
-            if (query === "" || slot.innerText.toLowerCase().includes(query)) {
-                slot.classList.remove('filtered-out');
-            } else {
-                slot.classList.add('filtered-out');
+        const q = document.getElementById('search-input').value.toLowerCase();
+        document.querySelectorAll('.slot').forEach(s => {
+            s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q));
+        });
+    }
+
+    function showFullHistory() {
+        const q = document.getElementById('search-input').value.trim().toLowerCase();
+        if (q.length < 2) return alert("Tapez au moins 2 lettres du chantier.");
+        let res = [];
+        Object.keys(window.data).forEach(k => {
+            let item = window.data[k];
+            if (item.chantier && item.chantier.toLowerCase().includes(q)) {
+                let p = k.split('_');
+                res.push({sem: p[0], qui: p[1].toUpperCase(), txt: item.text});
             }
         });
+        if (!res.length) return alert("Aucun résultat.");
+        res.sort((a,b) => a.sem - b.sem);
+        let h = `<div style="text-align:left; max-height:400px; overflow-y:auto; padding:10px;">`;
+        res.forEach(r => h += `<p style="border-bottom:1px solid #eee; padding:8px; margin:0; font-size:13px;"><b>SEM ${r.sem} - ${r.qui}</b><br>${r.txt}</p>`);
+        h += `</div>`;
+        document.getElementById('ed-title').textContent = "Historique : " + q.toUpperCase();
+        document.getElementById('ed-view-only').innerHTML = h;
+        document.getElementById('ed-view-only').classList.remove('hidden');
+        document.getElementById('ed-controls').classList.add('hidden');
+        document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function uploadFile(input) {
         if (!input.files[0]) return;
         const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: 'POST', body: fd }).then(r => r.json()).then(d => {
-            if(d.secure_url) { currentFiles.push({ name: input.files[0].name, url: d.secure_url }); renderFileListAdmin(); }
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{
+            if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
         });
     }
 
     function renderFileListAdmin() {
-        const div = document.getElementById('file-list-admin'); div.innerHTML = "";
-        currentFiles.forEach((f, idx) => { 
-            div.innerHTML += `<div style="background:#f1f5f9; padding:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:11px;"><span>📄 ${f.name}</span><div style="display:flex; gap:8px;"><button class="file-action-btn" onclick="window.open('${f.url}', '_blank')">👁</button><button class="file-action-btn" style="color:var(--danger);" onclick="currentFiles.splice(${idx},1);renderFileListAdmin()">Suppr.</button></div></div>`; 
-        });
+        let d = document.getElementById('file-list-admin'); d.innerHTML = "";
+        currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
     }
 
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
-        const dayNames = ["LUN","MAR","MER","JEU","VEN"];
-        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${dayNames[i]}<br>${getDayDate(curW, i)}`;
+        const days = ["LUN","MAR","MER","JEU","VEN"];
+        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br>${getDayDate(curW, i)}`;
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
@@ -222,17 +226,16 @@
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
-                        let isFilled = dta.text && (!dta.col || dta.col === 'default');
                         let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
-                        let displayTxt = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                        h += `<div class="slot ${isFilled ? 'filled' : ''} ${dta.toDepot?'is-to-depot':''} ${dta.files && dta.files.length > 0?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${displayTxt}</div>`;
+                        let disp = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${disp}</div>`;
                     }
                     h += `</td>`;
                 }
                 h += `</tr>`;
             });
             document.getElementById('b-admin').innerHTML = h;
-            applySearch(); // Réappliquer la recherche si du texte est présent
+            applySearch();
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let d=0; d<5; d++) {
@@ -240,13 +243,11 @@
                 for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
-                        let bCol = (dta.col && dta.col !== 'default') ? dta.col : '#3b82f6';
-                        let btns = ""; if(dta.files) dta.files.forEach(f => { btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold; font-size:14px;">👁 VOIR DOCUMENT</a>`; });
-                        let chTxt = dta.chantier ? `<span style="color:var(--blue); font-weight:800; font-size:16px;">🚧 ${dta.chantier.toUpperCase()}</span><br>` : "";
-                        c += `<div style="padding:15px; border-bottom:1px solid #f1f5f9; border-left:8px solid ${bCol}; margin-bottom:10px;">${chTxt}<b>Mission ${s}:</b><br><span style="font-size:15px;">${dta.text || ''}</span>${btns}</div>`;
+                        let btns = ""; if(dta.files) dta.files.forEach(f => btns += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR DOCUMENT</a>`);
+                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${btns}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="background:white; margin:15px; padding:15px; border-radius:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);"><b>${dayNames[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8; margin:10px 0;">Repos ou pas de mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
     }
@@ -255,36 +256,28 @@
         curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('chantier-display').textContent = d.chantier ? "🚧 " + d.chantier.toUpperCase() : "SANS CHANTIER";
-            document.getElementById('txt-display').textContent = d.text || "Aucun détail saisi.";
-            let h = ""; if(d.files) d.files.forEach(f => { h += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:12px; text-align:center; font-weight:bold;">📄 OUVRIR LE FICHIER</a>`; });
-            document.getElementById('link-display').innerHTML = h;
+            let fH = ""; if(d.files) d.files.forEach(f => fH += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center;">📄 FICHIER</a>`);
+            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || 'SANS CHANTIER'}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>${fH}`;
             document.getElementById('editor-overlay').style.display = 'flex';
             return;
         }
         if(curU !== 'admin') return;
-        currentFiles = d.files ? [...d.files] : []; selectedCol = d.col || 'default';
+        currentFiles = d.files || []; selectedCol = d.col || 'default';
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
-        document.getElementById('e-chantier').value = d.chantier || "";
-        document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
         document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function saveTask() {
-        let v = document.getElementById('e-input').value;
-        let ch = document.getElementById('e-chantier').value;
-        let c = document.getElementById('e-depot').checked;
+        let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
-            sendMails((ch ? "["+ch+"] " : "") + v); 
+            emailjs.send(SERVICE_ID, T_CHAUFFEUR, {chauffeur: curK.split('_')[1], message: "["+ch+"] "+v});
             closeEditor(); 
         });
     }
 
-    function deleteTask() {
-        if(confirm("Supprimer ?")) { db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
-    }
-
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(closeEditor); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
     if(curU) login(curU);
