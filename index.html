@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V62 - Diagnostic</title>
+    <title>RBF Planning V64 - Correct Service ID</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 10px 15px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; }
@@ -32,7 +32,7 @@
 <body>
 
 <header>
-    <div style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING V62</b></div>
+    <div style="display:flex; align-items:center; gap:8px;"><b style="color: var(--blue); font-size: 14px;">RBF PLANNING V64</b></div>
     <div id="u-info" class="hidden"><button onclick="logout()" style="background: var(--danger); border: none; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 10px;">QUITTER</button></div>
 </header>
 
@@ -65,17 +65,22 @@
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <textarea id="e-input" style="width:100%; height:120px; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Détails..."></textarea>
+        <h4 style="margin:0 0 10px 0; color:var(--blue);">Modifier Mission</h4>
+        <textarea id="e-input" style="width:100%; height:120px; padding:10px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px; box-sizing: border-box;" placeholder="Détails..."></textarea>
         <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; font-size:13px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>VISIBLE DÉPÔT</b></label>
-        <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:12px; border-radius:10px; border:none; font-weight:bold;">ENREGISTRER & ENVOYER</button>
+        <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:12px; border-radius:10px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER & ENVOYER</button>
         <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">Annuler</button>
     </div>
 </div>
 
 <script>
+    // CONFIGURATION FIXE
+    const SERVICE_ID = "service_1j5bpwf"; // TON VRAI ID
+    const PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
+
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    (function(){ emailjs.init("q2ZFtf0rJf0I0jLbq"); })();
+    (function(){ emailjs.init(PUBLIC_KEY); })();
 
     function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
     function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
@@ -86,32 +91,29 @@
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    // FONCTION DE DIAGNOSTIC - REGARDE LA CONSOLE POUR VOIR L'ERREUR
     function sendMails(m) {
         if(!curK) return;
         const p = curK.split('_');
         const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+        const dStr = dayNames[parseInt(p[2])] + " " + getDayDate(p[0], parseInt(p[2]));
         
+        // On utilise les noms exacts de tes templates Gmail (minuscules)
         const params = {
             chauffeur: p[1].toUpperCase(),
-            Chauffeur: p[1].toUpperCase(),
-            jour: dayNames[parseInt(p[2])] + " " + getDayDate(p[0], parseInt(p[2])),
-            Jour: dayNames[parseInt(p[2])] + " " + getDayDate(p[0], parseInt(p[2])),
+            jour: dStr,
             message: m
         };
 
-        console.log("Tentative d'envoi EmailJS avec :", params);
+        // Envoi au chauffeur
+        emailjs.send(SERVICE_ID, "template_rbf", params)
+            .then(() => console.log("Email Chauffeur OK"))
+            .catch(err => alert("Erreur Chauffeur: " + err.text));
 
-        // Envoi Chauffeur
-        emailjs.send("service_rbf", "template_rbf", params)
-            .then(res => console.log("✅ Email Chauffeur SUCCESS!", res.status, res.text))
-            .catch(err => console.error("❌ Email Chauffeur FAILED...", err));
-
-        // Envoi Dépôt
+        // Envoi au dépôt si coché
         if(document.getElementById('e-depot').checked) {
-            emailjs.send("service_rbf", "template_66r6v9h", params)
-                .then(res => console.log("✅ Email Dépôt SUCCESS!", res.status, res.text))
-                .catch(err => console.error("❌ Email Dépôt FAILED...", err));
+            emailjs.send(SERVICE_ID, "template_66r6v9h", params)
+                .then(() => console.log("Email Dépôt OK"))
+                .catch(err => console.log("Erreur Dépôt"));
         }
     }
 
