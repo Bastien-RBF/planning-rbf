@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V53 - Notifications Fix</title>
+    <title>RBF Planning V54 - Email Fix</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -114,23 +114,21 @@
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        opt.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedCol = opt.dataset.col; };
-    });
-
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    function sendNotif(action, content) {
-        if (!curK) return;
-        const parts = curK.split('_'); 
-        const userName = parts[1].toUpperCase();
-        emailjs.send('service_rbf', 'template_rbf', {
+    // FONCTION EMAIL ORIGINELLE (REPARÉE)
+    function triggerEmail(action, text) {
+        if(!curK) return;
+        const p = curK.split('_');
+        const params = {
             to_name: "RBF Transport",
-            from_name: "Système Planning",
-            message: `ACTION : ${action}\nCONDUCTEUR : ${userName}\nSEMAINE : ${parts[0]}\nINFO : ${content || 'Aucun texte'}`
-        }).catch(e => console.log("Erreur MailJS", e));
+            user_id: p[1].toUpperCase(),
+            week_id: p[0],
+            message_html: `Action: ${action}\nConducteur: ${p[1].toUpperCase()}\nSemaine: ${p[0]}\nMission: ${text}`
+        };
+        emailjs.send('service_rbf', 'template_rbf', params);
     }
 
     function uploadFile(input) {
@@ -191,7 +189,6 @@
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : []; selectedCol = d.col || 'default';
-        document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.col === selectedCol) o.classList.add('active'); });
         if(curU === 'admin') {
             document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
             document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
@@ -206,16 +203,15 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
-        const isNew = !window.data[curK] || !window.data[curK].text;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => {
-            sendNotif(isNew ? "NOUVELLE TÂCHE" : "MODIFICATION", v);
+            triggerEmail("Mise à jour / Ajout", v);
             closeEditor();
         });
     }
     function deleteTask() {
         if(confirm("Supprimer ?")) {
             db.ref('planning_v18/'+curK).remove().then(() => {
-                sendNotif("SUPPRESSION", "La tâche a été effacée");
+                triggerEmail("SUPPRESSION", "Tâche effacée");
                 closeEditor();
             });
         }
