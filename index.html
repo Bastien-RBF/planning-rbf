@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V59 - Final Fix</title>
+    <title>RBF Planning V60 - Version Stable</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -122,24 +122,28 @@
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    // FONCTION EMAIL ULTRA PRÉCISE (MAJUSCULES RESPECTÉES)
-    function triggerMails(msg) {
+    // RETOUR A LA FONCTION D'ENVOI SIMPLE COMME AVANT
+    function sendNotif(m) {
         if(!curK) return;
         const p = curK.split('_');
-        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        const templateData = {
+        const dNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+        const dStr = dNames[parseInt(p[2])] + " " + getDayDate(p[0], parseInt(p[2]));
+        
+        const data = {
             Chauffeur: p[1].toUpperCase(),
-            Jour: dayNames[parseInt(p[2])] + " (" + getDayDate(p[0], parseInt(p[2])) + ")",
-            message: msg
+            chauffeur: p[1].toUpperCase(),
+            Jour: dStr,
+            jour: dStr,
+            message: m
         };
 
-        // Envoi au chauffeur
-        emailjs.send('service_rbf', 'template_rbf', templateData);
-        
-        // Envoi au dépôt si coché
-        if (document.getElementById('e-depot').checked) {
-            emailjs.send('service_rbf', 'template_66r6v9h', templateData);
-        }
+        // Envoi avec petit délai pour laisser Firebase respirer
+        setTimeout(() => {
+            emailjs.send("service_rbf", "template_rbf", data);
+            if(document.getElementById('e-depot').checked) {
+                emailjs.send("service_rbf", "template_66r6v9h", data);
+            }
+        }, 500);
     }
 
     function uploadFile(input) {
@@ -216,14 +220,14 @@
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => {
-            triggerMails(v);
+            sendNotif(v);
             closeEditor();
         });
     }
     function deleteTask() {
         if(confirm("Supprimer ?")) {
             db.ref('planning_v18/'+curK).remove().then(() => {
-                triggerMails("MISSION SUPPRIMÉE");
+                sendNotif("ANNULÉE");
                 closeEditor();
             });
         }
