@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V57 - Fix Email</title>
+    <title>RBF Planning V58 - Template Fix</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -114,26 +114,30 @@
 
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        opt.onclick = () => { document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active')); opt.classList.add('active'); selectedCol = opt.dataset.col; };
-    });
-
     function askCode(u) { let p = prompt("Code " + u.toUpperCase()); if (p === (u==='admin'?'2026':u==='depot'?'5555':u==='damien'?'1111':u==='cedric'?'2222':u==='jadiel'?'3333':'4444')) { localStorage.setItem('rbf_u', u); login(u); } }
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); db.ref('planning_v18').on('value', (s) => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    // FONCTION EMAIL UNIFIÉE POUR UTILISER {{message_html}}
-    function sendNotif(action, text) {
+    // FONCTION EMAIL MISE À JOUR SELON TES TEMPLATES
+    function sendNotif(text) {
         if(!curK) return;
-        const p = curK.split('_');
+        const p = curK.split('_'); 
+        const dayIdx = parseInt(p[2]);
+        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+        
         const params = {
-            to_name: "RBF Transport",
-            // On envoie tout dans la variable que les templates utilisent le plus souvent
-            message_html: `ACTION : ${action}\nCHAUFFEUR : ${p[1].toUpperCase()}\nSEMAINE : ${p[0]}\nCONTENU : ${text}`
+            chauffeur: p[1].toUpperCase(),
+            jour: dayNames[dayIdx] + " (" + getDayDate(p[0], dayIdx) + ")",
+            message: text
         };
-        emailjs.send('service_rbf', 'template_rbf', params)
-            .then(() => console.log("Mail envoyé avec succès"))
-            .catch(err => console.log("Erreur MailJS:", err));
+
+        // Envoi au chauffeur (Template Contact Us)
+        emailjs.send('service_rbf', 'template_rbf', params);
+        
+        // Si coché pour le dépôt, on envoie aussi au template Dépôt
+        if (document.getElementById('e-depot').checked) {
+            emailjs.send('service_rbf', 'template_66r6v9h', params); 
+        }
     }
 
     function uploadFile(input) {
@@ -194,7 +198,6 @@
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", files:[], toDepot:false, col:'default'};
         currentFiles = d.files ? [...d.files] : []; selectedCol = d.col || 'default';
-        document.querySelectorAll('.color-opt').forEach(o => { o.classList.remove('active'); if(o.dataset.col === selectedCol) o.classList.add('active'); });
         if(curU === 'admin') {
             document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
             document.getElementById('e-input').value = d.text; document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
@@ -210,14 +213,14 @@
     function saveTask() {
         let v = document.getElementById('e-input').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, files:currentFiles, toDepot:c, col:selectedCol}).then(() => {
-            sendNotif("MISE À JOUR / AJOUT", v);
+            sendNotif(v);
             closeEditor();
         });
     }
     function deleteTask() {
         if(confirm("Supprimer ?")) {
             db.ref('planning_v18/'+curK).remove().then(() => {
-                sendNotif("SUPPRESSION", "Tâche effacée");
+                sendNotif("ANNULÉE / SUPPRIMÉE");
                 closeEditor();
             });
         }
