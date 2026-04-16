@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V87</title>
+    <title>RBF Planning V88</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -174,17 +174,21 @@
         Object.keys(window.data).forEach(k => {
             let item = window.data[k]; 
             if (item.chantier && item.chantier.toLowerCase().includes(q)) {
-                let p = k.split('_'); // Format: ANNEE_SEM_QUI_JOUR_SLOT
-                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier});
+                let p = k.split('_'); 
+                if(p.length < 4) return;
+                let dateCal = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
+                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier, date: dateCal.toLocaleDateString('fr-FR'), ts: dateCal.getTime()});
             }
         });
-        if (!res.length) return alert("Aucun résultat trouvé pour ce chantier.");
-        res.sort((a,b) => (a.an + a.sem) - (b.an + b.sem));
+        if (!res.length) return alert("Aucun résultat trouvé.");
+        res.sort((a,b) => b.ts - a.ts);
         let h = `<div style="text-align:left; max-height:450px; overflow-y:auto; padding:5px;">`;
-        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:12px; margin:0; font-size:13px; background:#fff;">
-            <span style="color:var(--blue); font-weight:800; font-size:11px;">[${r.an} - SEMAINE ${r.sem}]</span> 
-            <b style="color:var(--success); margin-left:5px;">${r.qui}</b><br>
-            <div style="margin-top:5px; color:#475569;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}</div>
+        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:12px; background:#fff;">
+            <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:var(--blue); margin-bottom:5px;">
+                <span>S${r.sem} - ${r.an}</span><span>${r.date}</span>
+            </div>
+            <b style="color:var(--success);">${r.qui}</b><br>
+            <div style="margin-top:5px; color:#334155;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}</div>
         </div>`);
         h += `</div>`;
         document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
@@ -273,18 +277,23 @@
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
         document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
         document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
+        document.querySelectorAll('.color-opt').forEach(o => o.classList.toggle('active', o.style.background.includes(selectedCol)));
         document.getElementById('editor-overlay').style.display = 'flex';
     }
+
     function saveTask() {
         let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
     }
+
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { closeEditor(); }); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    
     function applySearch() {
         const q = document.getElementById('search-input').value.toLowerCase();
         document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
     }
+
     function uploadFile(input) {
         if (!input.files[0]) return;
         const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
@@ -292,10 +301,12 @@
             if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
         });
     }
+
     function renderFileListAdmin() {
         let d = document.getElementById('file-list-admin'); d.innerHTML = "";
         currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
     }
+
     if(curU) login(curU);
 </script>
 </body>
