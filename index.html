@@ -3,42 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF PLANNING V98</title>
+    <title>RBF PLANNING V99 - RESTAURATION</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f4f7f9; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; }
+        
         header { background: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; }
         .logo img { height: 40px; }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; }
 
-        .admin-nav { background: white; padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: center; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .admin-nav { background: white; padding: 10px; display: flex; gap: 10px; justify-content: center; border-bottom: 1px solid #ddd; }
+        .btn-top { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 11px; }
 
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; }
         .wk-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ccc; background: white; cursor: pointer; font-weight: bold; }
 
-        /* STYLE V82 */
+        /* TABLEAU STYLE V82 */
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 2px; background: #e2e8f0; min-width: 1000px; }
-        th { background: var(--blue); color: white; padding: 12px 5px; font-size: 11px; }
-        td { background: white; padding: 5px; vertical-align: top; width: 18%; }
-        .user-cell { background: #f1f5f9; font-weight: bold; color: var(--blue); text-align: center; width: 140px; border-right: 3px solid var(--yellow) !important; }
+        table { width: 100%; border-collapse: separate; border-spacing: 2px; background: #cbd5e1; min-width: 1000px; }
+        th { background: var(--blue); color: white; padding: 12px; font-size: 11px; text-transform: uppercase; }
+        td { background: white; padding: 5px; vertical-align: top; width: 18%; border: 1px solid #e2e8f0; }
         
-        .slot { font-size: 10px; padding: 8px; margin-bottom: 4px; border-radius: 4px; background: #fff; border: 1px solid #ddd; cursor: pointer; min-height: 35px; color: #334155; }
-        .slot.filled { border-width: 2px; color: white; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .user-cell { background: #f1f5f9 !important; font-weight: bold; color: var(--blue); text-align: center; width: 140px; border-right: 4px solid var(--yellow) !important; }
+        .slot { font-size: 10px; padding: 8px; margin-bottom: 4px; border-radius: 4px; background: #fff; border: 1px solid #ddd; cursor: pointer; min-height: 38px; color: #334155; }
+        .slot.filled { border-width: 2px; color: white; font-weight: bold; text-shadow: 0 1px 1px rgba(0,0,0,0.3); }
 
-        .card-day { background: white; margin: 10px; padding: 15px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 5px solid var(--yellow); }
-        .mission-box { padding: 12px; border-radius: 8px; margin-bottom: 8px; color: white; font-weight: bold; font-size: 14px; }
+        /* MOBILE EMPLOYE */
+        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 6px solid var(--yellow); }
+        .mission-box { padding: 12px; border-radius: 8px; margin-bottom: 10px; color: white; font-weight: bold; font-size: 14px; }
         .pointage-zone { background: #f8fafc; padding: 12px; border-radius: 10px; margin-top: 10px; border: 1px solid #e2e8f0; }
-        .p-grid { display: flex; gap: 5px; margin-bottom: 8px; }
-        .p-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; }
+        .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .p-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
 
+        /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5000; display: none; align-items: center; justify-content: center; }
-        .modal-box { background: white; width: 95%; max-width: 450px; padding: 20px; border-radius: 15px; }
-        .color-opt { width: 30px; height: 30px; border-radius: 50%; display: inline-block; cursor: pointer; margin-right: 5px; border: 2px solid transparent; }
+        .modal-box { background: white; width: 92%; max-width: 450px; padding: 25px; border-radius: 20px; }
+        .color-opt { width: 35px; height: 35px; border-radius: 50%; display: inline-block; cursor: pointer; margin-right: 10px; border: 3px solid transparent; }
         .color-opt.active { border-color: #000; }
         .hidden { display: none !important; }
     </style>
@@ -47,21 +50,21 @@
 
 <header>
     <div class="logo"><img src="logo.png"></div>
-    <div id="u-ctrl" class="hidden"><button class="btn-logout" onclick="logout()">DÉCONNEXION</button></div>
+    <div id="u-ctrl" class="hidden"><button class="btn-logout" onclick="logout()">CHANGER COMPTE</button></div>
 </header>
 
-<div id="login-screen" style="padding: 20px; text-align: center;">
-    <div style="max-width: 400px; margin: auto; background:white; padding:20px; border-radius:20px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
-        <h2 style="color:var(--blue);">Planning RBF</h2>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button class="btn-top" style="grid-column: span 2; background:var(--blue);" onclick="askCode('admin')">ADMINISTRATION</button>
-            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('interne')">CHAUFFEUR INTERNE</button>
-            <button class="btn-top" style="background:#4b5563;" onclick="askCode('externe')">EXTERNE</button>
-            <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">CÉDRIC</button>
-            <button class="btn-top" style="background:#94a3b8;" onclick="askCode('divers')">DIVERS</button>
-            <button class="btn-top" style="background:#10b981;" onclick="askCode('elec')">INSTAL</button>
-            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('jadiel')">JADIEL</button>
-            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('nicola')">NICOLA</button>
+<div id="login-screen" style="padding: 30px 15px; text-align: center;">
+    <div style="max-width: 400px; margin: auto; background:white; padding:25px; border-radius:25px; box-shadow:0 10px 20px rgba(0,0,0,0.1);">
+        <h3 style="color:var(--blue); margin-bottom:20px;">CONNEXION PLANNING</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <button class="btn-top" style="grid-column: span 2; padding: 18px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('interne')">🚛 CHAUFFEUR INTERNE</button>
+            <button class="btn-top" style="background:#4b5563;" onclick="askCode('externe')">🚛 EXTERNE</button>
+            <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+            <button class="btn-top" style="background:#94a3b8;" onclick="askCode('divers')">🚛 DIVERS</button>
+            <button class="btn-top" style="background:#10b981;" onclick="askCode('elec')">⚡ INSTAL (ELEC)</button>
+            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
+            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('nicola')">👷 NICOLA</button>
         </div>
     </div>
 </div>
@@ -70,16 +73,14 @@
     <div class="admin-nav hidden" id="admin-tools">
         <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 RÉCAPITULATIF DES HEURES</button>
     </div>
-
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
         <div id="wk-disp" style="font-weight:bold; color:var(--blue); text-align:center;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
-
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead><tr><th>PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
+            <thead><tr><th class="user-cell">PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
@@ -88,30 +89,28 @@
 
 <div id="editor-overlay" class="modal-overlay">
     <div class="modal-box">
-        <h3 style="margin:0 0 10px 0;">Editer la mission</h3>
-        <input type="text" id="e-chantier" class="p-input" placeholder="Chantier" style="width:100%; margin-bottom:10px;">
-        <textarea id="e-mission" class="p-input" placeholder="Mission détaillée" style="width:100%; height:60px; margin-bottom:10px;"></textarea>
-
-        <div style="margin-bottom:10px;">
-            <div id="color-picker">
-                <div class="color-opt" style="background:#3b82f6;" data-c="#3b82f6"></div>
-                <div class="color-opt" style="background:#ef4444;" data-c="#ef4444"></div>
-                <div class="color-opt" style="background:#10b981;" data-c="#10b981"></div>
-                <div class="color-opt" style="background:#f59e0b;" data-c="#f59e0b"></div>
-                <div class="color-opt" style="background:#8b5cf6;" data-c="#8b5cf6"></div>
-            </div>
+        <h3 style="margin:0 0 15px 0;">Édition de la mission</h3>
+        <input type="text" id="e-chantier" class="p-input" placeholder="Nom du chantier" style="margin-bottom:10px;">
+        <textarea id="e-mission" class="p-input" placeholder="Détails de la mission..." style="height:60px; margin-bottom:15px;"></textarea>
+        
+        <div id="color-picker" style="margin-bottom:20px;">
+            <div class="color-opt" style="background:#3b82f6;" data-c="#3b82f6"></div>
+            <div class="color-opt" style="background:#ef4444;" data-c="#ef4444"></div>
+            <div class="color-opt" style="background:#10b981;" data-c="#10b981"></div>
+            <div class="color-opt" style="background:#f59e0b;" data-c="#f59e0b"></div>
+            <div class="color-opt" style="background:#8b5cf6;" data-c="#8b5cf6"></div>
         </div>
 
-        <div style="background:#fff1f1; padding:10px; border-radius:10px; border:1px solid #ffcfcf; margin-bottom:10px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 LOGISTIQUE / MATÉRIEL :</label>
-            <textarea id="e-matos" class="p-input" style="width:100%; height:40px; margin-top:5px;" placeholder="Besoins dépôt..."></textarea>
-            <label style="display:flex; align-items:center; gap:10px; margin-top:8px; font-size:12px; font-weight:bold;">
-                <input type="checkbox" id="e-send"> 📧 ENVOYER AU DÉPÔT
+        <div style="background:#fff1f1; padding:15px; border-radius:12px; border:1px solid #ffd1d1; margin-bottom:15px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 LOGISTIQUE DÉPÔT :</label>
+            <textarea id="e-matos" class="p-input" style="height:45px; margin-top:5px;" placeholder="Liste matériel..."></textarea>
+            <label style="display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; font-weight:bold;">
+                <input type="checkbox" id="e-send" style="width:18px; height:18px;"> 📧 ENVOYER AU DÉPÔT
             </label>
         </div>
 
-        <button class="btn-top" style="width:100%; padding:15px; background:var(--blue);" onclick="saveAll()">ENREGISTRER</button>
-        <button onclick="closeEd()" style="width:100%; border:none; background:none; margin-top:10px; color:#666; cursor:pointer;">Annuler</button>
+        <button class="btn-top" style="width:100%; padding:15px; font-size:14px;" onclick="saveAll()">ENREGISTRER</button>
+        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#666; margin-top:15px; cursor:pointer;">Annuler / Fermer</button>
     </div>
 </div>
 
@@ -121,13 +120,12 @@
     const db = firebase.database(); emailjs.init(PUBLIC_KEY);
 
     let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, selCol = "#3b82f6";
-    
     const users = [
         {id:'interne', n:'CHAUFFEUR INTERNE', s:4},
         {id:'externe', n:'EXTERNE', s:4},
         {id:'cedric', n:'CÉDRIC', s:4},
         {id:'divers', n:'DIVERS', s:4},
-        {id:'elec', n:'INSTAL', s:4},
+        {id:'elec', n:'INSTAL (ELEC)', s:4},
         {id:'jadiel', n:'JADIEL', s:2},
         {id:'nicola', n:'NICOLA', s:2}
     ];
@@ -145,18 +143,15 @@
         };
     });
 
-    // FORCE LE LUNDI : Méthode ISO 8601
+    // CALENDRIER STRICT LUNDI -> VENDREDI
     function getDates(w, y) {
-        let simple = new Date(y, 0, 1 + (w - 1) * 7);
-        let dow = simple.getDay();
-        let ISOweekStart = simple;
-        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-        
+        let d = new Date(y, 0, 1 + (w - 1) * 7);
+        let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6:1);
+        let mon = new Date(d.setDate(diff));
         let res = [];
         for(let i=0; i<5; i++) {
-            let d = new Date(ISOweekStart); d.setDate(ISOweekStart.getDate() + i);
-            res.push(d.toISOString().split('T')[0]);
+            let n = new Date(mon); n.setDate(mon.getDate() + i);
+            res.push(n.toISOString().split('T')[0]);
         }
         return res;
     }
@@ -173,9 +168,9 @@
                 dates.forEach(date => {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${date}_${u.id}_s${s}`, d = window.planData ? window.planData[k] : null;
-                        let st = d ? `background:${d.col||'#3b82f6'}; border-color:${d.col||'#3b82f6'};` : "";
-                        h += `<div class="slot ${d?'filled':''}" style="${st}" onclick="openEd('${k}')">${d ? d.chantier.toUpperCase() : '...'}</div>`;
+                        let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
+                        let st = dta ? `background:${dta.col||'#3b82f6'}; border-color:${dta.col||'#3b82f6'};` : "";
+                        h += `<div class="slot ${dta?'filled':''}" style="${st}" onclick="openEd('${k}')">${dta ? dta.chantier.toUpperCase() : '...'}</div>`;
                     }
                     h += `</td>`;
                 });
@@ -186,19 +181,19 @@
             document.getElementById('v-user').classList.remove('hidden');
             let h = ""; dates.forEach(date => {
                 let mHtml = ""; for(let s=1; s<=4; s++) {
-                    let d = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
-                    if(d) mHtml += `<div class="mission-box" style="background:${d.col||'#3b82f6'}">📍 ${d.chantier.toUpperCase()} : ${d.mission}</div>`;
+                    let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
+                    if(dta) mHtml += `<div class="mission-box" style="background:${dta.col||'#3b82f6'}">📍 ${dta.chantier.toUpperCase()}<br>${dta.mission}</div>`;
                 }
                 let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', r:''};
                 h += `<div class="card-day">
                     <b>${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric'})}</b>
-                    ${mHtml || '<div style="color:#999; font-size:12px; margin:5px 0;">Repos</div>'}
+                    ${mHtml || '<div style="color:#999; font-size:12px; margin:5px 0;">Aucune mission</div>'}
                     <div class="pointage-zone">
                         <div class="p-grid">
                             <input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)">
                             <input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)">
                         </div>
-                        <input type="text" class="p-input" style="width:100%;" placeholder="Commentaire / Rapport" value="${pt.r||''}" onblur="saveP('${date}','r',this.value)">
+                        <input type="text" class="p-input" placeholder="Rapport / Commentaire" value="${pt.r||''}" onblur="saveP('${date}','r',this.value)">
                     </div></div>`;
             });
             document.getElementById('v-user').innerHTML = h;
@@ -217,16 +212,16 @@
 
     function saveAll() {
         let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matos').value;
-        db.ref('v98_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, col:selCol}).then(() => {
+        db.ref('v99_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, col:selCol}).then(() => {
             if(document.getElementById('e-send').checked && ma) {
-                emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL : ${ch.toUpperCase()}\n\nLISTE :\n${ma}`, user_id: curK.split('_')[1] });
+                emailjs.send(SERVICE_ID, T_DEPOT, { message: `DÉPÔT - CHANTIER: ${ch.toUpperCase()}\n\nLISTE:\n${ma}`, user_id: curK.split('_')[1] });
             }
             closeEd();
         });
     }
 
     function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function saveP(date, f, v) { db.ref(`v98_point/${date}_${curU}/${f}`).set(v); }
+    function saveP(date, f, v) { db.ref(`v99_point/${date}_${curU}/${f}`).set(v); }
     function changeWeek(v) { curW += v; render(); }
 
     if(curU) {
@@ -234,8 +229,8 @@
         document.getElementById('app-content').classList.remove('hidden');
         document.getElementById('u-ctrl').classList.remove('hidden');
         if(curU === 'admin') document.getElementById('admin-tools').classList.remove('hidden');
-        db.ref('v98_plan').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('v98_point').on('value', s => { window.pointData = s.val(); render(); });
+        db.ref('v99_plan').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('v99_point').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
