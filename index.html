@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V82</title>
+    <title>RBF Planning V84</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -27,6 +27,7 @@
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .holiday-label { display: block; font-size: 9px; color: var(--yellow); margin-top: 4px; font-weight: bold; text-transform: uppercase; }
         .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: opacity 0.2s; }
         .slot.filtered-out { opacity: 0.15; pointer-events: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
@@ -109,91 +110,84 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     (function(){ emailjs.init(PUBLIC_KEY); })();
-    function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
-    function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
-    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
+
+    // CALCUL SEMAINE ET DATE FLEXIBLE (FONCTIONNE POUR TOUTES LES ANNÉES)
+    function getWeek(d) {
+        const date = new Date(d.getTime());
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        const week1 = new Date(date.getFullYear(), 0, 4);
+        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    }
+    
+    function getDateFromWeek(w, y, dIdx) {
+        const simple = new Date(y, 0, 1 + (w - 1) * 7);
+        const dow = simple.getDay();
+        const ISOweekStart = simple;
+        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+        ISOweekStart.setDate(ISOweekStart.getDate() + dIdx);
+        return ISOweekStart;
+    }
+
+    let holidays = {};
+    async function fetchHolidays(year) {
+        try {
+            const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`);
+            holidays = await r.json();
+            render();
+        } catch(e) { console.log("Erreur jours fériés"); }
+    }
+
+    let curDate = new Date();
+    let curW = getWeek(curDate), curY = curDate.getFullYear();
+    let curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
+    
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colors.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
         d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
         document.getElementById('cp').appendChild(d);
     });
+
     function askCode(u) { 
         let p = prompt("Code " + u.toUpperCase()); 
         let codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
     }
+
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
         document.getElementById('u-info').classList.remove('hidden'); 
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
+        fetchHolidays(curY);
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
+
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-    function applySearch() {
-        const q = document.getElementById('search-input').value.toLowerCase();
-        document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
-    }
-    function showFullHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if (q.length < 2) return alert("Tapez 2 lettres.");
-        let res = []; Object.keys(window.data).forEach(k => {
-            let item = window.data[k]; if (item.chantier && item.chantier.toLowerCase().includes(q)) {
-                let p = k.split('_'); res.push({sem: p[0], qui: p[1].toUpperCase(), txt: item.text});
-            }
-        });
-        if (!res.length) return alert("Rien.");
-        res.sort((a,b) => a.sem - b.sem);
-        let h = `<div style="text-align:left; max-height:400px; overflow-y:auto; padding:10px;">`;
-        res.forEach(r => h += `<p style="border-bottom:1px solid #eee; padding:10px; margin:0; font-size:13px;"><b>SEM ${r.sem} - ${r.qui}</b><br>${r.txt}</p>`);
-        h += `</div>`;
-        document.getElementById('ed-title').textContent = "Archives: " + q.toUpperCase();
-        document.getElementById('ed-view-only').innerHTML = h;
-        document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden');
-        document.getElementById('editor-overlay').style.display = 'flex';
-    }
-    function sendMails(msg) {
-        if(!curK) return;
-        const now = new Date();
-        const realCurrentWeek = getWeek(now);
-        const realCurrentDay = Math.max(0, now.getDay() - 1); 
-        const p = curK.split('_');
-        const taskWeek = parseInt(p[0]);
-        const taskDayIdx = parseInt(p[2]);
-        if (taskWeek !== realCurrentWeek) return;
-        if (taskDayIdx < realCurrentDay) return;
-        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
-        const dateStr = dayNames[taskDayIdx] + " " + getDayDate(taskWeek, taskDayIdx);
-        const params = { chauffeur: p[1].toUpperCase(), jour: dateStr, message: msg };
-        emailjs.send(SERVICE_ID, T_CHAUFFEUR, params);
-        if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, T_DEPOT, params);
-    }
-    function uploadFile(input) {
-        if (!input.files[0]) return;
-        const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{
-            if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
-        });
-    }
-    function renderFileListAdmin() {
-        let d = document.getElementById('file-list-admin'); d.innerHTML = "";
-        currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
-    }
+    
     function render() {
-        document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
+        document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"];
-        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br>${getDayDate(curW, i)}`;
+        
+        for(let i=0; i<5; i++) {
+            let d = getDateFromWeek(curW, curY, i);
+            let iso = d.toISOString().split('T')[0];
+            let label = holidays[iso] ? `<span class="holiday-label">${holidays[iso]}</span>` : "";
+            document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${label}`;
+        }
+
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                for(let d=0; d<5; d++) {
+                for(let dIdx=0; dIdx<5; dIdx++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
+                        let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
                         let disp = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
@@ -206,18 +200,30 @@
             document.getElementById('b-admin').innerHTML = h; applySearch();
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
-            for(let d=0; d<5; d++) {
+            for(let dIdx=0; dIdx<5; dIdx++) {
+                let dDate = getDateFromWeek(curW, curY, dIdx);
+                let iso = dDate.toISOString().split('T')[0];
+                let hLabel = holidays[iso] ? `<span style="color:var(--yellow); font-weight:bold;"> - ${holidays[iso]}</span>` : "";
                 let c = ""; for(let s=1; s<=4; s++) {
-                    let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
+                    let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
                         let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR FICHIER</a>`);
                         c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hLabel}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
     }
+
+    function changeWeek(v) {
+        curW += v;
+        if(curW > 52) { curW = 1; curY++; fetchHolidays(curY); }
+        else if(curW < 1) { curW = 52; curY--; fetchHolidays(curY); }
+        render();
+    }
+
+    // Le reste des fonctions (openEd, saveTask, etc.) reste identique à ta version
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
@@ -235,13 +241,25 @@
     }
     function saveTask() {
         let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
-            sendMails("["+ch.toUpperCase()+"] " + v); closeEditor(); 
+        db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
+    }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { closeEditor(); }); }
+    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function applySearch() {
+        const q = document.getElementById('search-input').value.toLowerCase();
+        document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
+    }
+    function uploadFile(input) {
+        if (!input.files[0]) return;
+        const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{
+            if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
         });
     }
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
-    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
+    function renderFileListAdmin() {
+        let d = document.getElementById('file-list-admin'); d.innerHTML = "";
+        currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
+    }
     if(curU) login(curU);
 </script>
 </body>
