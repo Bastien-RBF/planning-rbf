@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V89</title>
+    <title>RBF Planning V90</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -44,6 +44,7 @@
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
+        .mat-label { background: #dcfce7; color: #166534; font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; margin-bottom: 4px; display: inline-block; }
     </style>
 </head>
 <body>
@@ -91,8 +92,13 @@
         <div id="ed-controls">
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
             <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
+            
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
-            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none;"></textarea>
+            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none; margin-bottom:10px;"></textarea>
+            
+            <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL (POUR DÉPÔT) :</label>
+            <textarea id="e-matos" style="width:100%; height:60px; padding:12px; border-radius:12px; border:1px solid var(--success); box-sizing: border-box; outline: none; margin-bottom:10px;" placeholder="Ex: Mini-pelle, 10 sacs de chaux..."></textarea>
+
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom: 12px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
@@ -177,7 +183,7 @@
                 let p = k.split('_'); 
                 if(p.length < 4) return;
                 let dateCal = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
-                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier, date: dateCal.toLocaleDateString('fr-FR'), ts: dateCal.getTime()});
+                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, mat: item.matos, ch: item.chantier, date: dateCal.toLocaleDateString('fr-FR'), ts: dateCal.getTime()});
             }
         });
         if (!res.length) return alert("Aucun résultat trouvé.");
@@ -188,7 +194,7 @@
                 <span>S${r.sem} - ${r.an}</span><span>${r.date}</span>
             </div>
             <b style="color:var(--success);">${r.qui}</b><br>
-            <div style="margin-top:5px; color:#334155;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}</div>
+            <div style="margin-top:5px; color:#334155;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}${r.mat ? '<br><i style="color:green;">Logistique : '+r.mat+'</i>' : ''}</div>
         </div>`);
         h += `</div>`;
         document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
@@ -217,7 +223,6 @@
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; 
-            // MISE A JOUR : d:true pour instal, jadiel et nicola afin qu'ils apparaissent au dépôt
             const users = [
                 {id:'interne',s:4,d:true},
                 {id:'externe',s:4,d:true},
@@ -235,11 +240,21 @@
                     let isHoliday = holidayIdx.includes(dIdx) ? 'is-holiday-col' : '';
                     h += `<td class="${isHoliday}">`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
+                        let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", matos:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
+                        
                         let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
-                        let disp = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${disp}</div>`;
+                        
+                        let content = "";
+                        if(curU === 'depot') {
+                           if(dta.matos) content += `<div class="mat-label">MATÉRIEL : ${dta.matos}</div><br>`;
+                           content += dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : dta.text;
+                        } else {
+                           content = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                           if(dta.matos) content += `<br><span style="font-size:8px; color:#16a34a;">📦 ${dta.matos}</span>`;
+                        }
+
+                        h += `<div class="slot ${dta.text||dta.matos?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${content}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -255,9 +270,10 @@
                 let hLabel = isHoliday ? `<span class="holiday-badge" style="margin-left:10px;">${holidays[iso]}</span>` : "";
                 let c = ""; for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
-                    if(dta && (dta.text || dta.chantier)) {
+                    if(dta && (dta.text || dta.chantier || dta.matos)) {
                         let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR FICHIER</a>`);
-                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
+                        let mBox = dta.matos ? `<div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:8px; border-radius:6px; margin-top:8px; color:#166534; font-size:12px;"><b>📦 Matériel prévu :</b><br>${dta.matos}</div>` : "";
+                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${mBox}${b}</div>`;
                     }
                 }
                 let bgH = isHoliday ? 'background:#fffbeb; border-radius:12px;' : '';
@@ -274,25 +290,31 @@
     }
 
     function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
+        curK = k; let d = window.data[k] || {text:"", matos:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
             let fH = ""; if(d.files) d.files.forEach(f => fH += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center;">📄 FICHIER</a>`);
-            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>${fH}`;
+            let mH = d.matos ? `<div style="background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0; margin-top:10px; color:#166534;"><b>📦 BESOIN MATÉRIEL :</b><br>${d.matos}</div>` : "";
+            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:0;">${d.text}</p>${mH}${fH}`;
             document.getElementById('editor-overlay').style.display = 'flex'; return;
         }
         if(curU !== 'admin') return;
         currentFiles = d.files || []; selectedCol = d.col || 'default';
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
-        document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
-        document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
-        document.querySelectorAll('.color-opt').forEach(o => o.classList.toggle('active', o.style.background.includes(selectedCol)));
+        document.getElementById('e-chantier').value = d.chantier || ""; 
+        document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-matos').value = d.matos || "";
+        document.getElementById('e-depot').checked = !!d.toDepot; 
+        renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function saveTask() {
-        let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
+        let v = document.getElementById('e-input').value;
+        let m = document.getElementById('e-matos').value;
+        let ch = document.getElementById('e-chantier').value;
+        let c = document.getElementById('e-depot').checked;
+        db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
     }
 
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { closeEditor(); }); }
