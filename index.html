@@ -3,31 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V96</title>
+    <title>RBF Planning V97</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         
-        /* HEADER AVEC TITRE CENTRÉ ET BOUTON À DROITE */
         header { 
-            background: white; 
-            padding: 10px 15px; 
-            display: grid; 
-            grid-template-columns: 80px 1fr 80px; /* Force l'équilibre pour le centrage */
-            align-items: center; 
-            border-bottom: 4px solid var(--yellow); 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            background: white; padding: 10px 15px; display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; 
+            border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
         }
         .header-logo img { height: 35px; display: block; }
         .header-title { color: var(--blue); font-size: 13px; font-weight: 800; text-transform: uppercase; text-align: center; }
         .header-right { text-align: right; }
 
-        /* UI ELEMENTS */
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; flex-wrap: wrap; }
         #search-input { flex: 1; min-width: 150px; padding: 10px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; }
         .btn-action { background: var(--blue); color: white; border: none; padding: 10px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; }
@@ -36,37 +26,29 @@
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: white; font-weight: bold; font-size: 18px; cursor: pointer; }
 
-        /* TABLE */
         .table-container { padding: 10px; overflow-x: auto; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: 0.2s; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
-        .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
-        /* MODALS */
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(4px); }
         .box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; position: relative; }
         
-        input[type="time"], input[type="text"], textarea { width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; font-size: 15px; box-sizing: border-box; outline: none; }
+        input[type="time"], input[type="text"], textarea { width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; font-size: 15px; box-sizing: border-box; outline: none; font-family: inherit; }
         .pause-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 8px; border-radius: 10px; border: 1px solid #e2e8f0; }
         
-        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
-        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
-        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
-
         .hidden { display: none !important; }
-        .mat-label { background: #dcfce7; color: #166534; font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; display: inline-block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-logo"><img src="logo.png" style="height:35px;"></div>
+    <div class="header-logo"><img src="logo.png"></div>
     <div class="header-title">PLANNING TRANSPORT</div>
     <div class="header-right">
         <button id="logout-btn" onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer; display:none;">QUITTER</button>
@@ -92,11 +74,10 @@
 <div id="app-content" class="hidden">
     <div id="admin-tools" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button class="btn-action" onclick="showFullHistory()">HISTORIQUE</button>
-        <button class="btn-action" style="background:var(--success)" onclick="viewAllPointages()">📊 POINTAGES</button>
+        <button class="btn-action" style="background:var(--success)" onclick="viewAllPointages()">📊 RÉCAP DES JOURNÉES</button>
     </div>
 
-    <button id="btn-show-pointer" class="btn-pointage hidden" onclick="openPointage()">⏰ POINTER MES HEURES</button>
+    <button id="btn-show-pointer" class="btn-pointage hidden" onclick="openPointage()">⏰ POINTER & RAPPORT DU JOUR</button>
     
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
@@ -115,61 +96,40 @@
 
 <div id="pointage-overlay" class="overlay">
     <div class="box">
-        <h3 style="margin-top:0; color:var(--blue);">Pointage du jour</h3>
-        <label style="font-size:12px; font-weight:bold;">🕗 DÉBUT DE JOURNÉE :</label>
+        <h3 style="margin-top:0; color:var(--blue);">Pointage & Rapport</h3>
+        <label style="font-size:12px; font-weight:bold;">🕗 DÉBUT :</label>
         <input type="time" id="p-start">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px;">
-            <label style="font-weight:bold; font-size:12px;">☕ MES PAUSES :</label>
-            <button onclick="addPauseRow()" style="background:var(--blue); color:white; border:none; padding:6px 12px; border-radius:6px; font-size:10px; cursor:pointer;">+ AJOUTER</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0 5px;">
+            <label style="font-weight:bold; font-size:12px;">☕ PAUSES :</label>
+            <button onclick="addPauseRow()" style="background:var(--blue); color:white; border:none; padding:5px 10px; border-radius:6px; font-size:10px; cursor:pointer;">+ AJOUTER</button>
         </div>
         <div id="pause-container"></div>
-        <label style="font-size:12px; font-weight:bold;">🏁 FIN DE JOURNÉE :</label>
+        <label style="font-size:12px; font-weight:bold;">🏁 FIN :</label>
         <input type="time" id="p-end">
-        <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">VALIDER MES HEURES</button>
-        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:15px; cursor:pointer; font-weight:bold;">FERMER</button>
+        
+        <hr style="border:none; border-top:1px solid #eee; margin:15px 0;">
+        <label style="font-size:12px; font-weight:bold; color:var(--blue);">📝 RAPPORT DE LA JOURNÉE :</label>
+        <textarea id="p-rapport" style="height:100px; margin-top:5px;" placeholder="Détaillez ce que vous avez fait aujourd'hui..."></textarea>
+
+        <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">ENREGISTRER MA JOURNÉE</button>
+        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px; cursor:pointer;">ANNULER</button>
     </div>
 </div>
 
 <div id="recap-overlay" class="overlay">
     <div class="box" style="max-width:600px;">
-        <h3 style="margin-top:0; color:var(--blue);">Récapitulatif des Horaires</h3>
+        <h3 style="margin-top:0; color:var(--blue);">Journaux d'activité</h3>
         <div id="recap-content" style="font-size:12px;"></div>
-        <button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:12px; margin-top:20px; font-weight:bold; cursor:pointer;">FERMER</button>
-    </div>
-</div>
-
-<div id="editor-overlay" class="overlay">
-    <div class="box">
-        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
-        <div id="ed-view-only" class="hidden"></div>
-        <div id="ed-controls">
-            <label style="font-size:11px; font-weight:bold;">NOM DU CHANTIER :</label>
-            <input type="text" id="e-chantier" placeholder="Ex: Chantier Durand">
-            <label style="font-size:11px; font-weight:bold;">MISSION :</label>
-            <textarea id="e-input" style="height:80px;"></textarea>
-            <div id="zone-matos" class="hidden">
-                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL :</label>
-                <textarea id="e-matos" style="height:60px; border-color:var(--success);"></textarea>
-            </div>
-            <div class="color-picker" id="cp"></div>
-            <div id="file-list-admin" style="margin-bottom:10px;"></div>
-            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px; cursor:pointer;">📎 AJOUTER UN DOCUMENT</button>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:13px;"><input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>SIGNALER AU DÉPÔT</b></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
-        </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:10px; border:none; background:none; color:gray; cursor:pointer; font-weight:bold;">FERMER</button>
+        <button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:12px; margin-top:20px; font-weight:bold;">FERMER</button>
     </div>
 </div>
 
 <script>
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
 
     let curDate = new Date();
-    let curW = 0, curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
+    let curW = 0, curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u');
 
     function getWeek(d) {
         let date = new Date(d.getTime()); date.setHours(0,0,0,0);
@@ -181,8 +141,8 @@
 
     function getDateFromWeek(w, y, dIdx) {
         let simple = new Date(y, 0, 1 + (w - 1) * 7);
-        let dow = simple.getDay();
         let ISOweekStart = simple;
+        let dow = simple.getDay();
         if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
         else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
         ISOweekStart.setDate(ISOweekStart.getDate() + dIdx);
@@ -215,10 +175,11 @@
     function openPointage() {
         let today = new Date().toISOString().split('T')[0];
         document.getElementById('pause-container').innerHTML = "";
-        db.ref('pointages_v2/' + today + '/' + curU).once('value', s => {
+        db.ref('pointages_v3/' + today + '/' + curU).once('value', s => {
             let d = s.val() || {};
             document.getElementById('p-start').value = d.start || "";
             document.getElementById('p-end').value = d.end || "";
+            document.getElementById('p-rapport').value = d.rapport || "";
             if(d.pauses) d.pauses.forEach(p => addPauseRow(p.s, p.e));
         });
         document.getElementById('pointage-overlay').style.display = 'flex';
@@ -231,24 +192,28 @@
             let s = row.querySelector('.p-s').value, e = row.querySelector('.p-e').value;
             if(s && e) pauses.push({ s, e });
         });
-        db.ref('pointages_v2/' + today + '/' + curU).set({
+        db.ref('pointages_v3/' + today + '/' + curU).set({
             start: document.getElementById('p-start').value,
             end: document.getElementById('p-end').value,
+            rapport: document.getElementById('p-rapport').value,
             pauses: pauses,
             timestamp: Date.now()
-        }).then(() => { alert("Pointage enregistré !"); document.getElementById('pointage-overlay').style.display='none'; });
+        }).then(() => { alert("Journée enregistrée !"); document.getElementById('pointage-overlay').style.display='none'; });
     }
 
     function viewAllPointages() {
-        db.ref('pointages_v2').limitToLast(10).once('value', s => {
+        db.ref('pointages_v3').limitToLast(10).once('value', s => {
             let days = s.val() || {}, h = "";
             Object.keys(days).sort().reverse().forEach(date => {
                 h += `<div style="background:var(--blue); color:white; padding:10px; margin-top:15px; border-radius:8px; font-weight:bold;">📅 ${date}</div>`;
                 Object.keys(days[date]).forEach(u => {
-                    let p = days[date][u], pStr = p.pauses ? p.pauses.map(ps => `<span style="background:#fef3c7; padding:2px 5px; border-radius:4px; margin-right:5px; color:black;">${ps.s}-${ps.e}</span>`).join('') : 'aucune';
+                    let p = days[date][u];
                     h += `<div style="padding:12px; border-bottom:1px solid #eee; background:white;">
-                        <b style="color:var(--blue);">${u.toUpperCase()}</b> | Début: <b>${p.start||'--'}</b> | Fin: <b>${p.end||'--'}</b><br>
-                        <div style="margin-top:5px; color:#64748b; font-size:11px;">☕ Pauses: ${pStr}</div>
+                        <b style="color:var(--blue);">${u.toUpperCase()}</b> | Heures: <b>${p.start||'--'} à ${p.end||'--'}</b><br>
+                        <div style="margin:8px 0; padding:10px; background:#f8fafc; border-radius:8px; border-left:4px solid var(--yellow);">
+                            <b style="font-size:10px; color:gray; display:block; margin-bottom:4px;">RAPPORT :</b>
+                            ${p.rapport ? p.rapport.replace(/\n/g, '<br>') : '<i style="color:silver">Aucun rapport saisi</i>'}
+                        </div>
                     </div>`;
                 });
             });
@@ -269,22 +234,16 @@
             document.getElementById('v-admin').classList.remove('hidden');
             document.getElementById('v-driver').classList.add('hidden');
             let h = ""; 
-            const users = [
-                {id:'interne',s:4,d:true}, {id:'externe',s:4,d:true}, {id:'cedric',s:4,d:true},
-                {id:'divers',s:4,d:false}, {id:'instal',s:4,d:true}, {id:'jadiel',s:2,d:true}, {id:'nicola',s:2,d:true}
-            ];
+            const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                for(let dIdx=0; dIdx<5; dIdx++) {
+                for(let d=0; d<5; d++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", chantier:"", col:'default'};
-                        if (curU === 'depot' && !dta.toDepot) continue;
-                        let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col};` : '';
+                        let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:""};
                         let content = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                        if(dta.matos) content += `<br><span style="font-size:8px; color:#16a34a;">📦 ${dta.matos}</span>`;
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${content}</div>`;
+                        h += `<div class="slot ${dta.text?'filled':''}">${content}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -294,75 +253,21 @@
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             document.getElementById('v-admin').classList.add('hidden');
-            for(let dIdx=0; dIdx<5; dIdx++) {
-                let dDate = getDateFromWeek(curW, curY, dIdx);
+            for(let d=0; d<5; d++) {
+                let dDate = getDateFromWeek(curW, curY, d);
                 let c = ""; for(let s=1; s<=4; s++) {
-                    let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
+                    let dta = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
-                        let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR DOCUMENT</a>`);
-                        let mBox = dta.matos ? `<div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:8px; border-radius:6px; margin-top:8px; color:#166534; font-size:12px;"><b>📦 Matériel :</b> ${dta.matos}</div>` : "";
-                        c += `<div style="padding:15px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || ''}</b><br>${dta.text || ''}${mBox}${b}</div>`;
+                        c += `<div style="padding:15px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:12px;"><b>${dta.chantier?.toUpperCase() || ''}</b><br>${dta.text || ''}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
     }
 
-    const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
-    const cp = document.getElementById('cp');
-    colors.forEach(c => {
-        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'#eff6ff':c;
-        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
-        cp.appendChild(d);
-    });
-
-    function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", matos:"", chantier:"", files:[], toDepot:false, col:'default'};
-        if(curU !== 'admin') return;
-        currentFiles = d.files || []; selectedCol = d.col || 'default';
-        document.getElementById('e-chantier').value = d.chantier || ""; 
-        document.getElementById('e-input').value = d.text || ""; 
-        document.getElementById('e-matos').value = d.matos || ""; 
-        document.getElementById('e-depot').checked = !!d.toDepot;
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-        renderFileListAdmin();
-        document.getElementById('editor-overlay').style.display = 'flex';
-    }
-
-    function saveTask() {
-        let v = document.getElementById('e-input').value, m = document.getElementById('e-matos').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
-    }
-
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { closeEditor(); }); }
-    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW += v; render(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-
-    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); } }); }
-    function renderFileListAdmin() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()" style="border:none; background:none; color:red; cursor:pointer;">X</button></div>`); }
-
-    function showFullHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if (q.length < 2) return alert("Tapez au moins 2 lettres.");
-        let res = []; 
-        Object.keys(window.data).forEach(k => {
-            let item = window.data[k]; 
-            if (item.chantier && item.chantier.toLowerCase().includes(q)) {
-                let p = k.split('_'); 
-                res.push({sem: p[1], qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier});
-            }
-        });
-        if (!res.length) return alert("Aucun résultat.");
-        let h = res.map(r => `<div style="border-bottom:1px solid #eee; padding:10px;"><b>S${r.sem} - ${r.qui}</b> : ${r.txt}</div>`).join('');
-        document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
-        document.getElementById('ed-view-only').innerHTML = h;
-        document.getElementById('ed-view-only').classList.remove('hidden'); 
-        document.getElementById('ed-controls').classList.add('hidden');
-        document.getElementById('editor-overlay').style.display = 'flex';
-    }
-
     if(curU) login(curU);
 </script>
 </body>
