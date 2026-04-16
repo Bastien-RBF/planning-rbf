@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V84</title>
+    <title>RBF Planning V85</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -27,16 +27,22 @@
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
-        .holiday-label { display: block; font-size: 9px; color: var(--yellow); margin-top: 4px; font-weight: bold; text-transform: uppercase; }
+        
+        /* STYLE JOUR FÉRIÉ */
+        .is-holiday-col { background: #fffbeb !important; }
+        .holiday-badge { display: inline-block; background: var(--yellow); color: var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-top: 5px; font-weight: 900; text-transform: uppercase; }
+
         .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: opacity 0.2s; }
         .slot.filtered-out { opacity: 0.15; pointer-events: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
+        
         #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
         .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
         .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
+        
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
@@ -111,7 +117,7 @@
     const db = firebase.database();
     (function(){ emailjs.init(PUBLIC_KEY); })();
 
-    // CALCUL SEMAINE ET DATE FLEXIBLE (FONCTIONNE POUR TOUTES LES ANNÉES)
+    // CALCUL DATE ISO POUR TOUTES LES ANNÉES
     function getWeek(d) {
         const date = new Date(d.getTime());
         date.setHours(0, 0, 0, 0);
@@ -171,11 +177,20 @@
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"];
         
+        // Stocker quels index de jours sont fériés pour colorer les colonnes
+        let holidayIdx = [];
+
         for(let i=0; i<5; i++) {
             let d = getDateFromWeek(curW, curY, i);
-            let iso = d.toISOString().split('T')[0];
-            let label = holidays[iso] ? `<span class="holiday-label">${holidays[iso]}</span>` : "";
-            document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${label}`;
+            // On ajuste l'ISO pour éviter les décalages de timezone
+            let iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+            
+            if (holidays[iso]) {
+                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}<br><span class="holiday-badge">${holidays[iso]}</span>`;
+                holidayIdx.push(i);
+            } else {
+                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`;
+            }
         }
 
         if (curU === 'admin' || curU === 'depot') {
@@ -185,7 +200,8 @@
                 if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dIdx=0; dIdx<5; dIdx++) {
-                    h += `<td>`;
+                    let isHoliday = holidayIdx.includes(dIdx) ? 'is-holiday-col' : '';
+                    h += `<td class="${isHoliday}">`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
@@ -202,8 +218,10 @@
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let dIdx=0; dIdx<5; dIdx++) {
                 let dDate = getDateFromWeek(curW, curY, dIdx);
-                let iso = dDate.toISOString().split('T')[0];
-                let hLabel = holidays[iso] ? `<span style="color:var(--yellow); font-weight:bold;"> - ${holidays[iso]}</span>` : "";
+                let iso = dDate.getFullYear() + "-" + String(dDate.getMonth()+1).padStart(2,'0') + "-" + String(dDate.getDate()).padStart(2,'0');
+                let isHoliday = holidayIdx.includes(dIdx);
+                let hLabel = isHoliday ? `<span class="holiday-badge" style="margin-left:10px;">${holidays[iso]}</span>` : "";
+                
                 let c = ""; for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
@@ -211,7 +229,8 @@
                         c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hLabel}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                let bgH = isHoliday ? 'background:#fffbeb; border-radius:12px;' : '';
+                v.innerHTML += `<div style="margin:15px; padding:10px; ${bgH}"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hLabel}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
     }
@@ -220,10 +239,9 @@
         curW += v;
         if(curW > 52) { curW = 1; curY++; fetchHolidays(curY); }
         else if(curW < 1) { curW = 52; curY--; fetchHolidays(curY); }
-        render();
+        else { render(); }
     }
 
-    // Le reste des fonctions (openEd, saveTask, etc.) reste identique à ta version
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
