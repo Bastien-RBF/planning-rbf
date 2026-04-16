@@ -3,175 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V86 - Dashboard</title>
+    <title>RBF Planning V87 - FULL</title>
+    <link rel="icon" type="image/png" href="icon.png.png">
+    <link rel="apple-touch-icon" href="icon.png.png">
+    <meta name="theme-color" content="#1b2e58">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
-        header { background: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); sticky; top:0; z-index:100; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
-        .wk-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; font-weight: bold; }
-        
-        /* TABLEAU PRINCIPAL */
-        .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; min-width: 900px; }
-        th { background: var(--blue); color: white; padding: 12px; font-size: 11px; }
-        td { border: 1px solid #eee; padding: 8px; vertical-align: top; width: 150px; }
-        .user-cell { background: #f8fafc; font-weight: bold; color: var(--blue); position: sticky; left: 0; z-index: 2; border-right: 3px solid var(--yellow); width: 100px; text-align: center; }
-        .ferie { background: #dfe6e9 !important; color: #636e72; text-align: center; font-size: 10px; font-weight: bold; }
-        
-        /* SLOTS MISSIONS */
-        .slot { background: #f9f9f9; border: 1px dashed #ccc; padding: 8px; margin-bottom: 5px; border-radius: 6px; font-size: 11px; cursor: pointer; min-height: 35px; }
-        .slot.filled { background: #e3f2fd; border: 1px solid #2196f3; font-weight: bold; }
-        .is-mat { border-left: 5px solid var(--danger) !important; }
-
-        /* MODAL DASHBOARD POINTAGE */
-        #dash-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 2000; display:none; flex-direction: column; overflow-y: auto; }
-        .dash-header { padding: 20px; background: var(--blue); color: white; display: flex; justify-content: space-between; align-items: center; }
-        .dash-table { width: 100%; border-collapse: collapse; }
-        .dash-table th { position: sticky; top: 0; background: #34495e; }
-        .dash-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 12px; width: auto; }
-
-        /* VUE CHAUFFEUR/MACON */
-        .card-pointage { background: white; margin: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .input-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .hidden { display: none; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; padding-bottom: 30px; }
+        header { background: white; padding: 10px 15px; display: flex; justify-content: center; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 40px; }
+        .header-logo { position: absolute; left: 15px; }
+        .header-logo img { height: 40px; }
+        .header-title { color: var(--blue); font-size: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        #u-info { position: absolute; right: 15px; }
+        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        #search-input { flex: 1; min-width: 150px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 13px; }
+        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 10px; border-radius: 10px; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
+        .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
+        th { background: var(--blue); color: white; padding: 12px 8px; font-size: 10px; border-bottom: 2px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
+        .td-ferie { background: #f1f5f9 !important; color: #94a3b8; font-size: 9px; font-weight: bold; text-align: center; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
+        .is-to-depot { border-left: 6px solid var(--success) !important; }
+        .has-link::after { content: ' 📎'; }
+        #dash-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 5000; display:none; flex-direction: column; overflow-y: auto; }
+        .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .pointage-box { background: #f1f5f9; padding: 12px; border-radius: 10px; margin-top: 10px; }
+        .pointage-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px; margin-top: 4px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight: 900; color: var(--blue);">RBF TRANSPORT & MAÇONNERIE</div>
-    <div id="admin-btns" class="hidden">
-        <button class="btn-top" onclick="toggleDash()">📊 VOIR TOUS LES POINTAGES</button>
-        <button class="btn-top" onclick="logout()" style="background:var(--danger)">QUITTER</button>
-    </div>
+    <div class="header-logo"><img src="logo.png"></div>
+    <div class="header-title">PLANNING RBF</div>
+    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
 </header>
 
-<div id="login-screen" style="padding: 50px 20px; text-align: center;">
-    <h2 style="color:var(--blue)">Connexion</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 400px; margin: auto;">
-        <button class="btn-top" onclick="askCode('admin')" style="grid-column: span 2; padding: 20px;">💼 BUREAU / CONDUC (2026)</button>
-        <button class="btn-top" onclick="askCode('damien')">🚛 DAMIEN</button>
-        <button class="btn-top" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-        <button class="btn-top" onclick="askCode('jadiel')" style="background:var(--success)">👷 JADIEL</button>
-        <button class="btn-top" onclick="askCode('nicola')" style="background:var(--success)">👷 NICOLA</button>
-    </div>
-</div>
-
-<div id="dash-overlay">
-    <div class="dash-header">
-        <h2>TABLEAU DE BORD POINTAGES (Vue Secrétaire)</h2>
-        <button onclick="toggleDash()" style="padding: 10px; background: var(--yellow); border:none; font-weight:bold; border-radius:5px;">RETOUR AU PLANNING</button>
-    </div>
-    <div style="padding: 20px;">
-        <table class="dash-table">
-            <thead>
-                <tr>
-                    <th>DATE / SEMAINE</th>
-                    <th>NOM</th>
-                    <th>DÉBUT</th>
-                    <th>FIN</th>
-                    <th>PAUSE</th>
-                    <th>TOTAL</th>
-                    <th>RAPPORT DE MISSION</th>
-                </tr>
-            </thead>
-            <tbody id="dash-body">
-                </tbody>
-        </table>
+<div id="login-screen">
+    <div style="padding: 50px 20px; text-align: center;">
+        <img src="logo.png" style="width:180px; margin-bottom:20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 400px; margin: auto;">
+            <button class="btn-top" style="grid-column: span 2; padding:20px;" onclick="askCode('admin')">💼 BUREAU / CONDUC (2026)</button>
+            <button class="btn-top" onclick="askCode('depot')">📦 DÉPÔT (5555)</button>
+            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 CHAUFFEUR INT.</button>
+            <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+            <button class="btn-top" style="background:var(--success);" onclick="askCode('jadiel')">👷 JADIEL</button>
+            <button class="btn-top" style="background:var(--success);" onclick="askCode('nicola')">👷 NICOLA</button>
+        </div>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
+    <div class="search-container" id="admin-tools">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
+        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 POINTAGES (SECRÉTAIRE)</button>
+    </div>
+    
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
-        <div id="wk-disp" style="text-align: center; font-weight: bold; color: var(--blue);"></div>
+        <div id="wk-disp" style="font-weight:800; color:var(--blue); text-align:center;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
-
+    
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead>
-                <tr id="head-days">
-                    <th class="user-cell">PERSONNEL</th>
-                    <th>LUNDI</th><th>MARDI</th><th>MERCREDI</th><th>JEUDI</th><th>VENDREDI</th>
-                </tr>
-            </thead>
+            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
+    <div id="v-driver" class="hidden"></div>
+</div>
 
-    <div id="v-user" class="hidden"></div>
+<div id="dash-overlay">
+    <div style="padding:20px; background:var(--blue); color:white; display:flex; justify-content:space-between; align-items:center;">
+        <h2>TOUS LES POINTAGES</h2>
+        <button onclick="toggleDash()" style="padding:10px; background:var(--yellow); border:none; font-weight:bold; border-radius:8px;">FERMER</button>
+    </div>
+    <div style="padding:15px; overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead style="background:#eee;">
+                <tr><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr>
+            </thead>
+            <tbody id="dash-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="editor-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; border-radius:20px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;">
+        <h3 id="ed-title" style="color:var(--blue); margin-top:0;">Mission</h3>
+        <label>Chantier :</label>
+        <input type="text" id="e-chantier" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+        <label>Détails :</label>
+        <textarea id="e-input" style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+        
+        <div id="file-list-admin" style="margin:10px 0;"></div>
+        <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f1f5f9; border:1px dashed #ccc; border-radius:10px; font-weight:bold; margin-bottom:10px;">📎 AJOUTER PHOTO / DOC</button>
+        
+        <label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="e-depot"> SIGNALER AU DÉPÔT (Email)</label>
+        <label id="lbl-mat" class="hidden" style="display:flex; align-items:center; gap:10px; color:var(--danger); font-weight:bold;"><input type="checkbox" id="e-mat"> 🔧 BESOIN MATÉRIEL</label>
+        
+        <button onclick="saveTask()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:15px;">ENREGISTRER</button>
+        <button onclick="deleteTask()" style="width:100%; color:var(--danger); border:none; background:none; margin-top:10px;">Supprimer</button>
+        <button onclick="closeEd()" style="width:100%; color:#999; border:none; background:none; margin-top:10px;">Annuler</button>
+    </div>
 </div>
 
 <script>
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
+    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
+    
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
+    emailjs.init(PUBLIC_KEY);
 
-    let curU = localStorage.getItem('rbf_u');
-    let curW = 16, curY = 2026; // Par défaut avril 2026
+    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, currentFiles = [];
     const users = [
-        {id:'damien', display:'DAMIEN (Chauffeur)', s:4},
-        {id:'cedric', display:'CÉDRIC (Chauffeur)', s:4},
-        {id:'jadiel', display:'JADIEL (Maçon)', s:2},
-        {id:'nicola', display:'NICOLA (Maçon)', s:2},
-        {id:'divers', display:'DIVERS / INTERNE', s:4}
+        {id:'damien', display:'CHAUF. INT.', s:4}, {id:'externe', display:'EXTERNE', s:4},
+        {id:'cedric', display:'CÉDRIC', s:4}, {id:'divers', display:'DIVERS', s:4},
+        {id:'elec', display:'INSTAL', s:4}, {id:'jadiel', display:'JADIEL', s:2},
+        {id:'nicola', display:'NICOLA', s:2}
     ];
 
-    const feries2026 = ["2026-01-01", "2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-07-14", "2026-08-15", "2026-11-01", "2026-11-11", "2026-12-25"];
+    const feries = ["2026-01-01", "2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-07-14", "2026-08-15", "2026-11-01", "2026-11-11", "2026-12-25"];
 
     function askCode(u) {
-        let p = prompt("Code pour " + u.toUpperCase());
-        let codes = {admin:'2026', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
+        let p = prompt("Code ?");
+        let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if(p === codes[u]) { localStorage.setItem('rbf_u', u); location.reload(); }
     }
 
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    function getDatesOfWeek(w, y) {
+    function getDates(w, y) {
         let d = new Date(y, 0, 1 + (w - 1) * 7);
         let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6:1);
         let mon = new Date(d.setDate(diff));
-        let res = [];
-        for(let i=0; i<5; i++) {
-            let next = new Date(mon); next.setDate(mon.getDate() + i);
-            res.push(next.toISOString().split('T')[0]);
+        let res = []; for(let i=0; i<5; i++) {
+            let n = new Date(mon); n.setDate(mon.getDate()+i);
+            res.push(n.toISOString().split('T')[0]);
         }
         return res;
     }
 
-    function calculateTotal(s, e, p) {
-        if(!s || !e) return "-";
-        let [h1, m1] = s.split(':').map(Number);
-        let [h2, m2] = e.split(':').map(Number);
-        let diff = (h2*60 + m2) - (h1*60 + m1);
-        let pause = parseInt(p) || 0;
-        let totalMin = diff - pause;
-        return (totalMin/60).toFixed(2) + "h";
-    }
-
     function render() {
-        const dates = getDatesOfWeek(curW, curY);
-        document.getElementById('wk-disp').innerHTML = `SEMAINE ${curW} - ${curY}`;
-        
-        if(curU === 'admin') {
+        const dates = getDates(curW, curY);
+        document.getElementById('wk-disp').innerText = `SEMAINE ${curW} (${curY})`;
+        dates.forEach((d, i) => {
+            let dt = new Date(d);
+            document.getElementById('h'+i).innerHTML = dt.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'2-digit'});
+        });
+
+        if(curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
-            let h = "";
-            users.forEach(u => {
+            let h = ""; users.forEach(u => {
+                if(curU === 'depot' && u.id === 'divers') return;
                 h += `<tr><td class="user-cell">${u.display}</td>`;
-                dates.forEach((date, i) => {
-                    let isF = feries2026.includes(date);
-                    h += `<td class="${isF?'ferie':''}">`;
+                dates.forEach(date => {
+                    let isF = feries.includes(date);
+                    h += `<td class="${isF?'td-ferie':''}">`;
                     if(isF) h += "FÉRIÉ";
                     else {
                         for(let s=1; s<=u.s; s++) {
-                            let key = `${date}_${u.id}_s${s}`;
-                            let dta = window.planData ? window.planData[key] : null;
-                            h += `<div class="slot ${dta?'filled':''}" onclick="editTask('${key}')">${dta ? dta.chantier : '+'}</div>`;
+                            let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
+                            let txt = dta ? `<b>[${dta.chantier}]</b><br>${dta.text}` : "...";
+                            h += `<div class="slot ${dta?'filled':''} ${dta?.toDepot?'is-to-depot':''} ${dta?.files?.length?'has-link':''}" onclick="openEd('${k}')">${txt}</div>`;
                         }
                     }
                     h += `</td>`;
@@ -180,82 +187,99 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            // Vue Employé simplifiée
-            document.getElementById('v-user').classList.remove('hidden');
-            let h = "";
-            dates.forEach((date, i) => {
-                let p = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
-                h += `<div class="card-pointage">
-                    <h3 style="margin:0; color:var(--blue);">${date}</h3>
-                    <div class="input-group" style="margin-top:10px;">
-                        <div><label>Début</label><input type="time" value="${p.s}" onchange="saveP('${date}','s',this.value)"></div>
-                        <div><label>Fin</label><input type="time" value="${p.e}" onchange="saveP('${date}','e',this.value)"></div>
-                        <div><label>Pause (min)</label><input type="number" value="${p.p}" onchange="saveP('${date}','p',this.value)"></div>
-                    </div>
-                    <textarea placeholder="Travaux réalisés / Rapport..." onblur="saveP('${date}','r',this.value)">${p.r}</textarea>
-                    <div style="text-align:right; font-weight:bold; color:var(--success);">Total : ${calculateTotal(p.s, p.e, p.p)}</div>
-                </div>`;
+            document.getElementById('v-driver').classList.remove('hidden');
+            let h = ""; dates.forEach(date => {
+                let m = ""; for(let s=1; s<=4; s++) {
+                    let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
+                    if(dta) {
+                        let f = ""; dta.files?.forEach(fl => f += `<a href="${fl.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; margin-top:5px; border-radius:8px; text-decoration:none; text-align:center;">📄 VOIR DOC</a>`);
+                        m += `<div style="padding:10px; border-left:5px solid #3b82f6; background:white; margin-bottom:10px; border-radius:8px;"><b>${dta.chantier}</b><br>${dta.text}${f}</div>`;
+                    }
+                }
+                let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
+                h += `<div style="margin:15px; padding:15px; border-bottom:2px solid #ddd;">
+                    <h3 style="margin:0; color:var(--blue);">${date}</h3><br>${m || '<small>Rien prévu</small>'}
+                    <div class="pointage-box">
+                        <div class="p-grid">
+                            <div><label>Début</label><input type="time" class="pointage-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
+                            <div><label>Fin</label><input type="time" class="pointage-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
+                            <div><label>Pause(min)</label><input type="number" class="pointage-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
+                        </div>
+                        <textarea class="pointage-input" placeholder="Rapport de journée..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
+                    </div></div>`;
             });
-            document.getElementById('v-user').innerHTML = h;
+            document.getElementById('v-driver').innerHTML = h;
         }
     }
 
-    function saveP(date, field, val) {
-        db.ref(`pointages_v86/${date}_${curU}/${field}`).set(val);
-    }
-
-    function editTask(key) {
+    function openEd(k) {
         if(curU !== 'admin') return;
-        let c = prompt("Nom du chantier ?");
-        if(c !== null) db.ref(`planning_v86/${key}/chantier`).set(c);
+        curK = k; let dta = window.planData ? window.planData[k] : null;
+        document.getElementById('e-chantier').value = dta?.chantier || "";
+        document.getElementById('e-input').value = dta?.text || "";
+        document.getElementById('e-depot').checked = !!dta?.toDepot;
+        currentFiles = dta?.files || [];
+        if(k.includes('jadiel') || k.includes('nicola')) document.getElementById('lbl-mat').classList.remove('hidden');
+        else document.getElementById('lbl-mat').classList.add('hidden');
+        document.getElementById('editor-overlay').style.display = 'flex';
+        renderFiles();
     }
 
-    function toggleDash() {
-        let el = document.getElementById('dash-overlay');
-        if(el.style.display === 'flex') {
-            el.style.display = 'none';
-        } else {
-            el.style.display = 'flex';
-            loadFullDash();
-        }
+    async function uploadFile(input) {
+        if(!input.files[0]) return;
+        const formData = new FormData();
+        formData.append("file", input.files[0]);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
+        const data = await res.json();
+        currentFiles.push({ url: data.secure_url, name: input.files[0].name });
+        renderFiles();
     }
 
-    function loadFullDash() {
-        const body = document.getElementById('dash-body');
-        body.innerHTML = "Chargement...";
-        db.ref('pointages_v86').once('value', s => {
-            let data = s.val();
-            let h = "";
-            if(!data) { body.innerHTML = "Aucun pointage."; return; }
-            
-            // On trie par date inverse (plus récent en haut)
-            let keys = Object.keys(data).sort().reverse();
-            keys.forEach(k => {
-                let [date, user] = k.split('_');
-                let p = data[k];
-                h += `<tr>
-                    <td><b>${date}</b></td>
-                    <td style="text-transform:uppercase">${user}</td>
-                    <td>${p.s || '-'}</td>
-                    <td>${p.e || '-'}</td>
-                    <td>${p.p || '0'}m</td>
-                    <td style="color:var(--success); font-weight:bold;">${calculateTotal(p.s, p.e, p.p)}</td>
-                    <td style="font-style:italic;">${p.r || ''}</td>
-                </tr>`;
-            });
-            body.innerHTML = h;
+    function renderFiles() {
+        let h = ""; currentFiles.forEach((f, i) => h += `<div style="font-size:10px;">📄 ${f.name} <button onclick="currentFiles.splice(${i},1);renderFiles()">X</button></div>`);
+        document.getElementById('file-list-admin').innerHTML = h;
+    }
+
+    function saveTask() {
+        let ch = document.getElementById('e-chantier').value, txt = document.getElementById('e-input').value, dep = document.getElementById('e-depot').checked, mat = document.getElementById('e-mat').checked;
+        if(!ch) return alert("Nom du chantier obligatoire");
+        let obj = { chantier: ch, text: txt, toDepot: dep, needMat: mat, files: currentFiles };
+        db.ref('plan_v87/'+curK).set(obj).then(() => {
+            if(dep) emailjs.send(SERVICE_ID, T_DEPOT, { to_name: "Dépôt", message: `Mission: ${ch} - ${txt}`, user_id: curK });
+            closeEd();
         });
     }
 
+    function saveP(date, f, v) { db.ref(`point_v87/${date}_${curU}/${f}`).set(v); }
+
+    function toggleDash() {
+        let d = document.getElementById('dash-overlay');
+        if(d.style.display === 'flex') d.style.display = 'none';
+        else {
+            d.style.display = 'flex';
+            db.ref('point_v87').once('value', s => {
+                let data = s.val(), h = "";
+                if(!data) return;
+                Object.keys(data).sort().reverse().forEach(k => {
+                    let [date, user] = k.split('_'), p = data[k];
+                    let diff = (p.s && p.e) ? ((new Date(`1970-01-01T${p.e}`) - new Date(`1970-01-01T${p.s}`)) / 3600000 - (p.p/60)).toFixed(2) : '-';
+                    h += `<tr><td>${date}</td><td style="text-transform:uppercase">${user}</td><td>${p.s}</td><td>${p.e}</td><td>${p.p}m</td><td style="font-weight:bold;color:green">${diff}h</td><td>${p.r || ''}</td></tr>`;
+                });
+                document.getElementById('dash-body').innerHTML = h;
+            });
+        }
+    }
+
+    function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW += v; render(); }
 
     if(curU) {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
-        if(curU === 'admin') document.getElementById('admin-btns').classList.remove('hidden');
-        
-        db.ref('planning_v86').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('pointages_v86').on('value', s => { window.pointData = s.val(); render(); });
+        if(curU === 'admin') document.getElementById('u-info').classList.remove('hidden');
+        db.ref('plan_v87').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('point_v87').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
