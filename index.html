@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V86</title>
+    <title>RBF Planning V87</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -167,6 +167,33 @@
 
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     
+    function showFullHistory() {
+        const q = document.getElementById('search-input').value.trim().toLowerCase();
+        if (q.length < 2) return alert("Tapez au moins 2 lettres pour chercher.");
+        let res = []; 
+        Object.keys(window.data).forEach(k => {
+            let item = window.data[k]; 
+            if (item.chantier && item.chantier.toLowerCase().includes(q)) {
+                let p = k.split('_'); // Format: ANNEE_SEM_QUI_JOUR_SLOT
+                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier});
+            }
+        });
+        if (!res.length) return alert("Aucun résultat trouvé pour ce chantier.");
+        res.sort((a,b) => (a.an + a.sem) - (b.an + b.sem));
+        let h = `<div style="text-align:left; max-height:450px; overflow-y:auto; padding:5px;">`;
+        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:12px; margin:0; font-size:13px; background:#fff;">
+            <span style="color:var(--blue); font-weight:800; font-size:11px;">[${r.an} - SEMAINE ${r.sem}]</span> 
+            <b style="color:var(--success); margin-left:5px;">${r.qui}</b><br>
+            <div style="margin-top:5px; color:#475569;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}</div>
+        </div>`);
+        h += `</div>`;
+        document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
+        document.getElementById('ed-view-only').innerHTML = h;
+        document.getElementById('ed-view-only').classList.remove('hidden'); 
+        document.getElementById('ed-controls').classList.add('hidden');
+        document.getElementById('editor-overlay').style.display = 'flex';
+    }
+
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"];
@@ -186,7 +213,6 @@
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; 
-            // ICI CHANGEMENT : elec -> instal
             const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
             
             users.forEach(u => {
