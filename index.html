@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF PLANNING V83</title>
+    <title>RBF Planning V82</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -26,16 +26,16 @@
         table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 850px; }
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 110px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: opacity 0.2s; }
         .slot.filtered-out { opacity: 0.15; pointer-events: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
         #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
-        .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
-        .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 11px; text-transform: uppercase; }
+        .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
         #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
@@ -46,10 +46,9 @@
 </head>
 <body>
 <header>
-    <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING RBF</b></div>
-    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">DECONNEXION</button></div>
+    <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING TRANSPORT</b></div>
+    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
 </header>
-
 <div id="login-screen">
     <div class="login-card">
         <img src="logo.png" style="width:160px; margin-bottom:15px;">
@@ -57,20 +56,16 @@
             <button class="btn-auth" style="background:var(--blue); grid-column:span 2;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
             <button class="btn-auth" style="background:var(--success); grid-column:span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
             <button class="btn-auth" style="background:#3b82f6;" onclick="askCode('interne')">🚛 INTERNE</button>
-            <button class="btn-auth" style="background:#4b5563;" onclick="askCode('externe')">🚛 EXTERNE</button>
             <button class="btn-auth" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-            <button class="btn-auth" style="background:#94a3b8;" onclick="askCode('divers')">🚛 DIVERS</button>
-            <button class="btn-auth" style="background:#10b981;" onclick="askCode('elec')">⚡ INSTAL (ELEC)</button>
             <button class="btn-auth" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
-            <button class="btn-auth" style="background:#8b5cf6; grid-column: span 2;" onclick="askCode('nicola')">👷 NICOLA</button>
+            <button class="btn-auth" style="background:#64748b;" onclick="askCode('nicola')">👷 NICOLA</button>
         </div>
     </div>
 </div>
-
 <div id="app-content" class="hidden">
     <div id="admin-search-zone" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE</button>
+        <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
     </div>
     
     <div class="week-nav">
@@ -114,25 +109,20 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     (function(){ emailjs.init(PUBLIC_KEY); })();
-
     function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
     function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
-    
     let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
-    
     colors.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
         d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
         document.getElementById('cp').appendChild(d);
     });
-
     function askCode(u) { 
         let p = prompt("Code " + u.toUpperCase()); 
-        let codes = {admin:'2026', depot:'5555', interne:'1111', externe:'0000', cedric:'2222', divers:'3333', elec:'4444', jadiel:'3333', nicola:'4444'};
+        let codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
     }
-
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
@@ -140,13 +130,11 @@
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
-
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     function applySearch() {
         const q = document.getElementById('search-input').value.toLowerCase();
         document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
     }
-
     function showFullHistory() {
         const q = document.getElementById('search-input').value.trim().toLowerCase();
         if (q.length < 2) return alert("Tapez 2 lettres.");
@@ -165,9 +153,8 @@
         document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden');
         document.getElementById('editor-overlay').style.display = 'flex';
     }
-
     function sendMails(msg) {
-        if(!curK || curU !== 'admin') return;
+        if(!curK) return;
         const now = new Date();
         const realCurrentWeek = getWeek(now);
         const realCurrentDay = Math.max(0, now.getDay() - 1); 
@@ -182,7 +169,6 @@
         emailjs.send(SERVICE_ID, T_CHAUFFEUR, params);
         if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, T_DEPOT, params);
     }
-
     function uploadFile(input) {
         if (!input.files[0]) return;
         const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
@@ -190,31 +176,17 @@
             if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
         });
     }
-
     function renderFileListAdmin() {
         let d = document.getElementById('file-list-admin'); d.innerHTML = "";
         currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
     }
-
     function render() {
         document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
         const days = ["LUN","MAR","MER","JEU","VEN"];
         for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br>${getDayDate(curW, i)}`;
-        
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
-            // ORDRE MIS À JOUR ICI
-            const users = [
-                {id:'interne',s:4,d:true},
-                {id:'externe',s:4,d:true},
-                {id:'cedric',s:4,d:true},
-                {id:'divers',s:4,d:false},
-                {id:'elec',s:4,d:false},
-                {id:'jadiel',s:2,d:false},
-                {id:'nicola',s:2,d:false}
-            ];
-            
-            let h = "";
+            let h = ""; const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
@@ -246,7 +218,6 @@
             }
         }
     }
-
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
@@ -262,14 +233,12 @@
         document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
-
     function saveTask() {
         let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
             sendMails("["+ch.toUpperCase()+"] " + v); closeEditor(); 
         });
     }
-
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
