@@ -3,221 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF PLANNING V82</title>
+    <title>RBF Planning V82</title>
+    <link rel="icon" type="image/png" href="icon.png.png">
+    <link rel="apple-touch-icon" href="icon.png.png">
+    <meta name="theme-color" content="#1b2e58">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
-        header { background: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .logo img { height: 40px; }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        .admin-nav { background: white; padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; justify-content: center; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
-        .wk-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #ccc; background: white; font-weight: bold; cursor: pointer; color: var(--blue); font-size: 20px; }
-        .table-container { padding: 15px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 3px; background: #cbd5e1; border-radius: 15px; overflow: hidden; min-width: 1200px; }
-        th { background: var(--blue); color: white; padding: 15px 5px; font-size: 11px; text-transform: uppercase; }
-        td { background: white; padding: 8px; vertical-align: top; width: 150px; }
-        .user-cell { background: #f8fafc !important; font-weight: 900; color: var(--blue); text-align: center; width: 140px; position: sticky; left: 0; z-index: 10; border-right: 4px solid var(--yellow) !important; font-size: 12px; }
-        .slot { font-size: 10px; padding: 10px; margin-bottom: 6px; border-radius: 8px; background: #fff; border: 1px solid #e2e8f0; cursor: pointer; min-height: 45px; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.05); color: #475569; }
-        .slot.filled { border: 1px solid rgba(0,0,0,0.1); font-weight: 700; color: white; box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
-        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .mission-box { padding: 15px; border-radius: 12px; margin-bottom: 10px; color: white; font-weight: bold; }
-        .pointage-zone { background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; margin-top: 10px; }
-        .p-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .p-input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: white; width: 92%; max-width: 480px; padding: 30px; border-radius: 25px; }
-        .color-opt { width: 35px; height: 35px; border-radius: 50%; display: inline-block; cursor: pointer; margin-right: 10px; border: 3px solid transparent; }
-        .color-opt.active { border-color: #333; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
+        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-logo img { height: 40px; }
+        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #search-input { flex: 1; min-width: 180px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
+        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
+        .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 850px; }
+        th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: opacity 0.2s; }
+        .slot.filtered-out { opacity: 0.15; pointer-events: none; }
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
+        .is-to-depot { border-left: 6px solid var(--success) !important; }
+        .has-link { border-bottom: 4px solid #8b5cf6 !important; }
+        #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
+        .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
+        .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
+        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
-        .btn-save { background: var(--blue); color: white; border: none; padding: 16px; border-radius: 15px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
-
 <header>
-    <div class="logo"><img src="logo.png"></div>
-    <div id="u-ctrl" class="hidden"><button class="btn-logout" onclick="logout()">DÉCONNEXION</button></div>
+    <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING TRANSPORT</b></div>
+    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
 </header>
-
-<div id="login-screen" style="padding: 40px 20px; text-align: center;">
-    <div style="max-width: 450px; margin: auto; background:white; padding:35px; border-radius:30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-        <img src="logo.png" style="width:180px; margin-bottom:30px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <button class="btn-top" style="grid-column: span 2; padding: 22px;" onclick="askCode('admin')">ADMINISTRATION</button>
-            <button class="btn-top" onclick="askCode('chauffeuri')">CHAUFFEUR I</button>
-            <button class="btn-top" onclick="askCode('chauffeure')">CHAUFFEUR E</button>
-            <button class="btn-top" onclick="askCode('cedric')">CEDRIC</button>
-            <button class="btn-top" onclick="askCode('divers')">DIVERS</button>
-            <button class="btn-top" onclick="askCode('elec')">ELEC</button>
-            <button class="btn-top" onclick="askCode('macon1')">MACON 1</button>
-            <button class="btn-top" onclick="askCode('macon2')">MACON 2</button>
+<div id="login-screen">
+    <div class="login-card">
+        <img src="logo.png" style="width:160px; margin-bottom:15px;">
+        <div class="grid-auth">
+            <button class="btn-auth" style="background:var(--blue); grid-column:span 2;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+            <button class="btn-auth" style="background:var(--success); grid-column:span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+            <button class="btn-auth" style="background:#3b82f6;" onclick="askCode('damien')">🚛 DAMIEN</button>
+            <button class="btn-auth" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+            <button class="btn-auth" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
+            <button class="btn-auth" style="background:#64748b;" onclick="askCode('nicola')">👷 NICOLA</button>
         </div>
     </div>
 </div>
-
 <div id="app-content" class="hidden">
-    <div class="admin-nav hidden" id="admin-tools">
-        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 RÉCAPITULATIF HEURES</button>
+    <div id="admin-search-zone" class="search-container hidden">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
+        <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
     </div>
+    
     <div class="week-nav">
-        <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
-        <div id="wk-disp" style="text-align:center; font-weight:bold; color:var(--blue); min-width:200px;"></div>
-        <button class="wk-btn" onclick="changeWeek(1)">›</button>
+        <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
+        <div id="wk-disp" style="font-weight:800; color:var(--blue); font-size:16px;"></div>
+        <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead><tr><th class="user-cell">NOM</th><th id="h0">DIM</th><th id="h1">LUN</th><th id="h2">MAR</th><th id="h3">MER</th><th id="h4">JEU</th><th id="h5">VEN</th><th id="h6">SAM</th></tr></thead>
+            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    <div id="v-user" class="hidden"></div>
+    <div id="v-driver" class="hidden"></div>
 </div>
 
-<div id="editor-overlay" class="modal-overlay">
-    <div class="modal-box">
-        <h3 style="margin-top:0; color:var(--blue);">Modifier Mission</h3>
-        <label style="font-size:11px; font-weight:bold;">CHANTIER :</label>
-        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:15px;">
-        <label style="font-size:11px; font-weight:bold;">MISSION :</label>
-        <textarea id="e-mission" class="p-input" style="height:80px; margin-bottom:15px;"></textarea>
-        <div id="color-picker" style="margin-bottom:20px;">
-            <div class="color-opt" style="background:#3b82f6;" data-c="#3b82f6"></div>
-            <div class="color-opt" style="background:#ef4444;" data-c="#ef4444"></div>
-            <div class="color-opt" style="background:#10b981;" data-c="#10b981"></div>
-            <div class="color-opt" style="background:#f59e0b;" data-c="#f59e0b"></div>
-            <div class="color-opt" style="background:#8b5cf6;" data-c="#8b5cf6"></div>
+<div id="editor-overlay">
+    <div class="editor-box">
+        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
+        <div id="ed-view-only" class="hidden"></div>
+        <div id="ed-controls">
+            <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
+            <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
+            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none;"></textarea>
+            <div class="color-picker" id="cp"></div>
+            <div id="file-list-admin" style="margin-bottom: 12px;"></div>
+            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px;">📎 AJOUTER UN DOCUMENT</button>
+            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
         </div>
-        <div style="background:#fff1f1; padding:15px; border-radius:15px; border:1px solid #ffd1d1; margin-bottom:15px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 LOGISTIQUE DÉPÔT :</label>
-            <textarea id="e-matos" class="p-input" style="height:50px; margin-top:5px;" placeholder="Matériel à préparer..."></textarea>
-            <label style="display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; font-weight:bold;">
-                <input type="checkbox" id="e-send"> 📧 ENVOYER AU DÉPÔT
-            </label>
-        </div>
-        <button class="btn-save" onclick="saveAll()">ENREGISTRER</button>
-        <button onclick="delEntry()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:15px; font-weight:bold; cursor:pointer;">Supprimer</button>
-        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:10px;">Fermer</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">FERMER</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7";
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
+    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
-    const db = firebase.database(); emailjs.init(PUBLIC_KEY);
-
-    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, selCol = "#3b82f6";
-    const users = [
-        {id:'chauffeuri', n:'CHAUFFEUR I', s:4},
-        {id:'chauffeure', n:'CHAUFFEUR E', s:4},
-        {id:'cedric', n:'CEDRIC', s:4},
-        {id:'divers', n:'DIVERS', s:4},
-        {id:'elec', n:'ELEC', s:4},
-        {id:'macon1', n:'MACON 1', s:2},
-        {id:'macon2', n:'MACON 2', s:2}
-    ];
-
-    function askCode(u) {
-        let codes = {admin:'2026', chauffeuri:'1111', chauffeure:'0000', cedric:'2222', divers:'3333', elec:'4444', macon1:'3333', macon2:'4444'};
-        if(prompt("Code ?") === codes[u]) { localStorage.setItem('rbf_u', u); location.reload(); }
+    const db = firebase.database();
+    (function(){ emailjs.init(PUBLIC_KEY); })();
+    function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
+    function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
+    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
+    const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    colors.forEach(c => {
+        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
+        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
+        document.getElementById('cp').appendChild(d);
+    });
+    function askCode(u) { 
+        let p = prompt("Code " + u.toUpperCase()); 
+        let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
+        if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
+    }
+    function login(u) { 
+        curU = u; document.getElementById('login-screen').classList.add('hidden'); 
+        document.getElementById('app-content').classList.remove('hidden'); 
+        document.getElementById('u-info').classList.remove('hidden'); 
+        // BARRE DE RECHERCHE UNIQUEMENT POUR ADMIN
+        if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
+        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-
-    document.querySelectorAll('.color-opt').forEach(opt => {
-        opt.onclick = () => {
-            document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active'); selCol = opt.dataset.c;
-        };
-    });
-
-    function getDates(w, y) {
-        let d = new Date(y, 0, 1 + (w - 1) * 7);
-        let day = d.getDay(), diff = d.getDate() - day;
-        let sun = new Date(d.setDate(diff));
-        let res = []; for(let i=0; i<7; i++) {
-            let n = new Date(sun); n.setDate(sun.getDate()+i);
-            res.push(n.toISOString().split('T')[0]);
-        }
-        return res;
+    function applySearch() {
+        const q = document.getElementById('search-input').value.toLowerCase();
+        document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
     }
-
-    function render() {
-        const dates = getDates(curW, curY);
-        document.getElementById('wk-disp').innerHTML = `SEMAINE ${curW} - ${curY}`;
-        dates.forEach((d, i) => document.getElementById('h'+i).innerHTML = new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase());
-
-        if(curU === 'admin') {
-            document.getElementById('v-admin').classList.remove('hidden');
-            let h = ""; users.forEach(u => {
-                h += `<tr><td class="user-cell">${u.n}</td>`;
-                dates.forEach(date => {
-                    h += `<td>`;
-                    for(let s=1; s<=u.s; s++) {
-                        let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
-                        let st = dta ? `background:${dta.col||'#3b82f6'}; border-color:rgba(0,0,0,0.1); color:white;` : "";
-                        h += `<div class="slot ${dta?'filled':''}" style="${st}" onclick="openEd('${k}')">${dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.mission}` : "..."}</div>`;
-                    }
-                    h += `</td>`;
-                });
-                h += `</tr>`;
-            });
-            document.getElementById('b-admin').innerHTML = h;
-        } else {
-            document.getElementById('v-user').classList.remove('hidden');
-            let h = ""; dates.forEach(date => {
-                let mHtml = ""; for(let s=1; s<=4; s++) {
-                    let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
-                    if(dta) mHtml += `<div class="mission-box" style="background:${dta.col||'#3b82f6'}">📍 ${dta.chantier.toUpperCase()}<br>${dta.mission}</div>`;
-                }
-                let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', r:''};
-                h += `<div class="card-day"><h3>${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-                    ${mHtml || '<p>Repos</p>'}
-                    <div class="pointage-zone">
-                        <div class="p-grid"><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
-                        <input type="text" class="p-input" placeholder="Rapport / Commentaire" value="${pt.r||''}" onblur="saveP('${date}','r',this.value)">
-                    </div></div>`;
-            });
-            document.getElementById('v-user').innerHTML = h;
-        }
-    }
-
-    function openEd(k) {
-        if(curU !== 'admin') return; curK = k; let d = window.planData ? window.planData[k] : null;
-        document.getElementById('e-chantier').value = d?.chantier || "";
-        document.getElementById('e-mission').value = d?.mission || "";
-        document.getElementById('e-matos').value = d?.matos || "";
-        selCol = d?.col || "#3b82f6";
-        document.querySelectorAll('.color-opt').forEach(o => o.classList.toggle('active', o.dataset.c === selCol));
+    function showFullHistory() {
+        const q = document.getElementById('search-input').value.trim().toLowerCase();
+        if (q.length < 2) return alert("Tapez 2 lettres.");
+        let res = []; Object.keys(window.data).forEach(k => {
+            let item = window.data[k]; if (item.chantier && item.chantier.toLowerCase().includes(q)) {
+                let p = k.split('_'); res.push({sem: p[0], qui: p[1].toUpperCase(), txt: item.text});
+            }
+        });
+        if (!res.length) return alert("Rien.");
+        res.sort((a,b) => a.sem - b.sem);
+        let h = `<div style="text-align:left; max-height:400px; overflow-y:auto; padding:10px;">`;
+        res.forEach(r => h += `<p style="border-bottom:1px solid #eee; padding:10px; margin:0; font-size:13px;"><b>SEM ${r.sem} - ${r.qui}</b><br>${r.txt}</p>`);
+        h += `</div>`;
+        document.getElementById('ed-title').textContent = "Archives: " + q.toUpperCase();
+        document.getElementById('ed-view-only').innerHTML = h;
+        document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden');
         document.getElementById('editor-overlay').style.display = 'flex';
     }
-
-    function saveAll() {
-        let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matos').value;
-        db.ref('v82_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, col:selCol}).then(() => {
-            if(document.getElementById('e-send').checked && ma) {
-                emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL BESOIN - ${ch}\n\n${ma}`, user_id: curK.split('_')[1] });
-            }
-            closeEd();
+    function sendMails(msg) {
+        if(!curK) return;
+        const now = new Date();
+        const realCurrentWeek = getWeek(now);
+        const realCurrentDay = Math.max(0, now.getDay() - 1); 
+        const p = curK.split('_');
+        const taskWeek = parseInt(p[0]);
+        const taskDayIdx = parseInt(p[2]);
+        if (taskWeek !== realCurrentWeek) return;
+        if (taskDayIdx < realCurrentDay) return;
+        const dayNames = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+        const dateStr = dayNames[taskDayIdx] + " " + getDayDate(taskWeek, taskDayIdx);
+        const params = { chauffeur: p[1].toUpperCase(), jour: dateStr, message: msg };
+        emailjs.send(SERVICE_ID, T_CHAUFFEUR, params);
+        if(document.getElementById('e-depot').checked) emailjs.send(SERVICE_ID, T_DEPOT, params);
+    }
+    function uploadFile(input) {
+        if (!input.files[0]) return;
+        const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{
+            if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
         });
     }
-
-    function delEntry() { if(confirm("Supprimer ?")) db.ref('v82_plan/'+curK).remove().then(closeEd); }
-    function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function saveP(date, f, v) { db.ref(`v82_point/${date}_${curU}/${f}`).set(v); }
-    function changeWeek(v) { curW += v; render(); }
-
-    if(curU) {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-content').classList.remove('hidden');
-        document.getElementById('u-ctrl').classList.remove('hidden');
-        if(curU === 'admin') document.getElementById('admin-tools').classList.remove('hidden');
-        db.ref('v82_plan').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('v82_point').on('value', s => { window.pointData = s.val(); render(); });
+    function renderFileListAdmin() {
+        let d = document.getElementById('file-list-admin'); d.innerHTML = "";
+        currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
     }
+    function render() {
+        document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
+        const days = ["LUN","MAR","MER","JEU","VEN"];
+        for(let i=0; i<5; i++) document.getElementById('h'+i).innerHTML = `${days[i]}<br>${getDayDate(curW, i)}`;
+        if (curU === 'admin' || curU === 'depot') {
+            document.getElementById('v-admin').classList.remove('hidden');
+            let h = ""; const users = [{id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
+            users.forEach(u => {
+                if (curU === 'depot' && !u.d) return;
+                h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
+                for(let d=0; d<5; d++) {
+                    h += `<td>`;
+                    for(let s=1; s<=u.s; s++) {
+                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", chantier:"", files:[], col:'default'};
+                        if (curU === 'depot' && !dta.toDepot) continue;
+                        let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
+                        let disp = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${disp}</div>`;
+                    }
+                    h += `</td>`;
+                }
+                h += `</tr>`;
+            });
+            document.getElementById('b-admin').innerHTML = h; applySearch();
+        } else {
+            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
+            for(let d=0; d<5; d++) {
+                let c = ""; for(let s=1; s<=4; s++) {
+                    let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
+                    if(dta && (dta.text || dta.chantier)) {
+                        let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR FICHIER</a>`);
+                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
+                    }
+                }
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+            }
+        }
+    }
+    function openEd(k) {
+        curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
+        if(curU !== 'admin' && curU !== 'depot') {
+            document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
+            let fH = ""; if(d.files) d.files.forEach(f => fH += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center;">📄 FICHIER</a>`);
+            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>${fH}`;
+            document.getElementById('editor-overlay').style.display = 'flex'; return;
+        }
+        if(curU !== 'admin') return;
+        currentFiles = d.files || []; selectedCol = d.col || 'default';
+        document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
+        document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-depot').checked = !!d.toDepot; renderFileListAdmin();
+        document.getElementById('editor-overlay').style.display = 'flex';
+    }
+    function saveTask() {
+        let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
+        db.ref('planning_v18/'+curK).set({text:v, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { 
+            sendMails("["+ch.toUpperCase()+"] " + v); closeEditor(); 
+        });
+    }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { sendMails("ANNULÉE"); closeEditor(); }); }
+    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
+    if(curU) login(curU);
 </script>
 </body>
 </html>
