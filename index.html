@@ -3,161 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V89 - FINAL</title>
-    <link rel="icon" type="image/png" href="icon.png.png">
-    <link rel="apple-touch-icon" href="icon.png.png">
-    <meta name="theme-color" content="#1b2e58">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>RBF Planning V90</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
-        header { background: white; padding: 10px 15px; display: flex; justify-content: center; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 50px; }
-        .header-logo { position: absolute; left: 15px; }
-        .header-logo img { height: 40px; }
-        .header-title { color: var(--blue); font-size: 14px; font-weight: 800; text-transform: uppercase; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #334155; padding-bottom: 30px; }
         
-        .admin-nav { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
+        /* HEADER */
+        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; }
         
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .wk-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #e2e8f0; background: white; font-weight: bold; cursor: pointer; }
+        /* NAV ADMIN */
+        .admin-nav { background: white; padding: 12px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
 
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; }
+        .wk-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ddd; background: white; font-weight: bold; cursor: pointer; font-size: 18px; }
+
+        /* TABLEAU */
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 950px; }
-        th { background: var(--blue); color: white; padding: 15px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
-        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 950px; }
+        th { background: var(--blue); color: white; padding: 15px 8px; font-size: 11px; }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 100px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
-        .slot { font-size: 10.5px; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); }
-        .slot.filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; }
-        .slot.has-mat { border-left: 6px solid var(--danger) !important; }
+        .user-cell { background: #fdfdfd; font-weight: bold; color: var(--blue); text-align: center; width: 100px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .slot { font-size: 10px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; }
+        .slot.filled { background: #eff6ff; border: 1px solid #3b82f6; font-weight: 600; }
+        .slot.has-mat { border-left: 5px solid var(--danger) !important; }
 
-        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .mission-box { padding: 12px; border-left: 6px solid #3b82f6; background: #f0f7ff; border-radius: 10px; margin-bottom: 10px; }
-        .mat-box { padding: 12px; border-left: 6px solid var(--danger); background: #fff5f5; border-radius: 10px; margin-bottom: 10px; font-weight: bold; }
+        /* VUE EMPLOYE */
+        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .mission-box { padding: 12px; border-left: 6px solid #3b82f6; background: #f0f7ff; border-radius: 8px; margin-bottom: 10px; }
+        .mat-box { padding: 12px; border-left: 6px solid var(--danger); background: #fff5f5; border-radius: 8px; margin-bottom: 10px; color: #b91c1c; font-weight: bold; }
         
         .pointage-zone { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top: 10px; }
         .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .p-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
+        .p-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 14px; }
 
-        #editor-overlay, #dash-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-box { background: white; width: 92%; max-width: 500px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5000; display: none; align-items: center; justify-content: center; overflow-y: auto; }
+        .modal-box { background: white; width: 92%; max-width: 480px; padding: 20px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
         
         .hidden { display: none !important; }
-        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 800; cursor: pointer; margin-top: 15px; }
+        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; margin-top: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-logo"><img src="logo.png"></div>
-    <div class="header-title">PLANNING RBF TRANSPORT</div>
-    <div id="u-info" class="hidden" style="position:absolute; right:15px;"><button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px;">QUITTER</button></div>
+    <div style="font-weight: 900; color: var(--blue); font-size: 18px;">RBF PLANNING</div>
+    <div id="u-ctrl" class="hidden"><button class="btn-logout" onclick="logout()">CHANGER COMPTE</button></div>
 </header>
 
-<div id="login-screen">
-    <div style="padding: 50px 20px; text-align: center;">
-        <img src="logo.png" style="width:160px; margin-bottom:30px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 400px; margin: auto;">
-            <button class="btn-top" style="grid-column: span 2; padding: 18px;" onclick="askCode('admin')">💼 BUREAU / CONDUC</button>
-            <button class="btn-top" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
-            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 CHAUF. INT.</button>
-            <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
-            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('nicola')">👷 NICOLA</button>
-        </div>
+<div id="login-screen" style="padding: 40px 20px; text-align: center;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 400px; margin: auto;">
+        <button class="btn-top" style="grid-column: span 2; padding: 20px;" onclick="askCode('admin')">💼 BUREAU / CONDUC</button>
+        <button class="btn-top" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+        <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 DAMIEN</button>
+        <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+        <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
+        <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('nicola')">👷 NICOLA</button>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
     <div class="admin-nav hidden" id="admin-tools">
-        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 RÉCAP HEURES (SECRÉTAIRE)</button>
+        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 HISTORIQUE POINTAGES (SECRÉTAIRE)</button>
     </div>
 
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
-        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue);"></div>
+        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue); font-size:14px;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
 
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead><tr><th class="user-cell">PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
+            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-
     <div id="v-user" class="hidden"></div>
 </div>
 
-<div id="dash-overlay" style="display:none; background:white; flex-direction:column; justify-content: flex-start;">
+<div id="dash-overlay" class="modal-overlay" style="background:white; display:none; flex-direction:column; justify-content: flex-start;">
     <div style="background:var(--blue); color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="margin:0; font-size:16px;">TABLEAU DE BORD SECRÉTARIAT</h2>
-        <button onclick="toggleDash()" style="background:var(--yellow); border:none; padding:10px 20px; border-radius:8px; font-weight:bold;">FERMER</button>
+        <h2 style="margin:0; font-size:16px;">HISTORIQUE GLOBAL DES POINTAGES</h2>
+        <button onclick="toggleDash()" style="background:var(--yellow); border:none; padding:10px; border-radius:8px; font-weight:bold;">RETOUR</button>
     </div>
     <div style="padding:10px; overflow:auto;">
-        <table style="width:100%; font-size:12px;">
-            <thead style="background:#eee;">
-                <tr><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr>
-            </thead>
+        <table style="width:100%; font-size:11px;">
+            <thead><tr style="background:#eee;"><th>DATE</th><th>NOM</th><th>DEBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr></thead>
             <tbody id="dash-body"></tbody>
         </table>
     </div>
 </div>
 
-<div id="editor-overlay">
+<div id="editor-overlay" class="modal-overlay">
     <div class="modal-box">
-        <h3 style="margin:0 0 15px 0; color:var(--blue);">Programmation Mission</h3>
+        <h3 style="margin-top:0; color:var(--blue);">Modifier la journée</h3>
         
-        <label style="font-size:11px; font-weight:bold;">NOM DU CHANTIER :</label>
-        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:15px;">
+        <label style="font-size:11px; font-weight:bold;">CHANTIER :</label>
+        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:12px;">
         
-        <div style="background:#f0f7ff; padding:12px; border-radius:12px; margin-bottom:15px;">
-            <label style="font-size:11px; font-weight:bold; color:#3b82f6;">📝 MISSION (Confidentiel Maçon) :</label>
-            <textarea id="e-mission" class="p-input" style="height:70px; margin-top:5px;"></textarea>
-        </div>
+        <label style="font-size:11px; font-weight:bold; color:#3b82f6;">MISSION (Confidentiel) :</label>
+        <textarea id="e-mission" class="p-input" style="height:60px; margin-bottom:12px;"></textarea>
 
-        <div style="background:#fff5f5; padding:12px; border-radius:12px; margin-bottom:15px;">
-            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 BESOIN MATÉRIEL (Envoyé au dépôt) :</label>
-            <textarea id="e-matériel" class="p-input" style="height:70px; margin-top:5px;" placeholder="Pelles, sacs de ciment, niveau..."></textarea>
-            <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; font-weight:bold; color:var(--danger);">
-                <input type="checkbox" id="e-mail-depot"> 📧 ENVOYER LA LISTE AU DÉPÔT
+        <div id="section-matos" class="hidden" style="background:#fff5f5; padding:12px; border-radius:12px; border:1px solid #fecaca;">
+            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 BESOIN MATÉRIEL (POUR DÉPÔT) :</label>
+            <textarea id="e-matos" class="p-input" style="height:60px; margin-top:5px;"></textarea>
+            <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; font-weight:bold;">
+                <input type="checkbox" id="e-send"> 📧 ENVOYER AU DÉPÔT
             </label>
         </div>
 
-        <div id="file-list" style="margin-bottom:10px;"></div>
-        <input type="file" id="e-file" class="hidden" onchange="uploadToCloudinary(this)">
-        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f8fafc; border:1px dashed #ccc; border-radius:10px; font-weight:bold; font-size:11px;">📎 AJOUTER PHOTO / PLAN</button>
+        <div id="files-ui" style="margin:10px 0; font-size:10px; color:#666;"></div>
+        <input type="file" id="e-file" class="hidden" onchange="upCloud(this)">
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f8fafc; border:1px dashed #ccc; border-radius:8px; font-weight:bold; font-size:11px;">📎 AJOUTER PHOTO/DOC</button>
 
-        <button class="btn-save" onclick="saveData()">ENREGISTRER LA JOURNÉE</button>
-        <button onclick="deleteData()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:10px; font-weight:bold;">Supprimer</button>
-        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:10px;">Annuler</button>
+        <button class="btn-save" onclick="saveData()">ENREGISTRER</button>
+        <button onclick="delData()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:10px; font-weight:bold;">Supprimer</button>
+        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#999; margin-top:10px;">Annuler</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7";
-    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7", CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
     
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     emailjs.init(PUBLIC_KEY);
 
-    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, tempFiles = [];
+    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, curF = [];
     const users = [
-        {id:'damien', display:'CHAUF. INT.', s:4},
-        {id:'externe', display:'EXTERNE', s:4},
-        {id:'cedric', display:'CÉDRIC', s:4},
-        {id:'divers', display:'DIVERS', s:4},
-        {id:'elec', display:'INSTAL', s:4},
-        {id:'jadiel', display:'JADIEL', s:2},
-        {id:'nicola', display:'NICOLA', s:2}
+        {id:'damien', display:'DAMIEN', s:4}, {id:'cedric', display:'CÉDRIC', s:4},
+        {id:'jadiel', display:'JADIEL (Maçon)', s:2}, {id:'nicola', display:'NICOLA (Maçon)', s:2},
+        {id:'externe', display:'EXTERNE', s:4}, {id:'elec', display:'INSTAL', s:4}, {id:'divers', display:'DIVERS', s:4}
     ];
-
-    const feries = ["2026-01-01", "2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-07-14", "2026-08-15", "2026-11-01", "2026-11-11", "2026-12-25"];
 
     function askCode(u) {
         let p = prompt("Code ?");
@@ -179,8 +163,8 @@
 
     function render() {
         const dates = getDates(curW, curY);
-        document.getElementById('wk-disp').innerHTML = `<small>AVRIL ${curY}</small><br>SEMAINE ${curW}`;
-        dates.forEach((d, i) => document.getElementById('h'+i).innerHTML = `${new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase()}`);
+        document.getElementById('wk-disp').innerHTML = `AVRIL ${curY} - SEMAINE ${curW}`;
+        dates.forEach((d, i) => document.getElementById('h'+i).innerHTML = `${new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'}).toUpperCase()}`);
 
         if(curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
@@ -191,8 +175,7 @@
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
-                        let txt = dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.mission || ''}` : "...";
-                        h += `<div class="slot ${dta?'filled':''} ${dta?.matériel?'has-mat':''}" onclick="openEd('${k}')">${txt}</div>`;
+                        h += `<div class="slot ${dta?'filled':''} ${dta?.matos?'has-mat':''}" onclick="openEd('${k}')">${dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.mission || ''}` : "..."}</div>`;
                     }
                     h += `</td>`;
                 });
@@ -205,24 +188,24 @@
                 let m = ""; for(let s=1; s<=4; s++) {
                     let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
                     if(dta) {
-                        let f = ""; dta.files?.forEach(fl => f += `<a href="${fl.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:8px; margin-top:5px; border-radius:8px; text-decoration:none; text-align:center; font-size:10px;">📄 VOIR DOCUMENT</a>`);
-                        m += `<div class="mission-box"><b>MISSION : ${dta.chantier.toUpperCase()}</b><br>${dta.mission || ''}${f}</div>`;
-                        if(dta.matériel) m += `<div class="mat-box">🔧 BESOIN MATÉRIEL :<br>${dta.matériel}</div>`;
+                        let f = ""; dta.files?.forEach(fl => f += `<a href="${fl.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:8px; margin-top:5px; border-radius:8px; text-decoration:none; text-align:center; font-size:11px;">📄 VOIR DOC</a>`);
+                        m += `<div class="mission-box"><b>CHANTIER : ${dta.chantier.toUpperCase()}</b><br>${dta.mission || ''}${f}</div>`;
+                        if(dta.matos) m += `<div class="mat-box">🔧 MATÉRIEL :<br>${dta.matos}</div>`;
                     }
                 }
                 let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
                 let tot = (pt.s && pt.e) ? ((new Date(`1970-01-01T${pt.e}`) - new Date(`1970-01-01T${pt.s}`)) / 3600000 - (pt.p/60)).toFixed(2) : '-';
                 h += `<div class="card-day">
-                    <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--blue);">${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-                    ${m || '<p style="font-size:11px; color:#999;">Aucune mission.</p>'}
+                    <h3 style="margin:0 0 10px 0; color:var(--blue); font-size:14px;">${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h3>
+                    ${m || '<p style="color:#999; font-size:12px;">Aucun planning.</p>'}
                     <div class="pointage-zone">
                         <div class="p-grid">
-                            <div><label style="font-size:9px; font-weight:800;">DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
-                            <div><label style="font-size:9px; font-weight:800;">FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
-                            <div><label style="font-size:9px; font-weight:800;">PAUSE(M)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
+                            <div><label style="font-size:9px;">DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
+                            <div><label style="font-size:9px;">FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
+                            <div><label style="font-size:9px;">PAUSE(M)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
                         </div>
-                        <textarea class="p-input" style="height:50px; margin-top:8px;" placeholder="Rapport de journée..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
-                        <div style="text-align:right; font-weight:800; color:var(--success); font-size:12px; margin-top:5px;">TOTAL : ${tot}h</div>
+                        <textarea class="p-input" style="height:50px; margin-top:8px;" placeholder="Rapport..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
+                        <div style="text-align:right; font-weight:bold; color:var(--success); margin-top:5px;">TOTAL : ${tot}h</div>
                     </div></div>`;
             });
             document.getElementById('v-user').innerHTML = h;
@@ -234,51 +217,54 @@
         curK = k; let d = window.planData ? window.planData[k] : null;
         document.getElementById('e-chantier').value = d?.chantier || "";
         document.getElementById('e-mission').value = d?.mission || "";
-        document.getElementById('e-matériel').value = d?.matériel || "";
-        document.getElementById('e-mail-depot').checked = false;
-        tempFiles = d?.files || [];
+        document.getElementById('e-matos').value = d?.matos || "";
+        curF = d?.files || [];
+        
+        // Cacher ou montrer l'encart MATERIEL (Seulement pour Jadiel et Nicola)
+        if(k.includes('jadiel') || k.includes('nicola')) {
+            document.getElementById('section-matos').classList.remove('hidden');
+        } else {
+            document.getElementById('section-matos').classList.add('hidden');
+        }
+        
         document.getElementById('editor-overlay').style.display = 'flex';
-        renderFileList();
+        renderF();
     }
 
-    async function uploadToCloudinary(input) {
-        if(!input.files[0]) return;
-        const formData = new FormData();
-        formData.append("file", input.files[0]);
-        formData.append("upload_preset", UPLOAD_PRESET);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
-        const data = await res.json();
-        tempFiles.push({ url: data.secure_url, name: input.files[0].name });
-        renderFileList();
+    async function upCloud(inp) {
+        if(!inp.files[0]) return;
+        const fd = new FormData(); fd.append("file", inp.files[0]); fd.append("upload_preset", UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: fd });
+        const d = await res.json();
+        curF.push({ url: d.secure_url, name: inp.files[0].name });
+        renderF();
     }
 
-    function renderFileList() {
-        let h = ""; tempFiles.forEach((f, i) => h += `<div style="font-size:10px;">📎 ${f.name} <span onclick="tempFiles.splice(${i},1);renderFileList()" style="color:red; cursor:pointer;">(X)</span></div>`);
-        document.getElementById('file-list').innerHTML = h;
+    function renderF() {
+        let h = ""; curF.forEach((f, i) => h += `<div>📎 ${f.name} <span onclick="curF.splice(${i},1);renderF()" style="color:red;cursor:pointer;">[X]</span></div>`);
+        document.getElementById('files-ui').innerHTML = h;
     }
 
     function saveData() {
-        let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matériel').value, mail = document.getElementById('e-mail-depot').checked;
-        if(!ch) return alert("Nom du chantier obligatoire");
-        let obj = { chantier: ch, mission: mi, matériel: ma, files: tempFiles };
-        db.ref('v89_plan/'+curK).set(obj).then(() => {
-            if(mail && ma) emailjs.send(SERVICE_ID, T_DEPOT, { message: `CHANTIER: ${ch.toUpperCase()}\nMATÉRIEL BESOIN: ${ma}`, user_id: curK });
+        let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matos').value, send = document.getElementById('e-send').checked;
+        if(!ch) return alert("Chantier ?");
+        db.ref('v90_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, files:curF}).then(() => {
+            if(send && ma) emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL POUR ${ch.toUpperCase()}:\n${ma}`, user_id: curK });
             closeEd();
         });
     }
 
-    function deleteData() { if(confirm("Supprimer ?")) db.ref('v89_plan/'+curK).remove().then(closeEd); }
+    function delData() { if(confirm("Supprimer ?")) db.ref('v90_plan/'+curK).remove().then(closeEd); }
     function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function saveP(date, f, v) { db.ref(`v89_point/${date}_${curU}/${f}`).set(v); }
+    function saveP(date, f, v) { db.ref(`v90_point/${date}_${curU}/${f}`).set(v); }
 
     function toggleDash() {
         let d = document.getElementById('dash-overlay');
         if(d.style.display === 'flex') d.style.display = 'none';
         else {
             d.style.display = 'flex';
-            db.ref('v89_point').once('value', s => {
-                let data = s.val(), h = "";
-                if(!data) return;
+            db.ref('v90_point').once('value', s => {
+                let data = s.val(), h = ""; if(!data) return;
                 Object.keys(data).sort().reverse().forEach(k => {
                     let [date, user] = k.split('_'), p = data[k];
                     let tot = (p.s && p.e) ? ((new Date(`1970-01-01T${p.e}`) - new Date(`1970-01-01T${p.s}`)) / 3600000 - (p.p/60)).toFixed(2) : '-';
@@ -294,12 +280,10 @@
     if(curU) {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
-        if(curU === 'admin') {
-            document.getElementById('admin-tools').classList.remove('hidden');
-            document.getElementById('u-info').classList.remove('hidden');
-        }
-        db.ref('v89_plan').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('v89_point').on('value', s => { window.pointData = s.val(); render(); });
+        document.getElementById('u-ctrl').classList.remove('hidden');
+        if(curU === 'admin') document.getElementById('admin-tools').classList.remove('hidden');
+        db.ref('v90_plan').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('v90_point').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
