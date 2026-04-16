@@ -3,16 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V95</title>
+    <title>RBF Planning V96</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         
-        /* HEADER */
-        header { background: white; padding: 10px 15px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header-title { color: var(--blue); font-size: 14px; font-weight: 800; text-transform: uppercase; text-align: center; }
+        /* HEADER AVEC TITRE CENTRÉ ET BOUTON À DROITE */
+        header { 
+            background: white; 
+            padding: 10px 15px; 
+            display: grid; 
+            grid-template-columns: 80px 1fr 80px; /* Force l'équilibre pour le centrage */
+            align-items: center; 
+            border-bottom: 4px solid var(--yellow); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        .header-logo img { height: 35px; display: block; }
+        .header-title { color: var(--blue); font-size: 13px; font-weight: 800; text-transform: uppercase; text-align: center; }
+        .header-right { text-align: right; }
 
         /* UI ELEMENTS */
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -55,7 +68,9 @@
 <header>
     <div class="header-logo"><img src="logo.png" style="height:35px;"></div>
     <div class="header-title">PLANNING TRANSPORT</div>
-    <div class="header-right"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer;">QUITTER</button></div>
+    <div class="header-right">
+        <button id="logout-btn" onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer; display:none;">QUITTER</button>
+    </div>
 </header>
 
 <div id="login-screen">
@@ -103,13 +118,11 @@
         <h3 style="margin-top:0; color:var(--blue);">Pointage du jour</h3>
         <label style="font-size:12px; font-weight:bold;">🕗 DÉBUT DE JOURNÉE :</label>
         <input type="time" id="p-start">
-        
         <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px;">
             <label style="font-weight:bold; font-size:12px;">☕ MES PAUSES :</label>
             <button onclick="addPauseRow()" style="background:var(--blue); color:white; border:none; padding:6px 12px; border-radius:6px; font-size:10px; cursor:pointer;">+ AJOUTER</button>
         </div>
         <div id="pause-container"></div>
-
         <label style="font-size:12px; font-weight:bold;">🏁 FIN DE JOURNÉE :</label>
         <input type="time" id="p-end">
         <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer; margin-top:10px;">VALIDER MES HEURES</button>
@@ -176,7 +189,6 @@
         return ISOweekStart;
     }
 
-    // AUTH
     function askCode(u) { 
         let p = prompt("Code " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
@@ -186,6 +198,7 @@
         curU = u; 
         document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden');
+        document.getElementById('logout-btn').style.display = 'block';
         if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden');
         if(['interne','cedric','depot','jadiel','nicola'].includes(u)) document.getElementById('btn-show-pointer').classList.remove('hidden');
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); });
@@ -193,7 +206,6 @@
 
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    // POINTAGES
     function addPauseRow(valS = "", valE = "") {
         const div = document.createElement('div'); div.className = 'pause-row';
         div.innerHTML = `<input type="time" class="p-s" value="${valS}"> <input type="time" class="p-e" value="${valE}"> <button style="background:var(--danger); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;" onclick="this.parentElement.remove()">×</button>`;
@@ -233,7 +245,7 @@
             Object.keys(days).sort().reverse().forEach(date => {
                 h += `<div style="background:var(--blue); color:white; padding:10px; margin-top:15px; border-radius:8px; font-weight:bold;">📅 ${date}</div>`;
                 Object.keys(days[date]).forEach(u => {
-                    let p = days[date][u], pStr = p.pauses ? p.pauses.map(ps => `<span style="background:#fef3c7; padding:2px 5px; border-radius:4px; margin-right:5px;">${ps.s}-${ps.e}</span>`).join('') : 'aucune';
+                    let p = days[date][u], pStr = p.pauses ? p.pauses.map(ps => `<span style="background:#fef3c7; padding:2px 5px; border-radius:4px; margin-right:5px; color:black;">${ps.s}-${ps.e}</span>`).join('') : 'aucune';
                     h += `<div style="padding:12px; border-bottom:1px solid #eee; background:white;">
                         <b style="color:var(--blue);">${u.toUpperCase()}</b> | Début: <b>${p.start||'--'}</b> | Fin: <b>${p.end||'--'}</b><br>
                         <div style="margin-top:5px; color:#64748b; font-size:11px;">☕ Pauses: ${pStr}</div>
@@ -245,7 +257,6 @@
         });
     }
 
-    // RENDU PLANNING
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"];
@@ -298,7 +309,6 @@
         }
     }
 
-    // ÉDITEUR ADMIN
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     const cp = document.getElementById('cp');
     colors.forEach(c => {
@@ -322,10 +332,10 @@
 
     function saveTask() {
         let v = document.getElementById('e-input').value, m = document.getElementById('e-matos').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { document.getElementById('editor-overlay').style.display='none'; });
+        db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
     }
 
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { document.getElementById('editor-overlay').style.display='none'; }); }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { closeEditor(); }); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function changeWeek(v) { curW += v; render(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
