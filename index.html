@@ -3,80 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V88 - PREMIUM</title>
+    <title>RBF Planning V89 - FINAL</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
-        
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
         header { background: white; padding: 10px 15px; display: flex; justify-content: center; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 50px; }
         .header-logo { position: absolute; left: 15px; }
         .header-logo img { height: 40px; }
-        .header-title { color: var(--blue); font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .header-title { color: var(--blue); font-size: 14px; font-weight: 800; text-transform: uppercase; }
         
-        .admin-nav { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        #search-input { flex: 1; min-width: 150px; padding: 12px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc; outline: none; font-size: 13px; }
+        .admin-nav { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; }
+        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
         
-        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
-        .btn-top:active { transform: scale(0.95); }
-
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .wk-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #e2e8f0; background: white; font-weight: bold; font-size: 20px; cursor: pointer; color: var(--blue); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .wk-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #e2e8f0; background: white; font-weight: bold; cursor: pointer; }
 
-        .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 950px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        th { background: var(--blue); color: white; padding: 15px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); text-transform: uppercase; }
+        .table-container { padding: 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 950px; }
+        th { background: var(--blue); color: white; padding: 15px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; }
         
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 100px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
-        .td-ferie { background: #f1f5f9 !important; color: #94a3b8; text-align: center; font-size: 9px; font-weight: bold; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 100px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .slot { font-size: 10.5px; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); }
+        .slot.filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; }
+        .slot.has-mat { border-left: 6px solid var(--danger) !important; }
 
-        .slot { font-size: 10.5px; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); position: relative; transition: all 0.2s; }
-        .slot.filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1); }
-        .slot.is-to-depot { border-left: 6px solid var(--success) !important; }
-        .slot.has-link::after { content: '📎'; position: absolute; top: 5px; right: 5px; font-size: 10px; }
-
-        /* Pointage Employé */
         .card-day { background: white; margin: 15px; padding: 15px; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .mission-box { padding: 12px; border-left: 6px solid #3b82f6; background: #f8fafc; border-radius: 10px; margin-bottom: 12px; }
-        .pointage-zone { background: #f1f5f9; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        .p-grid label { font-size: 10px; font-weight: 800; color: var(--blue); display: block; margin-bottom: 4px; }
-        .p-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 14px; }
+        .mission-box { padding: 12px; border-left: 6px solid #3b82f6; background: #f0f7ff; border-radius: 10px; margin-bottom: 10px; }
+        .mat-box { padding: 12px; border-left: 6px solid var(--danger); background: #fff5f5; border-radius: 10px; margin-bottom: 10px; font-weight: bold; }
+        
+        .pointage-zone { background: #f1f5f9; padding: 15px; border-radius: 12px; margin-top: 10px; }
+        .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .p-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
 
-        /* Dashboard Secrétaire */
-        #dash-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; display: none; flex-direction: column; }
-        .dash-header { background: var(--blue); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); }
-        .dash-content { padding: 10px; overflow: auto; flex: 1; }
-
-        /* Login */
-        #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; padding: 20px; }
-        .login-card { background: white; padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-
+        #editor-overlay, #dash-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-box { background: white; width: 92%; max-width: 500px; padding: 25px; border-radius: 24px; max-height: 90vh; overflow-y: auto; }
+        
         .hidden { display: none !important; }
-        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 800; margin-top: 15px; cursor: pointer; }
+        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 800; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-logo"><img src="logo.png"></div>
-    <div class="header-title">PLANNING TRANSPORT</div>
+    <div class="header-title">PLANNING RBF TRANSPORT</div>
     <div id="u-info" class="hidden" style="position:absolute; right:15px;"><button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px;">QUITTER</button></div>
 </header>
 
 <div id="login-screen">
-    <div class="login-card">
-        <img src="logo.png" style="width:160px; margin-bottom:20px;">
-        <div class="grid-auth">
+    <div style="padding: 50px 20px; text-align: center;">
+        <img src="logo.png" style="width:160px; margin-bottom:30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 400px; margin: auto;">
             <button class="btn-top" style="grid-column: span 2; padding: 18px;" onclick="askCode('admin')">💼 BUREAU / CONDUC</button>
             <button class="btn-top" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
             <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 CHAUF. INT.</button>
@@ -89,21 +74,18 @@
 
 <div id="app-content" class="hidden">
     <div class="admin-nav hidden" id="admin-tools">
-        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 TABLEAU POINTAGES</button>
+        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 RÉCAP HEURES (SECRÉTAIRE)</button>
     </div>
 
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
-        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue); line-height:1.1;"></div>
+        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue);"></div>
         <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
 
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead>
-                <tr><th class="user-cell">PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr>
-            </thead>
+            <thead><tr><th class="user-cell">PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
@@ -111,53 +93,60 @@
     <div id="v-user" class="hidden"></div>
 </div>
 
-<div id="dash-overlay">
-    <div class="dash-header">
-        <h2 style="margin:0; font-size:16px;">RÉCAPITULATIF DES HEURES</h2>
-        <button onclick="toggleDash()" style="background:white; color:var(--blue); border:none; padding:8px 15px; border-radius:8px; font-weight:bold;">RETOUR</button>
+<div id="dash-overlay" style="display:none; background:white; flex-direction:column; justify-content: flex-start;">
+    <div style="background:var(--blue); color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; font-size:16px;">TABLEAU DE BORD SECRÉTARIAT</h2>
+        <button onclick="toggleDash()" style="background:var(--yellow); border:none; padding:10px 20px; border-radius:8px; font-weight:bold;">FERMER</button>
     </div>
-    <div class="dash-content">
-        <table style="min-width:100%; font-size:11px;">
-            <thead>
-                <tr style="background:#f8fafc; color:var(--blue);">
-                    <th style="color:var(--blue); background:#eee;">DATE</th>
-                    <th style="color:var(--blue); background:#eee;">NOM</th>
-                    <th style="color:var(--blue); background:#eee;">TOTAL</th>
-                    <th style="color:var(--blue); background:#eee;">RAPPORT</th>
-                </tr>
+    <div style="padding:10px; overflow:auto;">
+        <table style="width:100%; font-size:12px;">
+            <thead style="background:#eee;">
+                <tr><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr>
             </thead>
             <tbody id="dash-body"></tbody>
         </table>
     </div>
 </div>
 
-<div id="editor-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
-    <div style="background:white; width:92%; max-width:450px; padding:25px; border-radius:24px; max-height:90vh; overflow-y:auto;">
-        <h3 style="margin:0 0 20px 0; color:var(--blue);">Modifier Mission</h3>
-        <label style="font-size:12px; font-weight:bold;">CHANTIER :</label>
-        <input type="text" id="e-chantier" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
-        <label style="font-size:12px; font-weight:bold;">MISSION :</label>
-        <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box; font-family:inherit;"></textarea>
+<div id="editor-overlay">
+    <div class="modal-box">
+        <h3 style="margin:0 0 15px 0; color:var(--blue);">Programmation Mission</h3>
         
-        <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; font-weight:bold;">
-            <input type="checkbox" id="e-depot" style="width:18px; height:18px;"> SIGNALER AU DÉPÔT
-        </label>
-        <label id="lbl-mat" class="hidden" style="display:flex; align-items:center; gap:10px; margin-bottom:15px; font-size:14px; color:var(--danger); font-weight:bold;">
-            <input type="checkbox" id="e-mat" style="width:18px; height:18px;"> 🔧 BESOIN MATÉRIEL
-        </label>
+        <label style="font-size:11px; font-weight:bold;">NOM DU CHANTIER :</label>
+        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:15px;">
+        
+        <div style="background:#f0f7ff; padding:12px; border-radius:12px; margin-bottom:15px;">
+            <label style="font-size:11px; font-weight:bold; color:#3b82f6;">📝 MISSION (Confidentiel Maçon) :</label>
+            <textarea id="e-mission" class="p-input" style="height:70px; margin-top:5px;"></textarea>
+        </div>
 
-        <button class="btn-save" onclick="saveTask()">ENREGISTRER</button>
-        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:15px; font-weight:bold;">ANNULER</button>
+        <div style="background:#fff5f5; padding:12px; border-radius:12px; margin-bottom:15px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 BESOIN MATÉRIEL (Envoyé au dépôt) :</label>
+            <textarea id="e-matériel" class="p-input" style="height:70px; margin-top:5px;" placeholder="Pelles, sacs de ciment, niveau..."></textarea>
+            <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; font-weight:bold; color:var(--danger);">
+                <input type="checkbox" id="e-mail-depot"> 📧 ENVOYER LA LISTE AU DÉPÔT
+            </label>
+        </div>
+
+        <div id="file-list" style="margin-bottom:10px;"></div>
+        <input type="file" id="e-file" class="hidden" onchange="uploadToCloudinary(this)">
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f8fafc; border:1px dashed #ccc; border-radius:10px; font-weight:bold; font-size:11px;">📎 AJOUTER PHOTO / PLAN</button>
+
+        <button class="btn-save" onclick="saveData()">ENREGISTRER LA JOURNÉE</button>
+        <button onclick="deleteData()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:10px; font-weight:bold;">Supprimer</button>
+        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:10px;">Annuler</button>
     </div>
 </div>
 
 <script>
     const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7";
+    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
+    
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     emailjs.init(PUBLIC_KEY);
 
-    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null;
+    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, tempFiles = [];
     const users = [
         {id:'damien', display:'CHAUF. INT.', s:4},
         {id:'externe', display:'EXTERNE', s:4},
@@ -175,38 +164,23 @@
         let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if(p === codes[u]) { localStorage.setItem('rbf_u', u); location.reload(); }
     }
-
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function getDates(w, y) {
-        let simple = new Date(y, 0, 1 + (w - 1) * 7);
-        let dow = simple.getDay();
-        let ISOweekStart = simple;
-        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+        let d = new Date(y, 0, 1 + (w - 1) * 7);
+        let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6:1);
+        let mon = new Date(d.setDate(diff));
         let res = []; for(let i=0; i<5; i++) {
-            let n = new Date(ISOweekStart); n.setDate(ISOweekStart.getDate()+i);
+            let n = new Date(mon); n.setDate(mon.getDate()+i);
             res.push(n.toISOString().split('T')[0]);
         }
         return res;
     }
 
-    function calculateTotal(s, e, p) {
-        if(!s || !e) return "-";
-        let [h1, m1] = s.split(':').map(Number);
-        let [h2, m2] = e.split(':').map(Number);
-        let diff = (h2*60 + m2) - (h1*60 + m1);
-        let pause = parseInt(p) || 0;
-        return ((diff - pause)/60).toFixed(2) + "h";
-    }
-
     function render() {
         const dates = getDates(curW, curY);
-        document.getElementById('wk-disp').innerHTML = `<span style="font-size:10px; color:#94a3b8; font-weight:700;">AVRIL ${curY}</span><br>SEMAINE ${curW}`;
-        dates.forEach((d, i) => {
-            let dt = new Date(d);
-            document.getElementById('h'+i).innerHTML = `${dt.toLocaleDateString('fr-FR', {weekday:'short'}).toUpperCase()}<br>${dt.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`;
-        });
+        document.getElementById('wk-disp').innerHTML = `<small>AVRIL ${curY}</small><br>SEMAINE ${curW}`;
+        dates.forEach((d, i) => document.getElementById('h'+i).innerHTML = `${new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase()}`);
 
         if(curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
@@ -214,15 +188,11 @@
                 if(curU === 'depot' && u.id === 'divers') return;
                 h += `<tr><td class="user-cell">${u.display}</td>`;
                 dates.forEach(date => {
-                    let isF = feries.includes(date);
-                    h += `<td class="${isF?'td-ferie':''}">`;
-                    if(isF) h += "FÉRIÉ";
-                    else {
-                        for(let s=1; s<=u.s; s++) {
-                            let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
-                            let txt = dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : "...";
-                            h += `<div class="slot ${dta?'filled':''} ${dta?.toDepot?'is-to-depot':''}" onclick="openEd('${k}')">${txt}</div>`;
-                        }
+                    h += `<td>`;
+                    for(let s=1; s<=u.s; s++) {
+                        let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
+                        let txt = dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.mission || ''}` : "...";
+                        h += `<div class="slot ${dta?'filled':''} ${dta?.matériel?'has-mat':''}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
                 });
@@ -234,20 +204,25 @@
             let h = ""; dates.forEach(date => {
                 let m = ""; for(let s=1; s<=4; s++) {
                     let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
-                    if(dta) m += `<div class="mission-box"><b>${dta.chantier.toUpperCase()}</b><br>${dta.text}</div>`;
+                    if(dta) {
+                        let f = ""; dta.files?.forEach(fl => f += `<a href="${fl.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:8px; margin-top:5px; border-radius:8px; text-decoration:none; text-align:center; font-size:10px;">📄 VOIR DOCUMENT</a>`);
+                        m += `<div class="mission-box"><b>MISSION : ${dta.chantier.toUpperCase()}</b><br>${dta.mission || ''}${f}</div>`;
+                        if(dta.matériel) m += `<div class="mat-box">🔧 BESOIN MATÉRIEL :<br>${dta.matériel}</div>`;
+                    }
                 }
                 let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
+                let tot = (pt.s && pt.e) ? ((new Date(`1970-01-01T${pt.e}`) - new Date(`1970-01-01T${pt.s}`)) / 3600000 - (pt.p/60)).toFixed(2) : '-';
                 h += `<div class="card-day">
-                    <h3 style="margin:0 0 10px 0; color:var(--blue); font-size:15px;">${new Date(date).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'})}</h3>
-                    ${m || '<p style="font-size:12px; color:#94a3b8;">Aucune mission prévue.</p>'}
+                    <h3 style="margin:0 0 10px 0; font-size:14px; color:var(--blue);">${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h3>
+                    ${m || '<p style="font-size:11px; color:#999;">Aucune mission.</p>'}
                     <div class="pointage-zone">
                         <div class="p-grid">
-                            <div><label>DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
-                            <div><label>FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
-                            <div><label>PAUSE (MIN)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
+                            <div><label style="font-size:9px; font-weight:800;">DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
+                            <div><label style="font-size:9px; font-weight:800;">FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
+                            <div><label style="font-size:9px; font-weight:800;">PAUSE(M)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
                         </div>
-                        <textarea class="p-input" style="height:60px; margin-top:5px;" placeholder="Détaillez votre journée..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
-                        <div style="text-align:right; margin-top:10px; font-weight:800; color:var(--success);">TOTAL : ${calculateTotal(pt.s, pt.e, pt.p)}</div>
+                        <textarea class="p-input" style="height:50px; margin-top:8px;" placeholder="Rapport de journée..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
+                        <div style="text-align:right; font-weight:800; color:var(--success); font-size:12px; margin-top:5px;">TOTAL : ${tot}h</div>
                     </div></div>`;
             });
             document.getElementById('v-user').innerHTML = h;
@@ -258,47 +233,62 @@
         if(curU !== 'admin') return;
         curK = k; let d = window.planData ? window.planData[k] : null;
         document.getElementById('e-chantier').value = d?.chantier || "";
-        document.getElementById('e-input').value = d?.text || "";
-        document.getElementById('e-depot').checked = !!d?.toDepot;
-        if(k.includes('jadiel') || k.includes('nicola')) document.getElementById('lbl-mat').classList.remove('hidden');
-        else document.getElementById('lbl-mat').classList.add('hidden');
-        document.getElementById('editor-overlay').classList.remove('hidden');
+        document.getElementById('e-mission').value = d?.mission || "";
+        document.getElementById('e-matériel').value = d?.matériel || "";
+        document.getElementById('e-mail-depot').checked = false;
+        tempFiles = d?.files || [];
+        document.getElementById('editor-overlay').style.display = 'flex';
+        renderFileList();
     }
 
-    function saveTask() {
-        let ch = document.getElementById('e-chantier').value, tx = document.getElementById('e-input').value, dep = document.getElementById('e-depot').checked, mat = document.getElementById('e-mat').checked;
-        if(!ch) return alert("Nom du chantier ?");
-        db.ref('plan_v88/'+curK).set({chantier:ch, text:tx, toDepot:dep, needMat:mat}).then(() => {
-            if(dep) emailjs.send(SERVICE_ID, T_DEPOT, { message: `Mission: ${ch} - ${tx}`, user_id: curK });
+    async function uploadToCloudinary(input) {
+        if(!input.files[0]) return;
+        const formData = new FormData();
+        formData.append("file", input.files[0]);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
+        const data = await res.json();
+        tempFiles.push({ url: data.secure_url, name: input.files[0].name });
+        renderFileList();
+    }
+
+    function renderFileList() {
+        let h = ""; tempFiles.forEach((f, i) => h += `<div style="font-size:10px;">📎 ${f.name} <span onclick="tempFiles.splice(${i},1);renderFileList()" style="color:red; cursor:pointer;">(X)</span></div>`);
+        document.getElementById('file-list').innerHTML = h;
+    }
+
+    function saveData() {
+        let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matériel').value, mail = document.getElementById('e-mail-depot').checked;
+        if(!ch) return alert("Nom du chantier obligatoire");
+        let obj = { chantier: ch, mission: mi, matériel: ma, files: tempFiles };
+        db.ref('v89_plan/'+curK).set(obj).then(() => {
+            if(mail && ma) emailjs.send(SERVICE_ID, T_DEPOT, { message: `CHANTIER: ${ch.toUpperCase()}\nMATÉRIEL BESOIN: ${ma}`, user_id: curK });
             closeEd();
         });
     }
 
-    function saveP(date, f, v) { db.ref(`point_v88/${date}_${curU}/${f}`).set(v); }
+    function deleteData() { if(confirm("Supprimer ?")) db.ref('v89_plan/'+curK).remove().then(closeEd); }
+    function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function saveP(date, f, v) { db.ref(`v89_point/${date}_${curU}/${f}`).set(v); }
 
     function toggleDash() {
         let d = document.getElementById('dash-overlay');
         if(d.style.display === 'flex') d.style.display = 'none';
         else {
             d.style.display = 'flex';
-            db.ref('point_v88').once('value', s => {
+            db.ref('v89_point').once('value', s => {
                 let data = s.val(), h = "";
                 if(!data) return;
                 Object.keys(data).sort().reverse().forEach(k => {
                     let [date, user] = k.split('_'), p = data[k];
-                    h += `<tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px;">${date}</td>
-                        <td style="padding:10px; text-transform:uppercase;"><b>${user}</b></td>
-                        <td style="padding:10px; color:var(--success); font-weight:800;">${calculateTotal(p.s, p.e, p.p)}</td>
-                        <td style="padding:10px; font-style:italic; font-size:10px;">${p.r || ''}</td>
-                    </tr>`;
+                    let tot = (p.s && p.e) ? ((new Date(`1970-01-01T${p.e}`) - new Date(`1970-01-01T${p.s}`)) / 3600000 - (p.p/60)).toFixed(2) : '-';
+                    h += `<tr style="border-bottom:1px solid #eee;"><td>${date}</td><td style="text-transform:uppercase"><b>${user}</b></td><td>${p.s||'-'}</td><td>${p.e||'-'}</td><td>${p.p||0}m</td><td style="color:green; font-weight:bold;">${tot}h</td><td>${p.r||''}</td></tr>`;
                 });
                 document.getElementById('dash-body').innerHTML = h;
             });
         }
     }
 
-    function closeEd() { document.getElementById('editor-overlay').classList.add('hidden'); }
     function changeWeek(v) { curW += v; render(); }
 
     if(curU) {
@@ -308,8 +298,8 @@
             document.getElementById('admin-tools').classList.remove('hidden');
             document.getElementById('u-info').classList.remove('hidden');
         }
-        db.ref('plan_v88').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('point_v88').on('value', s => { window.pointData = s.val(); render(); });
+        db.ref('v89_plan').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('v89_point').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
