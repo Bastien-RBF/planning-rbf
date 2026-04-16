@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V88</title>
+    <title>RBF Planning V89</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -217,7 +217,16 @@
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; 
-            const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:false},{id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false}];
+            // MISE A JOUR : d:true pour instal, jadiel et nicola afin qu'ils apparaissent au dépôt
+            const users = [
+                {id:'interne',s:4,d:true},
+                {id:'externe',s:4,d:true},
+                {id:'cedric',s:4,d:true},
+                {id:'divers',s:4,d:false},
+                {id:'instal',s:4,d:true},
+                {id:'jadiel',s:2,d:true},
+                {id:'nicola',s:2,d:true}
+            ];
             
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
