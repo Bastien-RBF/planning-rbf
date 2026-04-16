@@ -3,73 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V92 - FULL STABLE</title>
+    <title>RBF Planning V93 - STABLE</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #334155; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
         
-        /* HEADER & NAV */
-        header { background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        header { background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo img { height: 40px; }
         .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; }
 
-        .admin-nav { background: white; padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
-        .search-bar { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #f1f5f9; border-radius: 12px; background: #f8fafc; }
+        .admin-nav { background: white; padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .search-bar { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; }
 
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #eee; }
-        .wk-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #ddd; background: white; font-weight: bold; cursor: pointer; color: var(--blue); font-size: 20px; }
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
+        .wk-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ccc; background: white; font-weight: bold; cursor: pointer; color: var(--blue); font-size: 18px; }
 
-        /* TABLEAU */
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 1000px; }
-        th { background: var(--blue); color: white; padding: 15px 8px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid var(--yellow); }
-        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 1000px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        th { background: var(--blue); color: white; padding: 15px 5px; font-size: 11px; text-transform: uppercase; border-bottom: 3px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 120px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
-        .slot { font-size: 10px; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); transition: 0.2s; }
-        .slot.filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .slot { font-size: 10px; padding: 10px; margin-bottom: 5px; border-radius: 8px; background: #f9fafb; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); transition: all 0.2s; }
+        .slot.filled { background: linear-gradient(135deg, #ffffff 0%, #eef6ff 100%); border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .slot.has-mat { border-left: 6px solid var(--danger) !important; }
-        .td-ferie { background: #f8fafc !important; }
+        .td-ferie { background: #f1f5f9 !important; }
 
-        /* VUE MOBILE */
-        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .mission-box { padding: 12px; border-left: 6px solid #3b82f6; background: #f0f7ff; border-radius: 10px; margin-bottom: 10px; }
         .mat-box { padding: 12px; border-left: 6px solid var(--danger); background: #fff5f5; border-radius: 10px; margin-bottom: 10px; color: #b91c1c; font-weight: bold; }
         
-        .pointage-zone { background: #f1f5f9; padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid #e2e8f0; }
+        .pointage-zone { background: #f8fafc; padding: 15px; border-radius: 15px; margin-top: 10px; border: 1px solid #e2e8f0; }
         .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .p-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
+        .p-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
 
-        /* MODALS */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: white; width: 92%; max-width: 500px; padding: 25px; border-radius: 25px; max-height: 90vh; overflow-y: auto; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-box { background: white; width: 92%; max-width: 500px; padding: 25px; border-radius: 20px; max-height: 90vh; overflow-y: auto; }
         
         .hidden { display: none !important; }
-        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; font-size: 15px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="logo"><img src="logo.png"></div>
-    <div class="header-title">RBF TRANSPORT - V92</div>
+    <div class="header-title">RBF PLANNING V93</div>
     <div id="u-ctrl" class="hidden"><button class="btn-logout" onclick="logout()">CHANGER COMPTE</button></div>
 </header>
 
-<div id="login-screen" style="padding: 50px 20px; text-align: center;">
-    <div style="max-width: 400px; margin: auto;">
-        <img src="logo.png" style="width:160px; margin-bottom:30px;">
+<div id="login-screen" style="padding: 40px 20px; text-align: center;">
+    <div style="max-width: 400px; margin: auto; background:white; padding:30px; border-radius:25px; box-shadow:0 10px 25px rgba(0,0,0,0.05);">
+        <img src="logo.png" style="width:150px; margin-bottom:20px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <button class="btn-top" style="grid-column: span 2; padding: 20px;" onclick="askCode('admin')">💼 BUREAU / CONDUC</button>
             <button class="btn-top" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
-            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 CHAUF. INT.</button>
-            <button class="btn-top" style="background:#f59e0b;" onclick="askCode('externe')">🚛 EXTERNE</button>
+            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 DAMIEN</button>
+            <button class="btn-top" style="background:#4b5563;" onclick="askCode('externe')">🚛 EXTERNE</button>
             <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-            <button class="btn-top" style="background:#64748b;" onclick="askCode('divers')">🚛 DIVERS</button>
+            <button class="btn-top" style="background:#94a3b8;" onclick="askCode('divers')">🚛 DIVERS</button>
             <button class="btn-top" style="background:#10b981;" onclick="askCode('elec')">⚡ INSTAL (ELEC)</button>
             <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
             <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('nicola')">👷 NICOLA</button>
@@ -80,12 +76,12 @@
 <div id="app-content" class="hidden">
     <div class="admin-nav hidden" id="admin-tools">
         <input type="text" id="search-input" class="search-bar" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 TABLEAU POINTAGES</button>
+        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 HISTORIQUE HEURES</button>
     </div>
 
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
-        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue);"></div>
+        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue); min-width:150px;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
 
@@ -95,20 +91,17 @@
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-
     <div id="v-user" class="hidden"></div>
 </div>
 
 <div id="dash-overlay" class="modal-overlay" style="background:white; display:none; flex-direction:column; justify-content: flex-start;">
-    <div style="background:var(--blue); color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="margin:0; font-size:16px;">RÉCAPITULATIF DES HEURES</h2>
-        <button onclick="toggleDash()" style="background:var(--yellow); border:none; padding:10px 20px; border-radius:10px; font-weight:bold;">FERMER</button>
+    <div style="background:var(--blue); color:white; padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid var(--yellow);">
+        <h2 style="margin:0; font-size:16px;">RÉCAPITULATIF HEURES</h2>
+        <button onclick="toggleDash()" style="background:var(--yellow); border:none; padding:10px 20px; border-radius:10px; font-weight:bold;">RETOUR</button>
     </div>
     <div style="padding:10px; overflow:auto;">
-        <table style="width:100%; font-size:11px;">
-            <thead style="background:#eee;">
-                <tr><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr>
-            </thead>
+        <table style="width:100%; font-size:11px; border-collapse:collapse;">
+            <thead><tr style="background:#f1f5f9;"><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr></thead>
             <tbody id="dash-body"></tbody>
         </table>
     </div>
@@ -116,27 +109,28 @@
 
 <div id="editor-overlay" class="modal-overlay">
     <div class="modal-box">
-        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue);">Programmer la journée</h3>
-        <label style="font-size:11px; font-weight:bold;">CHANTIER :</label>
-        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:12px;">
-        <label style="font-size:11px; font-weight:bold; color:#3b82f6;">MISSION (Pour l'employé) :</label>
-        <textarea id="e-mission" class="p-input" style="height:70px; margin-bottom:12px;"></textarea>
+        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); border-bottom:2px solid var(--yellow); padding-bottom:10px;">Édition Mission</h3>
+        <label style="font-size:11px; font-weight:bold;">NOM DU CHANTIER :</label>
+        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:15px; border-left:4px solid var(--blue);">
+        
+        <label style="font-size:11px; font-weight:bold; color:#3b82f6;">📝 MISSION (Détails) :</label>
+        <textarea id="e-mission" class="p-input" style="height:70px; margin-bottom:15px;"></textarea>
 
-        <div id="section-matos" class="hidden" style="background:#fff5f5; padding:12px; border-radius:12px; border:1px solid #fecaca; margin-bottom:12px;">
+        <div id="section-matos" class="hidden" style="background:#fff5f5; padding:15px; border-radius:12px; border:1px solid #fecaca; margin-bottom:15px;">
             <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 BESOIN MATÉRIEL (POUR DÉPÔT) :</label>
-            <textarea id="e-matos" class="p-input" style="height:60px; margin-top:5px;"></textarea>
-            <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; font-weight:bold;">
-                <input type="checkbox" id="e-send"> 📧 ENVOYER AU DÉPÔT PAR MAIL
+            <textarea id="e-matos" class="p-input" style="height:60px; margin-top:5px; border-color:#fecaca;"></textarea>
+            <label style="display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; font-weight:bold; color:var(--danger);">
+                <input type="checkbox" id="e-send" style="width:18px; height:18px;"> 📧 ENVOYER AU DÉPÔT
             </label>
         </div>
 
-        <div id="files-ui" style="margin-bottom:10px; font-size:10px;"></div>
+        <div id="files-ui" style="margin-bottom:10px; font-size:11px; font-weight:bold;"></div>
         <input type="file" id="e-file" class="hidden" onchange="upCloud(this)">
-        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f8fafc; border:1px dashed #ccc; border-radius:10px; font-weight:bold; font-size:11px;">📎 AJOUTER DOCUMENT / PHOTO</button>
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer;">📎 JOINDRE PHOTO / PLAN</button>
 
         <button class="btn-save" onclick="saveAll()">ENREGISTRER</button>
-        <button onclick="delEntry()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:15px; font-weight:bold;">Supprimer</button>
-        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#999; margin-top:10px;">Annuler</button>
+        <button onclick="delEntry()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:15px; font-weight:bold; cursor:pointer;">Supprimer</button>
+        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:10px; cursor:pointer;">Annuler</button>
     </div>
 </div>
 
@@ -146,16 +140,16 @@
     const db = firebase.database(); emailjs.init(PUBLIC_KEY);
 
     let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, curF = [];
-    
-    // ORDRE EXACT DEMANDÉ
+
+    // ORDRE EXACT DU PERSONNEL
     const users = [
-        {id:'damien', display:'CHAUF. INTERNE', s:4},
+        {id:'damien', display:'DAMIEN (Interne)', s:4},
         {id:'externe', display:'EXTERNE', s:4},
         {id:'cedric', display:'CÉDRIC', s:4},
         {id:'divers', display:'DIVERS', s:4},
         {id:'elec', display:'INSTAL (ELEC)', s:4},
-        {id:'jadiel', display:'JADIEL', s:2},
-        {id:'nicola', display:'NICOLA', s:2}
+        {id:'jadiel', display:'JADIEL (Maçon)', s:2},
+        {id:'nicola', display:'NICOLA (Maçon)', s:2}
     ];
 
     const feries = ["2026-01-01", "2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-07-14", "2026-08-15", "2026-11-01", "2026-11-11", "2026-12-25"];
@@ -178,10 +172,9 @@
         return res;
     }
 
-    function calculateTotal(s, e, p) {
+    function calcTotal(s, e, p) {
         if(!s || !e) return "0.00";
-        let start = new Date("1970-01-01T" + s), end = new Date("1970-01-01T" + e);
-        let diff = (end - start) / 3600000 - (p / 60);
+        let diff = (new Date("1970-01-01T"+e) - new Date("1970-01-01T"+s)) / 3600000 - (p/60);
         return diff > 0 ? diff.toFixed(2) : "0.00";
     }
 
@@ -211,26 +204,26 @@
         } else {
             document.getElementById('v-user').classList.remove('hidden');
             let h = ""; dates.forEach(date => {
-                let missions = ""; for(let s=1; s<=4; s++) {
+                let mHtml = ""; for(let s=1; s<=4; s++) {
                     let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
                     if(dta) {
-                        let fls = ""; dta.files?.forEach(f => fls += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; margin-top:10px; border-radius:10px; text-decoration:none; text-align:center; font-size:11px; font-weight:bold;">📄 DOCUMENT</a>`);
-                        missions += `<div class="mission-box"><b>📍 ${dta.chantier.toUpperCase()}</b><br>${dta.mission || ''}${fls}</div>`;
-                        if(dta.matos) missions += `<div class="mat-box">🔧 MATÉRIEL :<br>${dta.matos}</div>`;
+                        let fHtml = ""; dta.files?.forEach(f => fHtml += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; margin-top:10px; border-radius:10px; text-decoration:none; text-align:center; font-size:11px; font-weight:bold;">📄 VOIR DOCUMENT / PHOTO</a>`);
+                        mHtml += `<div class="mission-box"><b>📍 ${dta.chantier.toUpperCase()}</b><br>${dta.mission || ''}${fHtml}</div>`;
+                        if(dta.matos) mHtml += `<div class="mat-box">🔧 MATÉRIEL :<br>${dta.matos}</div>`;
                     }
                 }
                 let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
                 h += `<div class="card-day">
                     <h3 style="margin:0 0 10px 0; color:var(--blue); font-size:15px; border-bottom:1px solid #eee; padding-bottom:5px;">${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h3>
-                    ${missions || '<p style="color:#999; font-size:12px;">Aucun planning.</p>'}
+                    ${mHtml || '<p style="color:#999; font-size:12px;">Aucun planning.</p>'}
                     <div class="pointage-zone">
                         <div class="p-grid">
-                            <div><label style="font-size:9px;">DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
-                            <div><label style="font-size:9px;">FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
-                            <div><label style="font-size:9px;">PAUSE(M)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
+                            <div><label style="font-size:9px; font-weight:bold;">DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
+                            <div><label style="font-size:9px; font-weight:bold;">FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
+                            <div><label style="font-size:9px; font-weight:bold;">PAUSE(M)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
                         </div>
-                        <textarea class="p-input" style="height:50px; margin-top:8px;" placeholder="Notes..." onblur="saveP('${date}','r',this.value)">${pt.r || ''}</textarea>
-                        <div style="text-align:right; font-weight:bold; color:var(--success); margin-top:5px; font-size:12px;">TOTAL : ${calculateTotal(pt.s, pt.e, pt.p)}h</div>
+                        <textarea class="p-input" style="height:50px; margin-top:10px;" placeholder="Commentaires..." onblur="saveP('${date}','r',this.value)">${pt.r || ''}</textarea>
+                        <div style="text-align:right; font-weight:bold; color:var(--success); margin-top:5px; font-size:13px;">TOTAL : ${calcTotal(pt.s, pt.e, pt.p)}h</div>
                     </div></div>`;
             });
             document.getElementById('v-user').innerHTML = h;
@@ -244,6 +237,7 @@
         document.getElementById('e-matos').value = d?.matos || "";
         document.getElementById('e-send').checked = false; curF = d?.files || [];
         
+        // Uniquement pour les maçons
         if(k.includes('jadiel') || k.includes('nicola')) document.getElementById('section-matos').classList.remove('hidden');
         else document.getElementById('section-matos').classList.add('hidden');
         
@@ -254,37 +248,37 @@
         if(!inp.files[0]) return;
         const fd = new FormData(); fd.append("file", inp.files[0]); fd.append("upload_preset", PRESET);
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CL_NAME}/auto/upload`, { method: "POST", body: fd });
-        const data = await res.json(); curF.push({ url: data.secure_url, name: inp.files[0].name }); renderF();
+        const d = await res.json(); curF.push({ url: d.secure_url, name: inp.files[0].name }); renderF();
     }
 
     function renderF() {
-        let h = ""; curF.forEach((f, i) => h += `<div>📎 ${f.name} <span onclick="curF.splice(${i},1);renderF()" style="color:red;cursor:pointer;">[X]</span></div>`);
+        let h = ""; curF.forEach((f, i) => h += `<div style="margin-top:5px;">📎 ${f.name} <span onclick="curF.splice(${i},1);renderF()" style="color:red;cursor:pointer;">[X]</span></div>`);
         document.getElementById('files-ui').innerHTML = h;
     }
 
     function saveAll() {
         let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matos').value, send = document.getElementById('e-send').checked;
-        if(!ch) return alert("Nom chantier requis");
-        db.ref('v92_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, files:curF}).then(() => {
-            if(send && ma) emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL ${ch.toUpperCase()}:\n${ma}`, user_id: curK.split('_')[1] });
+        if(!ch) return alert("Chantier obligatoire");
+        db.ref('v93_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, files:curF}).then(() => {
+            if(send && ma) emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL BESOIN - ${ch.toUpperCase()}\n\nLISTE :\n${ma}`, user_id: curK.split('_')[1] });
             closeEd();
         });
     }
 
-    function delEntry() { if(confirm("Supprimer ?")) db.ref('v92_plan/'+curK).remove().then(closeEd); }
+    function delEntry() { if(confirm("Supprimer ?")) db.ref('v93_plan/'+curK).remove().then(closeEd); }
     function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function saveP(date, f, v) { db.ref(`v92_point/${date}_${curU}/${f}`).set(v); }
+    function saveP(date, f, v) { db.ref(`v93_point/${date}_${curU}/${f}`).set(v); }
 
     function toggleDash() {
         let d = document.getElementById('dash-overlay');
         if(d.style.display === 'flex') d.style.display = 'none';
         else {
             d.style.display = 'flex';
-            db.ref('v92_point').once('value', s => {
+            db.ref('v93_point').once('value', s => {
                 let data = s.val(), h = ""; if(!data) return;
                 Object.keys(data).sort().reverse().forEach(k => {
                     let [date, user] = k.split('_'), p = data[k];
-                    h += `<tr><td>${date}</td><td style="text-transform:uppercase"><b>${user}</b></td><td>${p.s||'-'}</td><td>${p.e||'-'}</td><td>${p.p||0}m</td><td style="color:green; font-weight:bold;">${calculateTotal(p.s, p.e, p.p)}h</td><td>${p.r||''}</td></tr>`;
+                    h += `<tr style="border-bottom:1px solid #eee;"><td>${date}</td><td style="text-transform:uppercase"><b>${user}</b></td><td>${p.s||'-'}</td><td>${p.e||'-'}</td><td>${p.p||0}m</td><td style="color:green; font-weight:bold;">${calcTotal(p.s, p.e, p.p)}h</td><td>${p.r||''}</td></tr>`;
                 });
                 document.getElementById('dash-body').innerHTML = h;
             });
@@ -302,8 +296,8 @@
         document.getElementById('app-content').classList.remove('hidden');
         document.getElementById('u-ctrl').classList.remove('hidden');
         if(curU === 'admin') document.getElementById('admin-tools').classList.remove('hidden');
-        db.ref('v92_plan').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('v92_point').on('value', s => { window.pointData = s.val(); render(); });
+        db.ref('v93_plan').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('v93_point').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
