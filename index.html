@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V87 - FULL</title>
+    <title>RBF Planning V88 - PREMIUM</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -14,125 +14,157 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; padding-bottom: 30px; }
-        header { background: white; padding: 10px 15px; display: flex; justify-content: center; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 40px; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
+        
+        header { background: white; padding: 10px 15px; display: flex; justify-content: center; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); min-height: 50px; }
         .header-logo { position: absolute; left: 15px; }
         .header-logo img { height: 40px; }
-        .header-title { color: var(--blue); font-size: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        #u-info { position: absolute; right: 15px; }
-        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        #search-input { flex: 1; min-width: 150px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 13px; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 10px; border-radius: 10px; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; }
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
+        .header-title { color: var(--blue); font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        
+        .admin-nav { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        #search-input { flex: 1; min-width: 150px; padding: 12px; border-radius: 12px; border: 2px solid #f1f5f9; background: #f8fafc; outline: none; font-size: 13px; }
+        
+        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 12px; font-weight: bold; font-size: 10px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-top:active { transform: scale(0.95); }
+
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .wk-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #e2e8f0; background: white; font-weight: bold; font-size: 20px; cursor: pointer; color: var(--blue); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
         .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
-        th { background: var(--blue); color: white; padding: 12px 8px; font-size: 10px; border-bottom: 2px solid var(--yellow); }
-        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
-        .td-ferie { background: #f1f5f9 !important; color: #94a3b8; font-size: 9px; font-weight: bold; text-align: center; }
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
-        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
-        .is-to-depot { border-left: 6px solid var(--success) !important; }
-        .has-link::after { content: ' 📎'; }
-        #dash-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 5000; display:none; flex-direction: column; overflow-y: auto; }
-        .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .pointage-box { background: #f1f5f9; padding: 12px; border-radius: 10px; margin-top: 10px; }
-        .pointage-input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px; margin-top: 4px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 950px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        th { background: var(--blue); color: white; padding: 15px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); text-transform: uppercase; }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; }
+        
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 100px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; box-shadow: 2px 0 5px rgba(0,0,0,0.02); }
+        .td-ferie { background: #f1f5f9 !important; color: #94a3b8; text-align: center; font-size: 9px; font-weight: bold; }
+
+        .slot { font-size: 10.5px; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); position: relative; transition: all 0.2s; }
+        .slot.filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1); }
+        .slot.is-to-depot { border-left: 6px solid var(--success) !important; }
+        .slot.has-link::after { content: '📎'; position: absolute; top: 5px; right: 5px; font-size: 10px; }
+
+        /* Pointage Employé */
+        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .mission-box { padding: 12px; border-left: 6px solid #3b82f6; background: #f8fafc; border-radius: 10px; margin-bottom: 12px; }
+        .pointage-zone { background: #f1f5f9; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .p-grid label { font-size: 10px; font-weight: 800; color: var(--blue); display: block; margin-bottom: 4px; }
+        .p-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 14px; }
+
+        /* Dashboard Secrétaire */
+        #dash-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 5000; display: none; flex-direction: column; }
+        .dash-header { background: var(--blue); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); }
+        .dash-content { padding: 10px; overflow: auto; flex: 1; }
+
+        /* Login */
+        #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; padding: 20px; }
+        .login-card { background: white; padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+
+        .hidden { display: none !important; }
+        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 800; margin-top: 15px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-logo"><img src="logo.png"></div>
-    <div class="header-title">PLANNING RBF</div>
-    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
+    <div class="header-title">PLANNING TRANSPORT</div>
+    <div id="u-info" class="hidden" style="position:absolute; right:15px;"><button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px;">QUITTER</button></div>
 </header>
 
 <div id="login-screen">
-    <div style="padding: 50px 20px; text-align: center;">
-        <img src="logo.png" style="width:180px; margin-bottom:20px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 400px; margin: auto;">
-            <button class="btn-top" style="grid-column: span 2; padding:20px;" onclick="askCode('admin')">💼 BUREAU / CONDUC (2026)</button>
-            <button class="btn-top" onclick="askCode('depot')">📦 DÉPÔT (5555)</button>
-            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 CHAUFFEUR INT.</button>
+    <div class="login-card">
+        <img src="logo.png" style="width:160px; margin-bottom:20px;">
+        <div class="grid-auth">
+            <button class="btn-top" style="grid-column: span 2; padding: 18px;" onclick="askCode('admin')">💼 BUREAU / CONDUC</button>
+            <button class="btn-top" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+            <button class="btn-top" style="background:#3b82f6;" onclick="askCode('damien')">🚛 CHAUF. INT.</button>
             <button class="btn-top" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-            <button class="btn-top" style="background:var(--success);" onclick="askCode('jadiel')">👷 JADIEL</button>
-            <button class="btn-top" style="background:var(--success);" onclick="askCode('nicola')">👷 NICOLA</button>
+            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
+            <button class="btn-top" style="background:#8b5cf6;" onclick="askCode('nicola')">👷 NICOLA</button>
         </div>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
-    <div class="search-container" id="admin-tools">
+    <div class="admin-nav hidden" id="admin-tools">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 POINTAGES (SECRÉTAIRE)</button>
+        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 TABLEAU POINTAGES</button>
     </div>
-    
+
     <div class="week-nav">
-        <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
-        <div id="wk-disp" style="font-weight:800; color:var(--blue); text-align:center;"></div>
-        <button class="wk-btn" onclick="changeWeek(1)">▶</button>
+        <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
+        <div id="wk-disp" style="text-align:center; font-weight:900; color:var(--blue); line-height:1.1;"></div>
+        <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
-    
+
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
+            <thead>
+                <tr><th class="user-cell">PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr>
+            </thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    <div id="v-driver" class="hidden"></div>
+
+    <div id="v-user" class="hidden"></div>
 </div>
 
 <div id="dash-overlay">
-    <div style="padding:20px; background:var(--blue); color:white; display:flex; justify-content:space-between; align-items:center;">
-        <h2>TOUS LES POINTAGES</h2>
-        <button onclick="toggleDash()" style="padding:10px; background:var(--yellow); border:none; font-weight:bold; border-radius:8px;">FERMER</button>
+    <div class="dash-header">
+        <h2 style="margin:0; font-size:16px;">RÉCAPITULATIF DES HEURES</h2>
+        <button onclick="toggleDash()" style="background:white; color:var(--blue); border:none; padding:8px 15px; border-radius:8px; font-weight:bold;">RETOUR</button>
     </div>
-    <div style="padding:15px; overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
-            <thead style="background:#eee;">
-                <tr><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr>
+    <div class="dash-content">
+        <table style="min-width:100%; font-size:11px;">
+            <thead>
+                <tr style="background:#f8fafc; color:var(--blue);">
+                    <th style="color:var(--blue); background:#eee;">DATE</th>
+                    <th style="color:var(--blue); background:#eee;">NOM</th>
+                    <th style="color:var(--blue); background:#eee;">TOTAL</th>
+                    <th style="color:var(--blue); background:#eee;">RAPPORT</th>
+                </tr>
             </thead>
             <tbody id="dash-body"></tbody>
         </table>
     </div>
 </div>
 
-<div id="editor-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; z-index:10000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:20px; border-radius:20px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;">
-        <h3 id="ed-title" style="color:var(--blue); margin-top:0;">Mission</h3>
-        <label>Chantier :</label>
-        <input type="text" id="e-chantier" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
-        <label>Détails :</label>
-        <textarea id="e-input" style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
+<div id="editor-overlay" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:10000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+    <div style="background:white; width:92%; max-width:450px; padding:25px; border-radius:24px; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin:0 0 20px 0; color:var(--blue);">Modifier Mission</h3>
+        <label style="font-size:12px; font-weight:bold;">CHANTIER :</label>
+        <input type="text" id="e-chantier" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
+        <label style="font-size:12px; font-weight:bold;">MISSION :</label>
+        <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box; font-family:inherit;"></textarea>
         
-        <div id="file-list-admin" style="margin:10px 0;"></div>
-        <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:10px; background:#f1f5f9; border:1px dashed #ccc; border-radius:10px; font-weight:bold; margin-bottom:10px;">📎 AJOUTER PHOTO / DOC</button>
-        
-        <label style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="e-depot"> SIGNALER AU DÉPÔT (Email)</label>
-        <label id="lbl-mat" class="hidden" style="display:flex; align-items:center; gap:10px; color:var(--danger); font-weight:bold;"><input type="checkbox" id="e-mat"> 🔧 BESOIN MATÉRIEL</label>
-        
-        <button onclick="saveTask()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold; margin-top:15px;">ENREGISTRER</button>
-        <button onclick="deleteTask()" style="width:100%; color:var(--danger); border:none; background:none; margin-top:10px;">Supprimer</button>
-        <button onclick="closeEd()" style="width:100%; color:#999; border:none; background:none; margin-top:10px;">Annuler</button>
+        <label style="display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:14px; font-weight:bold;">
+            <input type="checkbox" id="e-depot" style="width:18px; height:18px;"> SIGNALER AU DÉPÔT
+        </label>
+        <label id="lbl-mat" class="hidden" style="display:flex; align-items:center; gap:10px; margin-bottom:15px; font-size:14px; color:var(--danger); font-weight:bold;">
+            <input type="checkbox" id="e-mat" style="width:18px; height:18px;"> 🔧 BESOIN MATÉRIEL
+        </label>
+
+        <button class="btn-save" onclick="saveTask()">ENREGISTRER</button>
+        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:15px; font-weight:bold;">ANNULER</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
-    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
-    
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7";
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     emailjs.init(PUBLIC_KEY);
 
-    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, currentFiles = [];
+    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null;
     const users = [
-        {id:'damien', display:'CHAUF. INT.', s:4}, {id:'externe', display:'EXTERNE', s:4},
-        {id:'cedric', display:'CÉDRIC', s:4}, {id:'divers', display:'DIVERS', s:4},
-        {id:'elec', display:'INSTAL', s:4}, {id:'jadiel', display:'JADIEL', s:2},
+        {id:'damien', display:'CHAUF. INT.', s:4},
+        {id:'externe', display:'EXTERNE', s:4},
+        {id:'cedric', display:'CÉDRIC', s:4},
+        {id:'divers', display:'DIVERS', s:4},
+        {id:'elec', display:'INSTAL', s:4},
+        {id:'jadiel', display:'JADIEL', s:2},
         {id:'nicola', display:'NICOLA', s:2}
     ];
 
@@ -147,22 +179,33 @@
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
     function getDates(w, y) {
-        let d = new Date(y, 0, 1 + (w - 1) * 7);
-        let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6:1);
-        let mon = new Date(d.setDate(diff));
+        let simple = new Date(y, 0, 1 + (w - 1) * 7);
+        let dow = simple.getDay();
+        let ISOweekStart = simple;
+        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
         let res = []; for(let i=0; i<5; i++) {
-            let n = new Date(mon); n.setDate(mon.getDate()+i);
+            let n = new Date(ISOweekStart); n.setDate(ISOweekStart.getDate()+i);
             res.push(n.toISOString().split('T')[0]);
         }
         return res;
     }
 
+    function calculateTotal(s, e, p) {
+        if(!s || !e) return "-";
+        let [h1, m1] = s.split(':').map(Number);
+        let [h2, m2] = e.split(':').map(Number);
+        let diff = (h2*60 + m2) - (h1*60 + m1);
+        let pause = parseInt(p) || 0;
+        return ((diff - pause)/60).toFixed(2) + "h";
+    }
+
     function render() {
         const dates = getDates(curW, curY);
-        document.getElementById('wk-disp').innerText = `SEMAINE ${curW} (${curY})`;
+        document.getElementById('wk-disp').innerHTML = `<span style="font-size:10px; color:#94a3b8; font-weight:700;">AVRIL ${curY}</span><br>SEMAINE ${curW}`;
         dates.forEach((d, i) => {
             let dt = new Date(d);
-            document.getElementById('h'+i).innerHTML = dt.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'2-digit'});
+            document.getElementById('h'+i).innerHTML = `${dt.toLocaleDateString('fr-FR', {weekday:'short'}).toUpperCase()}<br>${dt.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`;
         });
 
         if(curU === 'admin' || curU === 'depot') {
@@ -177,8 +220,8 @@
                     else {
                         for(let s=1; s<=u.s; s++) {
                             let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
-                            let txt = dta ? `<b>[${dta.chantier}]</b><br>${dta.text}` : "...";
-                            h += `<div class="slot ${dta?'filled':''} ${dta?.toDepot?'is-to-depot':''} ${dta?.files?.length?'has-link':''}" onclick="openEd('${k}')">${txt}</div>`;
+                            let txt = dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : "...";
+                            h += `<div class="slot ${dta?'filled':''} ${dta?.toDepot?'is-to-depot':''}" onclick="openEd('${k}')">${txt}</div>`;
                         }
                     }
                     h += `</td>`;
@@ -187,99 +230,86 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            document.getElementById('v-driver').classList.remove('hidden');
+            document.getElementById('v-user').classList.remove('hidden');
             let h = ""; dates.forEach(date => {
                 let m = ""; for(let s=1; s<=4; s++) {
                     let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
-                    if(dta) {
-                        let f = ""; dta.files?.forEach(fl => f += `<a href="${fl.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; margin-top:5px; border-radius:8px; text-decoration:none; text-align:center;">📄 VOIR DOC</a>`);
-                        m += `<div style="padding:10px; border-left:5px solid #3b82f6; background:white; margin-bottom:10px; border-radius:8px;"><b>${dta.chantier}</b><br>${dta.text}${f}</div>`;
-                    }
+                    if(dta) m += `<div class="mission-box"><b>${dta.chantier.toUpperCase()}</b><br>${dta.text}</div>`;
                 }
                 let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
-                h += `<div style="margin:15px; padding:15px; border-bottom:2px solid #ddd;">
-                    <h3 style="margin:0; color:var(--blue);">${date}</h3><br>${m || '<small>Rien prévu</small>'}
-                    <div class="pointage-box">
+                h += `<div class="card-day">
+                    <h3 style="margin:0 0 10px 0; color:var(--blue); font-size:15px;">${new Date(date).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'})}</h3>
+                    ${m || '<p style="font-size:12px; color:#94a3b8;">Aucune mission prévue.</p>'}
+                    <div class="pointage-zone">
                         <div class="p-grid">
-                            <div><label>Début</label><input type="time" class="pointage-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
-                            <div><label>Fin</label><input type="time" class="pointage-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
-                            <div><label>Pause(min)</label><input type="number" class="pointage-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
+                            <div><label>DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
+                            <div><label>FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
+                            <div><label>PAUSE (MIN)</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
                         </div>
-                        <textarea class="pointage-input" placeholder="Rapport de journée..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
+                        <textarea class="p-input" style="height:60px; margin-top:5px;" placeholder="Détaillez votre journée..." onblur="saveP('${date}','r',this.value)">${pt.r}</textarea>
+                        <div style="text-align:right; margin-top:10px; font-weight:800; color:var(--success);">TOTAL : ${calculateTotal(pt.s, pt.e, pt.p)}</div>
                     </div></div>`;
             });
-            document.getElementById('v-driver').innerHTML = h;
+            document.getElementById('v-user').innerHTML = h;
         }
     }
 
     function openEd(k) {
         if(curU !== 'admin') return;
-        curK = k; let dta = window.planData ? window.planData[k] : null;
-        document.getElementById('e-chantier').value = dta?.chantier || "";
-        document.getElementById('e-input').value = dta?.text || "";
-        document.getElementById('e-depot').checked = !!dta?.toDepot;
-        currentFiles = dta?.files || [];
+        curK = k; let d = window.planData ? window.planData[k] : null;
+        document.getElementById('e-chantier').value = d?.chantier || "";
+        document.getElementById('e-input').value = d?.text || "";
+        document.getElementById('e-depot').checked = !!d?.toDepot;
         if(k.includes('jadiel') || k.includes('nicola')) document.getElementById('lbl-mat').classList.remove('hidden');
         else document.getElementById('lbl-mat').classList.add('hidden');
-        document.getElementById('editor-overlay').style.display = 'flex';
-        renderFiles();
-    }
-
-    async function uploadFile(input) {
-        if(!input.files[0]) return;
-        const formData = new FormData();
-        formData.append("file", input.files[0]);
-        formData.append("upload_preset", UPLOAD_PRESET);
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { method: "POST", body: formData });
-        const data = await res.json();
-        currentFiles.push({ url: data.secure_url, name: input.files[0].name });
-        renderFiles();
-    }
-
-    function renderFiles() {
-        let h = ""; currentFiles.forEach((f, i) => h += `<div style="font-size:10px;">📄 ${f.name} <button onclick="currentFiles.splice(${i},1);renderFiles()">X</button></div>`);
-        document.getElementById('file-list-admin').innerHTML = h;
+        document.getElementById('editor-overlay').classList.remove('hidden');
     }
 
     function saveTask() {
-        let ch = document.getElementById('e-chantier').value, txt = document.getElementById('e-input').value, dep = document.getElementById('e-depot').checked, mat = document.getElementById('e-mat').checked;
-        if(!ch) return alert("Nom du chantier obligatoire");
-        let obj = { chantier: ch, text: txt, toDepot: dep, needMat: mat, files: currentFiles };
-        db.ref('plan_v87/'+curK).set(obj).then(() => {
-            if(dep) emailjs.send(SERVICE_ID, T_DEPOT, { to_name: "Dépôt", message: `Mission: ${ch} - ${txt}`, user_id: curK });
+        let ch = document.getElementById('e-chantier').value, tx = document.getElementById('e-input').value, dep = document.getElementById('e-depot').checked, mat = document.getElementById('e-mat').checked;
+        if(!ch) return alert("Nom du chantier ?");
+        db.ref('plan_v88/'+curK).set({chantier:ch, text:tx, toDepot:dep, needMat:mat}).then(() => {
+            if(dep) emailjs.send(SERVICE_ID, T_DEPOT, { message: `Mission: ${ch} - ${tx}`, user_id: curK });
             closeEd();
         });
     }
 
-    function saveP(date, f, v) { db.ref(`point_v87/${date}_${curU}/${f}`).set(v); }
+    function saveP(date, f, v) { db.ref(`point_v88/${date}_${curU}/${f}`).set(v); }
 
     function toggleDash() {
         let d = document.getElementById('dash-overlay');
         if(d.style.display === 'flex') d.style.display = 'none';
         else {
             d.style.display = 'flex';
-            db.ref('point_v87').once('value', s => {
+            db.ref('point_v88').once('value', s => {
                 let data = s.val(), h = "";
                 if(!data) return;
                 Object.keys(data).sort().reverse().forEach(k => {
                     let [date, user] = k.split('_'), p = data[k];
-                    let diff = (p.s && p.e) ? ((new Date(`1970-01-01T${p.e}`) - new Date(`1970-01-01T${p.s}`)) / 3600000 - (p.p/60)).toFixed(2) : '-';
-                    h += `<tr><td>${date}</td><td style="text-transform:uppercase">${user}</td><td>${p.s}</td><td>${p.e}</td><td>${p.p}m</td><td style="font-weight:bold;color:green">${diff}h</td><td>${p.r || ''}</td></tr>`;
+                    h += `<tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px;">${date}</td>
+                        <td style="padding:10px; text-transform:uppercase;"><b>${user}</b></td>
+                        <td style="padding:10px; color:var(--success); font-weight:800;">${calculateTotal(p.s, p.e, p.p)}</td>
+                        <td style="padding:10px; font-style:italic; font-size:10px;">${p.r || ''}</td>
+                    </tr>`;
                 });
                 document.getElementById('dash-body').innerHTML = h;
             });
         }
     }
 
-    function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function closeEd() { document.getElementById('editor-overlay').classList.add('hidden'); }
     function changeWeek(v) { curW += v; render(); }
 
     if(curU) {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
-        if(curU === 'admin') document.getElementById('u-info').classList.remove('hidden');
-        db.ref('plan_v87').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('point_v87').on('value', s => { window.pointData = s.val(); render(); });
+        if(curU === 'admin') {
+            document.getElementById('admin-tools').classList.remove('hidden');
+            document.getElementById('u-info').classList.remove('hidden');
+        }
+        db.ref('plan_v88').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('point_v88').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
