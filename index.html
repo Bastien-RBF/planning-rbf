@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V90</title>
+    <title>RBF Planning V91</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -96,8 +96,10 @@
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
             <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none; margin-bottom:10px;"></textarea>
             
-            <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL (POUR DÉPÔT) :</label>
-            <textarea id="e-matos" style="width:100%; height:60px; padding:12px; border-radius:12px; border:1px solid var(--success); box-sizing: border-box; outline: none; margin-bottom:10px;" placeholder="Ex: Mini-pelle, 10 sacs de chaux..."></textarea>
+            <div id="zone-matos" class="hidden">
+                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL (JADIEL/NICOLA) :</label>
+                <textarea id="e-matos" style="width:100%; height:60px; padding:12px; border-radius:12px; border:1px solid var(--success); box-sizing: border-box; outline: none; margin-bottom:10px;" placeholder="Ex: Mini-pelle, 10 sacs de chaux..."></textarea>
+            </div>
 
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom: 12px;"></div>
@@ -224,13 +226,8 @@
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; 
             const users = [
-                {id:'interne',s:4,d:true},
-                {id:'externe',s:4,d:true},
-                {id:'cedric',s:4,d:true},
-                {id:'divers',s:4,d:false},
-                {id:'instal',s:4,d:true},
-                {id:'jadiel',s:2,d:true},
-                {id:'nicola',s:2,d:true}
+                {id:'interne',s:4,d:true}, {id:'externe',s:4,d:true}, {id:'cedric',s:4,d:true},
+                {id:'divers',s:4,d:false}, {id:'instal',s:4,d:true}, {id:'jadiel',s:2,d:true}, {id:'nicola',s:2,d:true}
             ];
             
             users.forEach(u => {
@@ -242,9 +239,7 @@
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", matos:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
-                        
                         let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
-                        
                         let content = "";
                         if(curU === 'depot') {
                            if(dta.matos) content += `<div class="mat-label">MATÉRIEL : ${dta.matos}</div><br>`;
@@ -253,7 +248,6 @@
                            content = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
                            if(dta.matos) content += `<br><span style="font-size:8px; color:#16a34a;">📦 ${dta.matos}</span>`;
                         }
-
                         h += `<div class="slot ${dta.text||dta.matos?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${content}</div>`;
                     }
                     h += `</td>`;
@@ -276,67 +270,43 @@
                         c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${mBox}${b}</div>`;
                     }
                 }
-                let bgH = isHoliday ? 'background:#fffbeb; border-radius:12px;' : '';
-                v.innerHTML += `<div style="margin:15px; padding:10px; ${bgH}"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hLabel}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hLabel}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
-    }
-
-    function changeWeek(v) {
-        curW += v;
-        if(curW > 52) { curW = 1; curY++; fetchHolidays(curY); }
-        else if(curW < 1) { curW = 52; curY--; fetchHolidays(curY); }
-        else { render(); }
     }
 
     function openEd(k) {
         curK = k; let d = window.data[k] || {text:"", matos:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            let fH = ""; if(d.files) d.files.forEach(f => fH += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:14px; border-radius:12px; text-decoration:none; margin-top:10px; text-align:center;">📄 FICHIER</a>`);
-            let mH = d.matos ? `<div style="background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0; margin-top:10px; color:#166534;"><b>📦 BESOIN MATÉRIEL :</b><br>${d.matos}</div>` : "";
-            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:0;">${d.text}</p>${mH}${fH}`;
+            let mH = d.matos ? `<div style="background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0; margin-top:10px; color:#166534;"><b>📦 MATÉRIEL :</b><br>${d.matos}</div>` : "";
+            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>${mH}`;
             document.getElementById('editor-overlay').style.display = 'flex'; return;
         }
         if(curU !== 'admin') return;
         currentFiles = d.files || []; selectedCol = d.col || 'default';
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
-        document.getElementById('e-chantier').value = d.chantier || ""; 
-        document.getElementById('e-input').value = d.text || ""; 
-        document.getElementById('e-matos').value = d.matos || "";
-        document.getElementById('e-depot').checked = !!d.toDepot; 
+        document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot;
+        
+        // Restriction Besoins Matériels : Uniquement Jadiel ou Nicola
+        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
+
         renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function saveTask() {
-        let v = document.getElementById('e-input').value;
-        let m = document.getElementById('e-matos').value;
-        let ch = document.getElementById('e-chantier').value;
-        let c = document.getElementById('e-depot').checked;
+        let v = document.getElementById('e-input').value, m = document.getElementById('e-matos').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
         db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => { closeEditor(); });
     }
 
+    function changeWeek(v) { curW += v; if(curW > 52) { curW = 1; curY++; fetchHolidays(curY); } else if(curW < 1) { curW = 52; curY--; fetchHolidays(curY); } else { render(); } }
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => { closeEditor(); }); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
-    
-    function applySearch() {
-        const q = document.getElementById('search-input').value.toLowerCase();
-        document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q)));
-    }
-
-    function uploadFile(input) {
-        if (!input.files[0]) return;
-        const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET);
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{
-            if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); }
-        });
-    }
-
-    function renderFileListAdmin() {
-        let d = document.getElementById('file-list-admin'); d.innerHTML = "";
-        currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`);
-    }
+    function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q))); }
+    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); } }); }
+    function renderFileListAdmin() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`); }
 
     if(curU) login(curU);
 </script>
