@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V99 - REPAIRED</title>
+    <title>RBF Planning V100</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -21,25 +21,27 @@
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; flex-wrap: wrap; }
         #search-input { flex: 1; min-width: 150px; padding: 10px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; }
         .btn-action { background: var(--blue); color: white; border: none; padding: 10px 12px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; }
-        .btn-pointage { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 800; width: calc(100% - 30px); margin: 10px 15px; cursor: pointer; }
+        .btn-pointage { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 800; width: calc(100% - 30px); margin: 10px 15px; cursor: pointer; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
 
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; background: white; font-weight: bold; font-size: 18px; cursor: pointer; }
 
         .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 950px; }
         th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
+        .is-ferie { background: #fee2e2 !important; color: #b91c1c !important; }
+        
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         
-        /* IMPORTANT: Assurer que le curseur change pour montrer que c'est cliquable */
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer !important; min-height: 45px; color: var(--blue); white-space: pre-wrap; display: block; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); white-space: pre-wrap; transition: 0.2s; }
+        .slot:hover { border-color: var(--blue); background: #f1f5f9; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(4px); }
-        .box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 480px; max-height: 90vh; overflow-y: auto; position: relative; }
         
         input[type="time"], input[type="text"], textarea { width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; font-size: 15px; box-sizing: border-box; outline: none; font-family: inherit; }
         .pause-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 8px; border-radius: 10px; border: 1px solid #e2e8f0; }
@@ -48,12 +50,16 @@
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
+
+        /* Historique Style */
+        .hist-item { padding: 12px; border-bottom: 1px solid #eee; margin-bottom: 5px; background: #fcfcfc; border-radius: 8px; }
+        .hist-date { font-weight: bold; color: var(--blue); font-size: 11px; margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-logo"><img src="logo.png"></div>
+    <div class="header-logo"><img src="logo.png" style="height:35px;"></div>
     <div class="header-title">PLANNING TRANSPORT</div>
     <div class="header-right"><button id="logout-btn" onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer; display:none;">QUITTER</button></div>
 </header>
@@ -63,8 +69,8 @@
         <div style="background:white; padding:35px 25px; border-radius:24px; text-align:center; width:90%; max-width:380px; box-shadow:0 20px 25px rgba(0,0,0,0.1);">
             <img src="logo.png" style="width:160px; margin-bottom:20px;">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                <button class="btn-action" style="grid-column:span 2; padding:16px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
-                <button class="btn-action" style="grid-column:span 2; background:var(--success); padding:16px;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+                <button class="btn-action" style="grid-column:span 2; padding:16px; font-size:14px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+                <button class="btn-action" style="grid-column:span 2; background:var(--success); padding:16px; font-size:14px;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
                 <button class="btn-action" style="background:#3b82f6;" onclick="askCode('interne')">🚛 INTERNE</button>
                 <button class="btn-action" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
                 <button class="btn-action" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
@@ -81,52 +87,79 @@
         <button class="btn-action" style="background:var(--success)" onclick="viewAllPointages()">📊 RÉCAP JOURNÉES</button>
     </div>
     <button id="btn-show-pointer" class="btn-pointage hidden" onclick="openPointage()">⏰ POINTER & RAPPORT DU JOUR</button>
-    <div class="week-nav"><button class="wk-btn" onclick="changeWeek(-1)">◀</button><div id="wk-disp" style="font-weight:800;"></div><button class="wk-btn" onclick="changeWeek(1)">▶</button></div>
-    <div id="v-admin" class="table-container hidden"><table><thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead><tbody id="b-admin"></tbody></table></div>
+    
+    <div class="week-nav">
+        <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
+        <div id="wk-disp" style="font-weight:800; color:var(--blue); font-size:16px;"></div>
+        <button class="wk-btn" onclick="changeWeek(1)">▶</button>
+    </div>
+
+    <div id="v-admin" class="table-container hidden">
+        <table>
+            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
+            <tbody id="b-admin"></tbody>
+        </table>
+    </div>
     <div id="v-driver" class="hidden"></div>
 </div>
 
 <div id="pointage-overlay" class="overlay">
     <div class="box">
-        <h3>Pointage & Rapport</h3>
-        <label>🕗 DÉBUT :</label><input type="time" id="p-start">
+        <h3 style="margin-top:0; color:var(--blue);">Pointage & Rapport</h3>
+        <label style="font-size:12px; font-weight:bold;">🕗 DÉBUT :</label><input type="time" id="p-start">
         <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0;">
-            <b>☕ PAUSES :</b><button onclick="addPauseRow()" class="btn-action" style="padding:5px;">+ AJOUTER</button>
+            <label style="font-weight:bold; font-size:12px;">☕ PAUSES :</label>
+            <button onclick="addPauseRow()" class="btn-action" style="padding:5px 10px; font-size:10px;">+ AJOUTER PAUSE</button>
         </div>
         <div id="pause-container"></div>
-        <label>🏁 FIN :</label><input type="time" id="p-end">
-        <label>📝 RAPPORT :</label><textarea id="p-rapport" style="height:80px;" placeholder="Ce que j'ai fait aujourd'hui..."></textarea>
-        <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold;">ENREGISTRER</button>
-        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">FERMER</button>
+        <label style="font-size:12px; font-weight:bold;">🏁 FIN :</label><input type="time" id="p-end">
+        <hr style="border:none; border-top:1px solid #eee; margin:15px 0;">
+        <label style="font-size:12px; font-weight:bold; color:var(--blue);">📝 RAPPORT D'ACTIVITÉ :</label>
+        <textarea id="p-rapport" style="height:100px; margin-top:5px;" placeholder="Détaillez votre journée ici..."></textarea>
+        <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">VALIDER MA JOURNÉE</button>
+        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px; cursor:pointer;">FERMER</button>
     </div>
 </div>
 
 <div id="editor-overlay" class="overlay">
     <div class="box">
-        <h3 id="ed-title" style="text-align:center;">Détails Mission</h3>
+        <h3 id="ed-title" style="text-align:center; color:var(--blue); margin-top:0;">Édition Mission</h3>
         <div id="ed-view-only" class="hidden"></div>
         <div id="ed-controls">
-            <label>CHANTIER :</label><input type="text" id="e-chantier" placeholder="Nom du chantier">
-            <label>MISSION :</label><textarea id="e-input" style="height:80px;" placeholder="Détails..."></textarea>
-            <div id="zone-matos" class="hidden"><label>MATÉRIEL :</label><textarea id="e-matos" style="height:50px; border-color:var(--success);" placeholder="Besoins matériels..."></textarea></div>
+            <label style="font-size:11px; font-weight:bold;">CHANTIER :</label><input type="text" id="e-chantier">
+            <label style="font-size:11px; font-weight:bold;">MISSION :</label><textarea id="e-input" style="height:80px;"></textarea>
+            <div id="zone-matos" class="hidden">
+                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL :</label>
+                <textarea id="e-matos" style="height:60px; border-color:var(--success);"></textarea>
+            </div>
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom:10px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px; cursor:pointer;">📎 AJOUTER UN DOCUMENT</button>
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px; cursor:pointer;">📎 JOINDRE UN DOCUMENT</button>
             <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:13px;"><input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>SIGNALER AU DÉPÔT</b></label>
-            <button onclick="saveTask()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="width:100%; background:none; color:red; border:none; margin-top:10px; font-weight:bold;">SUPPRIMER</button>
+            <button onclick="saveTask()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="width:100%; background:none; color:red; border:none; margin-top:10px; font-weight:bold; cursor:pointer;">SUPPRIMER LA MISSION</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; background:none; border:none; color:gray; margin-top:10px; font-weight:bold;">FERMER</button>
+        <button onclick="closeEditor()" style="width:100%; background:none; border:none; color:gray; margin-top:10px; font-weight:bold; cursor:pointer;">QUITTER</button>
     </div>
 </div>
 
-<div id="recap-overlay" class="overlay"><div class="box" style="max-width:600px;"><h3>Journaux d'activité</h3><div id="recap-content"></div><button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:12px; margin-top:20px;">FERMER</button></div></div>
+<div id="recap-overlay" class="overlay">
+    <div class="box" style="max-width:600px;">
+        <h3 style="margin-top:0; color:var(--blue);">Journaux & Pointages</h3>
+        <div id="recap-content"></div>
+        <button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:12px; margin-top:20px; font-weight:bold; cursor:pointer;">FERMER</button>
+    </div>
+</div>
 
 <script>
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
+    
+    // LISTE DES JOURS FÉRIÉS 2026
+    const FERIES = ["2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25"];
+
     let curDate = new Date(), curW = 0, curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
     function getWeek(d) { let date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
@@ -137,17 +170,50 @@
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('logout-btn').style.display = 'block'; if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden'); if(['interne','cedric','depot','jadiel','nicola'].includes(u)) document.getElementById('btn-show-pointer').classList.remove('hidden'); db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    function addPauseRow(s="", e="") { const div = document.createElement('div'); div.className = 'pause-row'; div.innerHTML = `<input type="time" class="p-s" value="${s}"> <input type="time" class="p-e" value="${e}"> <button onclick="this.parentElement.remove()">×</button>`; document.getElementById('pause-container').appendChild(div); }
-    function openPointage() { let t = new Date().toISOString().split('T')[0]; document.getElementById('pause-container').innerHTML = ""; db.ref('pointages_v3/'+t+'/'+curU).once('value', s => { let d = s.val() || {}; document.getElementById('p-start').value = d.start||""; document.getElementById('p-end').value = d.end||""; document.getElementById('p-rapport').value = d.rapport||""; if(d.pauses) d.pauses.forEach(p => addPauseRow(p.s, p.e)); }); document.getElementById('pointage-overlay').style.display='flex'; }
-    function savePointage() { let t = new Date().toISOString().split('T')[0], pz = []; document.querySelectorAll('.pause-row').forEach(r => { let s=r.querySelector('.p-s').value, e=r.querySelector('.p-e').value; if(s&&e) pz.push({s,e}); }); db.ref('pointages_v3/'+t+'/'+curU).set({start: document.getElementById('p-start').value, end: document.getElementById('p-end').value, rapport: document.getElementById('p-rapport').value, pauses: pz}).then(() => { alert("Enregistré !"); document.getElementById('pointage-overlay').style.display='none'; }); }
+    function addPauseRow(s="", e="") { const div = document.createElement('div'); div.className = 'pause-row'; div.innerHTML = `<input type="time" class="p-s" value="${s}"> <input type="time" class="p-e" value="${e}"> <button onclick="this.parentElement.remove()" style="background:var(--danger); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">×</button>`; document.getElementById('pause-container').appendChild(div); }
+    
+    function openPointage() { 
+        let t = new Date().toISOString().split('T')[0]; 
+        document.getElementById('pause-container').innerHTML = ""; 
+        db.ref('pointages_v3/'+t+'/'+curU).once('value', s => { 
+            let d = s.val() || {}; 
+            document.getElementById('p-start').value = d.start||""; 
+            document.getElementById('p-end').value = d.end||""; 
+            document.getElementById('p-rapport').value = d.rapport||""; 
+            if(d.pauses) d.pauses.forEach(p => addPauseRow(p.s, p.e)); 
+        }); 
+        document.getElementById('pointage-overlay').style.display='flex'; 
+    }
+
+    function savePointage() { 
+        let t = new Date().toISOString().split('T')[0], pz = []; 
+        document.querySelectorAll('.pause-row').forEach(r => { 
+            let s=r.querySelector('.p-s').value, e=r.querySelector('.p-e').value; 
+            if(s&&e) pz.push({s,e}); 
+        }); 
+        db.ref('pointages_v3/'+t+'/'+curU).set({
+            start: document.getElementById('p-start').value, 
+            end: document.getElementById('p-end').value, 
+            rapport: document.getElementById('p-rapport').value, 
+            pauses: pz,
+            timestamp: Date.now()
+        }).then(() => { alert("Pointage et rapport enregistrés !"); document.getElementById('pointage-overlay').style.display='none'; }); 
+    }
 
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"];
-        for(let i=0; i<5; i++) { let d = getDateFromWeek(curW, curY, i); document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`; }
+        for(let i=0; i<5; i++) { 
+            let d = getDateFromWeek(curW, curY, i); 
+            let iso = d.toISOString().split('T')[0];
+            let cell = document.getElementById('h'+i);
+            cell.innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`; 
+            cell.classList.toggle('is-ferie', FERIES.includes(iso));
+        }
         
         if (curU === 'admin' || curU === 'depot') {
-            document.getElementById('v-admin').classList.remove('hidden'); document.getElementById('v-driver').classList.add('hidden');
+            document.getElementById('v-admin').classList.remove('hidden'); 
+            document.getElementById('v-driver').classList.add('hidden');
             let h = ""; 
             const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
             
@@ -160,7 +226,6 @@
                         let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", col:'default'}; 
                         if (curU==='depot' && !dta.toDepot) continue;
                         let bg = (dta.text && dta.col && dta.col!=='default') ? `background:${dta.col};` : '';
-                        // AJOUT DE openEd(k) ICI - RÉPARÉ
                         h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')"><b>${dta.chantier ? '['+dta.chantier.toUpperCase()+']' : ''}</b><br>${dta.text||'...'}</div>`;
                     } 
                     h += `</td>`; 
@@ -175,15 +240,17 @@
                 for(let s=1; s<=4; s++) { 
                     let dta = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`]; 
                     if(dta&&(dta.text||dta.chantier)) {
-                        let docs = ""; if(dta.files) dta.files.forEach(f => docs += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; border-radius:8px; margin-top:5px; text-decoration:none; text-align:center;">📄 VOIR DOC</a>`);
-                        c += `<div style="padding:15px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:12px;"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}${docs}</div>`;
+                        let docs = ""; if(dta.files) dta.files.forEach(f => docs += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:5px; text-decoration:none; text-align:center; font-weight:bold;">📄 VOIR DOCUMENT</a>`);
+                        let matos = dta.matos ? `<div style="margin-top:5px; color:#166534; font-size:11px; background:#f0fdf4; padding:5px; border-radius:5px;"><b>📦 Matériel :</b> ${dta.matos}</div>` : '';
+                        c += `<div style="padding:15px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}${matos}${docs}</div>`;
                     }
                 } 
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:gray;">Repos</p>'}</div>`; 
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:gray;">Repos ou aucune mission</p>'}</div>`; 
             }
         }
     }
 
+    // GESTION COULEURS
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     const cp = document.getElementById('cp'); 
     colors.forEach(c => { 
@@ -194,7 +261,7 @@
 
     function openEd(k) { 
         curK = k; 
-        if(curU!=='admin' && curU!=='depot') return; // Seuls admin et depot peuvent cliquer sur les cases
+        if(curU!=='admin' && curU!=='depot') return;
         let d = window.data[k]||{text:"",files:[],col:'default'}; 
         currentFiles = d.files||[]; 
         selectedCol = d.col||'default'; 
@@ -209,29 +276,83 @@
         document.getElementById('editor-overlay').style.display='flex'; 
     }
 
-    function saveTask() { db.ref('planning_v18/'+curK).set({text:document.getElementById('e-input').value, matos:document.getElementById('e-matos').value, chantier:document.getElementById('e-chantier').value, files:currentFiles, toDepot:document.getElementById('e-depot').checked, col:selectedCol}).then(() => closeEditor()); }
-    function deleteTask() { if(confirm("Supprimer?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
+    function saveTask() { 
+        db.ref('planning_v18/'+curK).set({
+            text: document.getElementById('e-input').value, 
+            matos: document.getElementById('e-matos').value, 
+            chantier: document.getElementById('e-chantier').value, 
+            files: currentFiles, 
+            toDepot: document.getElementById('e-depot').checked, 
+            col: selectedCol
+        }).then(() => closeEditor()); 
+    }
+
+    function deleteTask() { if(confirm("Supprimer cette mission ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
     function closeEditor() { document.getElementById('editor-overlay').style.display='none'; }
     
-    function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFileListAdmin(); } }); }
-    function renderFileListAdmin() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; background:#f1f5f9; padding:5px; border-radius:5px; margin-bottom:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()" style="border:none; color:red; cursor:pointer;">X</button></div>`); }
+    function uploadFile(i) { 
+        if(!i.files[0]) return; 
+        const fd = new FormData(); 
+        fd.append('file', i.files[0]); 
+        fd.append('upload_preset', UPLOAD_PRESET); 
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd})
+            .then(r=>r.json())
+            .then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFileListAdmin(); } }); 
+    }
+
+    function renderFileListAdmin() { 
+        let d = document.getElementById('file-list-admin'); 
+        d.innerHTML = ""; 
+        currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; background:#f1f5f9; padding:8px; border-radius:8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()" style="border:none; background:var(--danger); color:white; border-radius:4px; padding:2px 6px; cursor:pointer;">X</button></div>`); 
+    }
     
     function changeWeek(v) { curW += v; render(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
     
     function showFullHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase(); if (q.length < 2) return alert("Cherchez au moins 2 lettres.");
-        let res = []; Object.keys(window.data).forEach(k => { let item = window.data[k]; if (item.chantier && item.chantier.toLowerCase().includes(q)) { let p = k.split('_'); res.push({sem:p[1], qui:p[2].toUpperCase(), txt:item.text, ch:item.chantier}); } });
-        if (!res.length) return alert("Aucun historique pour ce nom.");
-        let h = res.map(r => `<div style="padding:10px; border-bottom:1px solid #eee;">S${r.sem} - ${r.qui} : ${r.txt}</div>`).join('');
-        document.getElementById('ed-title').textContent = "HISTORIQUE : "+q.toUpperCase(); document.getElementById('ed-view-only').innerHTML = h; document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('editor-overlay').style.display='flex';
+        const q = document.getElementById('search-input').value.trim().toLowerCase(); 
+        if (q.length < 2) return alert("Cherchez au moins 2 lettres.");
+        let res = []; 
+        Object.keys(window.data).forEach(k => { 
+            let item = window.data[k]; 
+            if (item.chantier && item.chantier.toLowerCase().includes(q)) { 
+                let p = k.split('_'); 
+                let exactDate = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
+                res.push({
+                    date: exactDate.toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}),
+                    qui: p[2].toUpperCase(), 
+                    txt: item.text, 
+                    ch: item.chantier
+                }); 
+            } 
+        });
+        if (!res.length) return alert("Aucun historique pour ce chantier.");
+        let h = res.map(r => `<div class="hist-item"><span class="hist-date">📅 ${r.date}</span><b>${r.qui}</b> : [${r.ch}] ${r.txt}</div>`).join('');
+        document.getElementById('ed-title').textContent = "HISTORIQUE : "+q.toUpperCase(); 
+        document.getElementById('ed-view-only').innerHTML = h; 
+        document.getElementById('ed-view-only').classList.remove('hidden'); 
+        document.getElementById('ed-controls').classList.add('hidden'); 
+        document.getElementById('editor-overlay').style.display='flex';
     }
     
     function viewAllPointages() {
-        db.ref('pointages_v3').limitToLast(10).once('value', s => {
-            let days = s.val() || {}, h = ""; Object.keys(days).sort().reverse().forEach(date => { h += `<div style="background:var(--blue); color:white; padding:8px; margin-top:10px; border-radius:8px;">📅 ${date}</div>`;
-                Object.keys(days[date]).forEach(u => { let p = days[date][u]; h += `<div style="padding:10px; background:white; border-bottom:1px solid #eee;"><b>${u.toUpperCase()}</b> | ${p.start||'--'} à ${p.end||'--'}<br><small style="color:gray;">${p.rapport||'Pas de rapport'}</small></div>`; });
-            }); document.getElementById('recap-content').innerHTML = h || "Rien enregistré."; document.getElementById('recap-overlay').style.display='flex';
+        db.ref('pointages_v3').limitToLast(15).once('value', s => {
+            let days = s.val() || {}, h = ""; 
+            Object.keys(days).sort().reverse().forEach(date => { 
+                h += `<div style="background:var(--blue); color:white; padding:10px; margin-top:15px; border-radius:8px; font-weight:bold; font-size:12px;">📅 JOURNÉE DU ${date}</div>`;
+                Object.keys(days[date]).forEach(u => { 
+                    let p = days[date][u]; 
+                    h += `<div style="padding:12px; background:white; border-bottom:1px solid #eee;">
+                        <b style="color:var(--blue);">${u.toUpperCase()}</b> | ${p.start||'--'} à ${p.end||'--'}<br>
+                        <div style="margin-top:8px; padding:10px; background:#f8fafc; border-left:4px solid var(--yellow); border-radius:4px;">
+                            <b style="font-size:10px; color:gray; display:block;">RAPPORT :</b>
+                            ${p.rapport ? p.rapport.replace(/\n/g, '<br>') : '<i>Aucun rapport saisi</i>'}
+                        </div>
+                    </div>`; 
+                });
+            }); 
+            document.getElementById('recap-content').innerHTML = h || "Aucun pointage enregistré récemment."; 
+            document.getElementById('recap-overlay').style.display='flex';
         });
     }
 
