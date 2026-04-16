@@ -3,45 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V95</title>
+    <title>RBF PLANNING V96 - FULL VERSION</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f4f7f9; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         
-        header { background: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; }
-        .logo img { height: 35px; }
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        header { background: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo img { height: 40px; }
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 11px; }
 
-        .admin-nav { background: white; padding: 10px; display: flex; gap: 10px; justify-content: center; border-bottom: 1px solid #ddd; }
-        .btn-top { background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .admin-nav { background: white; padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+        .btn-top { background: var(--blue); color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: bold; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .search-bar { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; }
 
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 10px; background: white; }
-        .wk-btn { width: 35px; height: 35px; border-radius: 50%; border: 1px solid #ccc; background: white; cursor: pointer; }
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 15px; background: white; border-bottom: 1px solid #ddd; }
+        .wk-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid #ccc; background: white; font-weight: bold; cursor: pointer; color: var(--blue); font-size: 20px; }
 
-        .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; border-radius: 10px; overflow: hidden; }
-        th { background: var(--blue); color: white; padding: 12px; font-size: 12px; border: 1px solid #334466; }
-        td { border: 1px solid #e2e8f0; padding: 5px; vertical-align: top; width: 18%; }
+        .table-container { padding: 15px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 15px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 1100px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        th { background: var(--blue); color: white; padding: 15px 10px; font-size: 11px; text-transform: uppercase; border-bottom: 3px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; width: 180px; }
         
-        .user-cell { background: #f8fafc; font-weight: bold; color: var(--blue); text-align: center; width: 130px; border-right: 3px solid var(--yellow); font-size: 11px; }
-        .slot { font-size: 11px; padding: 8px; margin-bottom: 4px; border-radius: 6px; background: #fff; border: 1px solid #ddd; cursor: pointer; min-height: 35px; overflow: hidden; text-overflow: ellipsis; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 140px; position: sticky; left: 0; z-index: 10; border-right: 4px solid var(--yellow) !important; font-size: 11px; }
+        .slot { font-size: 10px; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: #fff; border: 1px solid #ddd; cursor: pointer; min-height: 45px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .slot.filled { border: 1px solid rgba(0,0,0,0.1); font-weight: 600; color: white; }
+        .td-ferie { background: #f8fafc !important; }
 
-        .card-day { background: white; margin: 10px; padding: 15px; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .mission-box { padding: 10px; border-radius: 8px; margin-bottom: 10px; color: white; font-weight: bold; }
-        
-        .pointage-zone { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 10px; border-radius: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .p-input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 80px; }
-        .comment-input { flex: 1; min-width: 200px; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+        /* MOBILE VIEW */
+        .card-day { background: white; margin: 15px; padding: 15px; border-radius: 20px; border: 1px solid #e2e8f0; }
+        .mission-box { padding: 15px; border-radius: 12px; margin-bottom: 10px; color: white; font-weight: bold; }
+        .pointage-zone { background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; margin-top: 10px; }
+        .p-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .p-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 5000; display: none; align-items: center; justify-content: center; }
-        .modal-box { background: white; width: 90%; max-width: 450px; padding: 20px; border-radius: 15px; }
-        .color-opt { width: 30px; height: 30px; border-radius: 50%; display: inline-block; cursor: pointer; margin-right: 5px; border: 2px solid transparent; }
-        .color-opt.active { border-color: black; }
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 5000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-box { background: white; width: 92%; max-width: 500px; padding: 25px; border-radius: 25px; max-height: 90vh; overflow-y: auto; }
+        .color-opt { width: 35px; height: 35px; border-radius: 50%; display: inline-block; cursor: pointer; margin-right: 8px; border: 3px solid transparent; }
+        .color-opt.active { border-color: #333; }
         
         .hidden { display: none !important; }
+        .btn-save { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -52,11 +57,15 @@
 </header>
 
 <div id="login-screen" style="padding: 40px 20px; text-align: center;">
-    <div style="max-width: 400px; margin: auto;">
-        <button class="btn-top" style="width:100%; margin-bottom:10px; padding:20px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <button class="btn-top" onclick="askCode('damien')">🚛 CHAUFFEUR INTERNE</button>
+    <div style="max-width: 450px; margin: auto; background:white; padding:30px; border-radius:30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+        <img src="logo.png" style="width:160px; margin-bottom:30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <button class="btn-top" style="grid-column: span 2; padding: 20px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+            <button class="btn-top" onclick="askCode('interne')">🚛 CHAUFFEUR INTERNE</button>
+            <button class="btn-top" onclick="askCode('externe')">🚛 EXTERNE</button>
             <button class="btn-top" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+            <button class="btn-top" onclick="askCode('divers')">🚛 DIVERS</button>
+            <button class="btn-top" onclick="askCode('elec')">⚡ INSTAL</button>
             <button class="btn-top" onclick="askCode('jadiel')">👷 JADIEL</button>
             <button class="btn-top" onclick="askCode('nicola')">👷 NICOLA</button>
         </div>
@@ -65,18 +74,19 @@
 
 <div id="app-content" class="hidden">
     <div class="admin-nav hidden" id="admin-tools">
-        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 RÉCAPITULATIF HEURES</button>
+        <input type="text" id="search-input" class="search-bar" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
+        <button class="btn-top" style="background:var(--success);" onclick="toggleDash()">📊 RÉCAP DES HEURES</button>
     </div>
 
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
-        <div id="wk-disp" style="font-weight:bold; color:var(--blue); text-align:center;"></div>
+        <div id="wk-disp" style="text-align:center; font-weight:bold; color:var(--blue); min-width:180px;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
 
     <div id="v-admin" class="table-container hidden">
         <table>
-            <thead><tr><th>PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
+            <thead><tr><th class="user-cell">PERSONNEL</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
@@ -85,45 +95,77 @@
 
 <div id="editor-overlay" class="modal-overlay">
     <div class="modal-box">
-        <h3 style="margin-top:0;">Programmer la mission</h3>
-        <input type="text" id="e-chantier" placeholder="Nom du chantier" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
-        <textarea id="e-mission" placeholder="Détails de la mission" style="width:100%; padding:10px; height:60px; margin-bottom:10px; box-sizing:border-box;"></textarea>
+        <h3 style="margin-top:0; color:var(--blue);">Modifier la mission</h3>
         
-        <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:12px; margin-bottom:5px;">Couleur d'affichage :</label>
-            <div id="color-picker">
-                <div class="color-opt" style="background:#3b82f6;" data-c="#3b82f6"></div>
-                <div class="color-opt" style="background:#ef4444;" data-c="#ef4444"></div>
-                <div class="color-opt" style="background:#10b981;" data-c="#10b981"></div>
-                <div class="color-opt" style="background:#f59e0b;" data-c="#f59e0b"></div>
-                <div class="color-opt" style="background:#8b5cf6;" data-c="#8b5cf6"></div>
-            </div>
+        <label style="font-size:11px; font-weight:bold;">CHANTIER :</label>
+        <input type="text" id="e-chantier" class="p-input" style="margin-bottom:15px;">
+        
+        <label style="font-size:11px; font-weight:bold;">MISSION :</label>
+        <textarea id="e-mission" class="p-input" style="height:70px; margin-bottom:15px;"></textarea>
+
+        <label style="font-size:11px; font-weight:bold;">COULEUR :</label>
+        <div id="color-picker" style="margin-bottom:15px;">
+            <div class="color-opt" style="background:#3b82f6;" data-c="#3b82f6"></div>
+            <div class="color-opt" style="background:#ef4444;" data-c="#ef4444"></div>
+            <div class="color-opt" style="background:#10b981;" data-c="#10b981"></div>
+            <div class="color-opt" style="background:#f59e0b;" data-c="#f59e0b"></div>
+            <div class="color-opt" style="background:#8b5cf6;" data-c="#8b5cf6"></div>
         </div>
 
-        <div id="section-depot" style="background:#fff5f5; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #fecaca;">
-            <textarea id="e-matos" placeholder="Matériel pour le dépôt..." style="width:100%; padding:5px; height:40px; margin-bottom:5px; box-sizing:border-box;"></textarea>
-            <label style="font-size:12px; font-weight:bold; color:var(--danger); cursor:pointer;">
-                <input type="checkbox" id="e-send"> 📧 ENVOYER AU DÉPÔT PAR MAIL
+        <div id="section-depot" style="background:#fff5f5; padding:15px; border-radius:15px; border:1px solid #fecaca; margin-bottom:15px;">
+            <label style="font-size:11px; font-weight:bold; color:var(--danger);">🔧 BESOIN MATÉRIEL (DÉPÔT) :</label>
+            <textarea id="e-matos" class="p-input" style="height:60px; margin-top:5px;"></textarea>
+            <label style="display:flex; align-items:center; gap:10px; margin-top:10px; font-size:12px; font-weight:bold;">
+                <input type="checkbox" id="e-send" style="width:20px; height:20px;"> 📧 ENVOYER AU DÉPÔT
             </label>
         </div>
 
-        <button class="btn-top" style="width:100%; padding:15px;" onclick="saveAll()">ENREGISTRER</button>
-        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#666; margin-top:10px; cursor:pointer;">Annuler</button>
+        <div id="files-ui" style="margin-bottom:10px;"></div>
+        <input type="file" id="e-file" class="hidden" onchange="upCloud(this)">
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; padding:12px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; font-weight:bold; cursor:pointer;">📎 AJOUTER PHOTO/PLAN</button>
+
+        <button class="btn-save" onclick="saveAll()">ENREGISTRER</button>
+        <button onclick="delEntry()" style="width:100%; border:none; background:none; color:var(--danger); margin-top:15px; font-weight:bold; cursor:pointer;">Supprimer</button>
+        <button onclick="closeEd()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:10px;">Fermer</button>
+    </div>
+</div>
+
+<div id="dash-overlay" class="modal-overlay" style="background:white; display:none; flex-direction:column; justify-content: flex-start;">
+    <div style="background:var(--blue); color:white; padding:20px; display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0;">HISTORIQUE POINTAGES</h2>
+        <button onclick="toggleDash()" style="background:var(--yellow); border:none; padding:10px 20px; border-radius:10px; font-weight:bold;">FERMER</button>
+    </div>
+    <div style="padding:15px; overflow:auto;">
+        <table style="width:100%; font-size:12px;">
+            <thead><tr style="background:#f1f5f9;"><th>DATE</th><th>NOM</th><th>DÉBUT</th><th>FIN</th><th>PAUSE</th><th>TOTAL</th><th>RAPPORT</th></tr></thead>
+            <tbody id="dash-body"></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7";
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_DEPOT = "template_8gqnnh7", CL_NAME = "dixdmejal", PRESET = "rbf-preset";
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database(); emailjs.init(PUBLIC_KEY);
 
-    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, selCol = "#3b82f6";
-    const users = [{id:'damien',n:'CHAUFFEUR INTERNE'},{id:'cedric',n:'CÉDRIC'},{id:'jadiel',n:'JADIEL'},{id:'nicola',n:'NICOLA'}];
+    let curU = localStorage.getItem('rbf_u'), curW = 16, curY = 2026, curK = null, curF = [], selCol = "#3b82f6";
+    
+    // ORDRE DU PERSONNEL (DEMANDÉ)
+    const users = [
+        {id:'interne', n:'CHAUFFEUR INTERNE', s:4},
+        {id:'externe', n:'EXTERNE', s:4},
+        {id:'cedric', n:'CÉDRIC', s:4},
+        {id:'divers', n:'DIVERS', s:4},
+        {id:'elec', n:'INSTAL', s:4},
+        {id:'jadiel', n:'JADIEL', s:2},
+        {id:'nicola', n:'NICOLA', s:2}
+    ];
+
+    const feries = ["2026-01-01", "2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-07-14", "2026-08-15", "2026-11-01", "2026-11-11", "2026-12-25"];
 
     function askCode(u) {
-        let codes = {admin:'2026', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
-        let p = prompt("Code d'accès ?");
-        if(p === codes[u]) { localStorage.setItem('rbf_u', u); location.reload(); }
+        let codes = {admin:'2026', interne:'1111', externe:'0000', cedric:'2222', divers:'3333', elec:'4444', jadiel:'3333', nicola:'4444'};
+        if(prompt("Code ?") === codes[u]) { localStorage.setItem('rbf_u', u); location.reload(); }
     }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
@@ -145,21 +187,29 @@
         return res;
     }
 
+    function calcTotal(s, e, p) {
+        if(!s || !e) return "0.00";
+        let diff = (new Date("1970-01-01T"+e) - new Date("1970-01-01T"+s)) / 3600000 - (p/60);
+        return diff > 0 ? diff.toFixed(2) : "0.00";
+    }
+
     function render() {
         const dates = getDates(curW, curY);
         document.getElementById('wk-disp').innerHTML = `AVRIL ${curY}<br>SEMAINE ${curW}`;
-        dates.forEach((d, i) => document.getElementById('h'+i).innerHTML = new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'}).toUpperCase());
+        dates.forEach((d, i) => document.getElementById('h'+i).innerHTML = new Date(d).toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase());
 
         if(curU === 'admin') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.n}</td>`;
                 dates.forEach(date => {
-                    h += `<td>`;
-                    for(let s=1; s<=3; s++) {
+                    let isF = feries.includes(date);
+                    h += `<td class="${isF?'td-ferie':''}">`;
+                    if(isF) h += `<div style="text-align:center; color:#94a3b8; font-size:9px; font-weight:bold;">FÉRIÉ</div>`;
+                    for(let s=1; s<=u.s; s++) {
                         let k = `${date}_${u.id}_s${s}`, dta = window.planData ? window.planData[k] : null;
                         let st = dta ? `background:${dta.col||'#3b82f6'}; color:white; border:none;` : "";
-                        h += `<div class="slot" style="${st}" onclick="openEd('${k}')">${dta ? dta.chantier : '...'}</div>`;
+                        h += `<div class="slot ${dta?'filled':''}" style="${st}" onclick="openEd('${k}')">${dta ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.mission||''}` : "..."}</div>`;
                     }
                     h += `</td>`;
                 });
@@ -169,18 +219,25 @@
         } else {
             document.getElementById('v-user').classList.remove('hidden');
             let h = ""; dates.forEach(date => {
-                let mH = ""; for(let s=1; s<=3; s++) {
+                let mHtml = ""; for(let s=1; s<=4; s++) {
                     let dta = window.planData ? window.planData[`${date}_${curU}_s${s}`] : null;
-                    if(dta) mH += `<div class="mission-box" style="background:${dta.col||'#3b82f6'}">📍 ${dta.chantier.toUpperCase()} : ${dta.mission}</div>`;
+                    if(dta) {
+                        let fHtml = ""; dta.files?.forEach(f => fHtml += `<a href="${f.url}" target="_blank" style="display:block; background:rgba(255,255,255,0.2); color:white; padding:10px; margin-top:10px; border-radius:10px; text-decoration:none; font-size:11px; text-align:center;">📄 VOIR DOCUMENT</a>`);
+                        mHtml += `<div class="mission-box" style="background:${dta.col||'#3b82f6'}">📍 ${dta.chantier.toUpperCase()}<br>${dta.mission}${fHtml}</div>`;
+                    }
                 }
                 let pt = (window.pointData && window.pointData[date+'_'+curU]) ? window.pointData[date+'_'+curU] : {s:'', e:'', p:'45', r:''};
                 h += `<div class="card-day">
-                    <b>${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric'})}</b>
-                    ${mH || '<div style="font-size:12px; color:#999; margin:5px 0;">Aucune mission.</div>'}
+                    <h3 style="margin:0 0 10px 0; color:var(--blue); border-bottom:1px solid #eee;">${new Date(date).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</h3>
+                    ${mHtml || '<p style="color:#94a3b8;">Aucune mission prévue.</p>'}
                     <div class="pointage-zone">
-                        <input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)">
-                        <input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)">
-                        <input type="text" class="comment-input" placeholder="Rapport / Commentaire" value="${pt.r||''}" onblur="saveP('${date}','r',this.value)">
+                        <div class="p-grid">
+                            <div><label style="font-size:10px; font-weight:bold;">DÉBUT</label><input type="time" class="p-input" value="${pt.s}" onchange="saveP('${date}','s',this.value)"></div>
+                            <div><label style="font-size:10px; font-weight:bold;">FIN</label><input type="time" class="p-input" value="${pt.e}" onchange="saveP('${date}','e',this.value)"></div>
+                            <div><label style="font-size:10px; font-weight:bold;">PAUSE</label><input type="number" class="p-input" value="${pt.p}" onchange="saveP('${date}','p',this.value)"></div>
+                        </div>
+                        <textarea class="p-input" style="height:60px;" placeholder="Votre rapport ou commentaire..." onblur="saveP('${date}','r',this.value)">${pt.r||''}</textarea>
+                        <div style="text-align:right; font-weight:bold; color:var(--success); margin-top:5px;">TOTAL : ${calcTotal(pt.s, pt.e, pt.p)}h</div>
                     </div></div>`;
             });
             document.getElementById('v-user').innerHTML = h;
@@ -188,36 +245,71 @@
     }
 
     function openEd(k) {
-        curK = k; let d = window.planData ? window.planData[k] : null;
+        if(curU !== 'admin') return; curK = k; let d = window.planData ? window.planData[k] : null;
         document.getElementById('e-chantier').value = d?.chantier || "";
         document.getElementById('e-mission').value = d?.mission || "";
         document.getElementById('e-matos').value = d?.matos || "";
-        selCol = d?.col || "#3b82f6";
+        selCol = d?.col || "#3b82f6"; curF = d?.files || [];
         document.querySelectorAll('.color-opt').forEach(o => o.classList.toggle('active', o.dataset.c === selCol));
-        document.getElementById('editor-overlay').style.display = 'flex';
+        document.getElementById('editor-overlay').style.display = 'flex'; renderF();
+    }
+
+    async function upCloud(inp) {
+        if(!inp.files[0]) return;
+        const fd = new FormData(); fd.append("file", inp.files[0]); fd.append("upload_preset", PRESET);
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CL_NAME}/auto/upload`, { method: "POST", body: fd });
+        const d = await res.json(); curF.push({ url: d.secure_url, name: inp.files[0].name }); renderF();
+    }
+
+    function renderF() {
+        let h = ""; curF.forEach((f, i) => h += `<div style="font-size:11px; margin-top:5px;">📎 ${f.name} <span onclick="curF.splice(${i},1);renderF()" style="color:red;cursor:pointer;">[X]</span></div>`);
+        document.getElementById('files-ui').innerHTML = h;
     }
 
     function saveAll() {
         let ch = document.getElementById('e-chantier').value, mi = document.getElementById('e-mission').value, ma = document.getElementById('e-matos').value;
-        db.ref('v95_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, col:selCol}).then(() => {
+        if(!ch) return alert("Chantier obligatoire");
+        db.ref('v96_plan/'+curK).set({chantier:ch, mission:mi, matos:ma, col:selCol, files:curF}).then(() => {
             if(document.getElementById('e-send').checked && ma) {
-                emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL BESOIN - ${ch.toUpperCase()}\n${ma}`, user_id: curK.split('_')[1] });
+                emailjs.send(SERVICE_ID, T_DEPOT, { message: `MATÉRIEL BESOIN - ${ch.toUpperCase()}\n\nLISTE :\n${ma}`, user_id: curK.split('_')[1] });
             }
             closeEd();
         });
     }
 
+    function delEntry() { if(confirm("Supprimer ?")) db.ref('v96_plan/'+curK).remove().then(closeEd); }
     function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function saveP(date, f, v) { db.ref(`v95_point/${date}_${curU}/${f}`).set(v); }
+    function saveP(date, f, v) { db.ref(`v96_point/${date}_${curU}/${f}`).set(v); }
     function changeWeek(v) { curW += v; render(); }
+
+    function toggleDash() {
+        let d = document.getElementById('dash-overlay');
+        if(d.style.display === 'flex') d.style.display = 'none';
+        else {
+            d.style.display = 'flex';
+            db.ref('v96_point').once('value', s => {
+                let data = s.val(), h = ""; if(!data) return;
+                Object.keys(data).sort().reverse().forEach(k => {
+                    let [date, user] = k.split('_'), p = data[k];
+                    h += `<tr style="border-bottom:1px solid #eee;"><td>${date}</td><td><b>${user.toUpperCase()}</b></td><td>${p.s||'-'}</td><td>${p.e||'-'}</td><td>${p.p||0}m</td><td style="color:green; font-weight:bold;">${calcTotal(p.s, p.e, p.p)}h</td><td>${p.r||''}</td></tr>`;
+                });
+                document.getElementById('dash-body').innerHTML = h;
+            });
+        }
+    }
+
+    function applySearch() {
+        let val = document.getElementById('search-input').value.toLowerCase();
+        document.querySelectorAll('.slot').forEach(s => s.style.opacity = s.innerText.toLowerCase().includes(val) ? "1" : "0.2");
+    }
 
     if(curU) {
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
         document.getElementById('u-ctrl').classList.remove('hidden');
         if(curU === 'admin') document.getElementById('admin-tools').classList.remove('hidden');
-        db.ref('v95_plan').on('value', s => { window.planData = s.val(); render(); });
-        db.ref('v95_point').on('value', s => { window.pointData = s.val(); render(); });
+        db.ref('v96_plan').on('value', s => { window.planData = s.val(); render(); });
+        db.ref('v96_point').on('value', s => { window.pointData = s.val(); render(); });
     }
 </script>
 </body>
