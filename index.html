@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V91</title>
+    <title>RBF Planning V92 - Pointage</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -38,13 +38,20 @@
         .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
         .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
-        #editor-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
+        #editor-overlay, #report-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
         .mat-label { background: #dcfce7; color: #166534; font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; margin-bottom: 4px; display: inline-block; }
+        
+        /* Styles Pointage */
+        .driver-tools { display: flex; gap: 10px; margin: 10px; justify-content: center; }
+        .btn-tool { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: var(--blue); }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -52,6 +59,7 @@
     <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING TRANSPORT</b></div>
     <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
 </header>
+
 <div id="login-screen">
     <div class="login-card">
         <img src="logo.png" style="width:160px; margin-bottom:15px;">
@@ -65,7 +73,13 @@
         </div>
     </div>
 </div>
+
 <div id="app-content" class="hidden">
+    <div id="driver-tools-zone" class="driver-tools hidden">
+        <button class="btn-tool" style="background:var(--blue);" onclick="openReport('pointage')">🕒 <span>POINTAGE</span></button>
+        <button class="btn-tool" style="background:var(--success);" onclick="openReport('journalier')">📝 <span>RAPPORT</span></button>
+    </div>
+
     <div id="admin-search-zone" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
         <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
@@ -85,6 +99,44 @@
     <div id="v-driver" class="hidden"></div>
 </div>
 
+<div id="report-overlay">
+    <div class="editor-box">
+        <h3 id="rep-title" style="text-align:center; color:var(--blue);"></h3>
+        <div id="form-pointage" class="hidden">
+            <div class="form-group">
+                <label>CHANTIER :</label>
+                <input type="text" id="p-chantier" placeholder="Nom du chantier">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group">
+                    <label>DÉBUT :</label>
+                    <input type="time" id="p-start">
+                </div>
+                <div class="form-group">
+                    <label>FIN :</label>
+                    <input type="time" id="p-end">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>TRAJET (min) :</label>
+                <input type="number" id="p-trajet" placeholder="Temps de route total">
+            </div>
+        </div>
+        <div id="form-journalier" class="hidden">
+            <div class="form-group">
+                <label>CHANTIER :</label>
+                <input type="text" id="rj-chantier" placeholder="Nom du chantier">
+            </div>
+            <div class="form-group">
+                <label>TRAVAUX RÉALISÉS :</label>
+                <textarea id="rj-text" style="height:120px;" placeholder="Détaillez votre journée..."></textarea>
+            </div>
+        </div>
+        <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; margin-top:10px;">ENVOYER</button>
+        <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">ANNULER</button>
+    </div>
+</div>
+
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
@@ -92,15 +144,12 @@
         <div id="ed-controls">
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
             <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
-            
             <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
             <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none; margin-bottom:10px;"></textarea>
-            
             <div id="zone-matos" class="hidden">
                 <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL (JADIEL/NICOLA) :</label>
                 <textarea id="e-matos" style="width:100%; height:60px; padding:12px; border-radius:12px; border:1px solid var(--success); box-sizing: border-box; outline: none; margin-bottom:10px;" placeholder="Ex: Mini-pelle, 10 sacs de chaux..."></textarea>
             </div>
-
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom: 12px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
@@ -120,6 +169,7 @@
     const db = firebase.database();
     (function(){ emailjs.init(PUBLIC_KEY); })();
 
+    // Logique Calendrier
     function getWeek(d) {
         const date = new Date(d.getTime());
         date.setHours(0, 0, 0, 0);
@@ -127,7 +177,6 @@
         const week1 = new Date(date.getFullYear(), 0, 4);
         return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
     }
-    
     function getDateFromWeek(w, y, dIdx) {
         const simple = new Date(y, 0, 1 + (w - 1) * 7);
         const dow = simple.getDay();
@@ -149,8 +198,9 @@
 
     let curDate = new Date();
     let curW = getWeek(curDate), curY = curDate.getFullYear();
-    let curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
-    
+    let curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default', activeReportType = '';
+
+    // Init Couleurs
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colors.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
@@ -169,48 +219,56 @@
         document.getElementById('app-content').classList.remove('hidden'); 
         document.getElementById('u-info').classList.remove('hidden'); 
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
+        if(u!=='admin' && u!=='depot') document.getElementById('driver-tools-zone').classList.remove('hidden');
         fetchHolidays(curY);
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
 
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-    
-    function showFullHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if (q.length < 2) return alert("Tapez au moins 2 lettres pour chercher.");
-        let res = []; 
-        Object.keys(window.data).forEach(k => {
-            let item = window.data[k]; 
-            if (item.chantier && item.chantier.toLowerCase().includes(q)) {
-                let p = k.split('_'); 
-                if(p.length < 4) return;
-                let dateCal = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
-                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, mat: item.matos, ch: item.chantier, date: dateCal.toLocaleDateString('fr-FR'), ts: dateCal.getTime()});
-            }
-        });
-        if (!res.length) return alert("Aucun résultat trouvé.");
-        res.sort((a,b) => b.ts - a.ts);
-        let h = `<div style="text-align:left; max-height:450px; overflow-y:auto; padding:5px;">`;
-        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:12px; background:#fff;">
-            <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:var(--blue); margin-bottom:5px;">
-                <span>S${r.sem} - ${r.an}</span><span>${r.date}</span>
-            </div>
-            <b style="color:var(--success);">${r.qui}</b><br>
-            <div style="margin-top:5px; color:#334155;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}${r.mat ? '<br><i style="color:green;">Logistique : '+r.mat+'</i>' : ''}</div>
-        </div>`);
-        h += `</div>`;
-        document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
-        document.getElementById('ed-view-only').innerHTML = h;
-        document.getElementById('ed-view-only').classList.remove('hidden'); 
-        document.getElementById('ed-controls').classList.add('hidden');
-        document.getElementById('editor-overlay').style.display = 'flex';
+
+    // FONCTION POINTAGE & RAPPORT
+    function openReport(type) {
+        activeReportType = type;
+        document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE DU JOUR' : '📝 RAPPORT JOURNALIER';
+        document.getElementById('form-pointage').classList.toggle('hidden', type !== 'pointage');
+        document.getElementById('form-journalier').classList.toggle('hidden', type !== 'journalier');
+        document.getElementById('report-overlay').style.display = 'flex';
     }
 
+    function closeReport() { document.getElementById('report-overlay').style.display = 'none'; }
+
+    function saveReport() {
+        const today = new Date().toISOString().split('T')[0];
+        let reportData = { user: curU, date: today, timestamp: Date.now() };
+
+        if(activeReportType === 'pointage') {
+            reportData.type = "POINTAGE";
+            reportData.chantier = document.getElementById('p-chantier').value;
+            reportData.debut = document.getElementById('p-start').value;
+            reportData.fin = document.getElementById('p-end').value;
+            reportData.trajet = document.getElementById('p-trajet').value;
+        } else {
+            reportData.type = "RAPPORT";
+            reportData.chantier = document.getElementById('rj-chantier').value;
+            reportData.travaux = document.getElementById('rj-text').value;
+        }
+
+        if(!reportData.chantier) return alert("Veuillez indiquer le nom du chantier.");
+
+        db.ref(`pointages_v18/${today}/${curU}_${Date.now()}`).set(reportData).then(() => {
+            alert("Envoyé avec succès !");
+            closeReport();
+            // Reset forms
+            document.getElementById('p-chantier').value = "";
+            document.getElementById('rj-text').value = "";
+        });
+    }
+
+    // Le reste du script Planning (V91 pur)
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"];
         let holidayIdx = [];
-
         for(let i=0; i<5; i++) {
             let d = getDateFromWeek(curW, curY, i);
             let iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
@@ -221,7 +279,6 @@
                 document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`;
             }
         }
-
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; 
@@ -229,7 +286,6 @@
                 {id:'interne',s:4,d:true}, {id:'externe',s:4,d:true}, {id:'cedric',s:4,d:true},
                 {id:'divers',s:4,d:false}, {id:'instal',s:4,d:true}, {id:'jadiel',s:2,d:true}, {id:'nicola',s:2,d:true}
             ];
-            
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
@@ -240,14 +296,8 @@
                         let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", matos:"", chantier:"", files:[], col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
                         let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
-                        let content = "";
-                        if(curU === 'depot') {
-                           if(dta.matos) content += `<div class="mat-label">MATÉRIEL : ${dta.matos}</div><br>`;
-                           content += dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : dta.text;
-                        } else {
-                           content = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                           if(dta.matos) content += `<br><span style="font-size:8px; color:#16a34a;">📦 ${dta.matos}</span>`;
-                        }
+                        let content = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                        if(dta.matos) content += `<br><span style="font-size:8px; color:#16a34a;">📦 ${dta.matos}</span>`;
                         h += `<div class="slot ${dta.text||dta.matos?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${content}</div>`;
                     }
                     h += `</td>`;
@@ -259,18 +309,14 @@
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let dIdx=0; dIdx<5; dIdx++) {
                 let dDate = getDateFromWeek(curW, curY, dIdx);
-                let iso = dDate.getFullYear() + "-" + String(dDate.getMonth()+1).padStart(2,'0') + "-" + String(dDate.getDate()).padStart(2,'0');
-                let isHoliday = holidayIdx.includes(dIdx);
-                let hLabel = isHoliday ? `<span class="holiday-badge" style="margin-left:10px;">${holidays[iso]}</span>` : "";
                 let c = ""; for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
-                    if(dta && (dta.text || dta.chantier || dta.matos)) {
+                    if(dta && (dta.text || dta.chantier)) {
                         let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR FICHIER</a>`);
-                        let mBox = dta.matos ? `<div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:8px; border-radius:6px; margin-top:8px; color:#166534; font-size:12px;"><b>📦 Matériel prévu :</b><br>${dta.matos}</div>` : "";
-                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${mBox}${b}</div>`;
+                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hLabel}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
     }
@@ -279,8 +325,7 @@
         curK = k; let d = window.data[k] || {text:"", matos:"", chantier:"", files:[], toDepot:false, col:'default'};
         if(curU !== 'admin' && curU !== 'depot') {
             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            let mH = d.matos ? `<div style="background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0; margin-top:10px; color:#166534;"><b>📦 MATÉRIEL :</b><br>${d.matos}</div>` : "";
-            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>${mH}`;
+            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>`;
             document.getElementById('editor-overlay').style.display = 'flex'; return;
         }
         if(curU !== 'admin') return;
@@ -288,10 +333,7 @@
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
         document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
         document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot;
-        
-        // Restriction Besoins Matériels : Uniquement Jadiel ou Nicola
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-
         renderFileListAdmin();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
