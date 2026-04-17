@@ -3,69 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V112</title>
+    <title>RBF Planning V103 - FULL VERSION</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
-        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header-logo img { height: 40px; }
-        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        #search-input { flex: 1; min-width: 180px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
-        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
-        .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 850px; }
-        th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
-        /* Style Jours Fériés */
-        .is-ferie { background: #fee2e2 !important; color: #dc2626 !important; border-bottom: 2px solid #dc2626 !important; }
-        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
+        :root { 
+            --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; 
+            --danger: #ef4444; --bg: #f8fafc; --border: #e2e8f0; 
+        }
+        
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); margin: 0; color: #334155; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        header { 
+            background: white; padding: 12px 20px; 
+            display: grid; grid-template-columns: 100px 1fr 100px; align-items: center; 
+            border-bottom: 4px solid var(--yellow); position: sticky; 
+            top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        .header-logo img { height: 40px; display: block; }
+        .header-title { 
+            color: var(--blue); font-size: 14px; font-weight: 900; 
+            text-transform: uppercase; text-align: center; letter-spacing: 1px;
+        }
+
+        .search-container { 
+            background: white; padding: 12px 15px; border-bottom: 1px solid var(--border); 
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        }
+        #search-input { 
+            flex: 1; min-width: 180px; padding: 12px; border-radius: 10px; 
+            border: 2px solid #f1f5f9; outline: none;
+        }
+
+        .btn-action { 
+            background: var(--blue); color: white; border: none; 
+            padding: 12px 15px; border-radius: 8px; font-weight: bold; 
+            font-size: 11px; cursor: pointer; text-transform: uppercase;
+        }
+        
+        .btn-pointage { 
+            background: var(--success); color: white; border: none; 
+            padding: 18px; border-radius: 15px; font-weight: 800; 
+            width: calc(100% - 30px); margin: 15px; cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); font-size: 14px;
+        }
+
+        .week-nav { 
+            display: flex; align-items: center; justify-content: center; 
+            gap: 20px; padding: 20px; background: white; border-bottom: 1px solid var(--border); 
+        }
+        .wk-btn { 
+            padding: 10px 20px; border-radius: 10px; border: 1px solid #ddd; 
+            background: white; font-weight: bold; font-size: 20px; cursor: pointer;
+        }
+
+        .table-container { padding: 15px; overflow-x: auto; }
+        table { 
+            width: 100%; border-collapse: separate; border-spacing: 0; 
+            background: white; border-radius: 15px; overflow: hidden; 
+            border: 1px solid var(--border); min-width: 1000px; 
+        }
+        th { 
+            background: var(--blue); color: white; padding: 15px 10px; 
+            font-size: 12px; border-bottom: 2px solid var(--yellow); 
+        }
+        .is-ferie { background: #fee2e2 !important; color: #b91c1c !important; font-weight: 900; }
+        
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 8px; vertical-align: top; }
+        .user-cell { 
+            background: #fdfdfd; font-weight: 800; color: var(--blue); 
+            text-align: center; width: 110px; position: sticky; 
+            left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; 
+        }
+        
+        .slot { 
+            font-size: 11px; padding: 10px; margin-bottom: 6px; 
+            border-radius: 10px; background: #fcfcfc; border: 1px dashed #cbd5e1; 
+            cursor: pointer; min-height: 50px; color: var(--blue); 
+            white-space: pre-wrap; line-height: 1.4;
+        }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
-        .is-to-depot { border-left: 6px solid var(--success) !important; }
-        #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
-        .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
-        .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 11px; text-transform: uppercase; }
-        #editor-overlay { position: fixed; inset:0; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        .is-to-depot { border-left: 7px solid var(--success) !important; }
+        .has-link { border-bottom: 5px solid #8b5cf6 !important; }
+
+        .overlay { 
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(15, 23, 42, 0.9); display:none; 
+            align-items:center; justify-content:center; z-index:10000; 
+            backdrop-filter: blur(5px); 
+        }
+        .box { 
+            background: white; padding: 25px; border-radius: 25px; 
+            width: 95%; max-width: 550px; max-height: 90vh; 
+            overflow-y: auto; position: relative;
+        }
+        
+        input[type="time"], input[type="text"], input[type="date"], textarea { 
+            width: 100%; padding: 14px; border: 2px solid #f1f5f9; 
+            border-radius: 12px; margin-bottom: 12px; font-size: 16px; 
+            box-sizing: border-box; outline: none; font-family: inherit;
+        }
+        .pause-row { 
+            display: grid; grid-template-columns: 1fr 1fr 40px; gap: 10px; 
+            align-items: center; margin-bottom: 12px; background: #f8fafc; 
+            padding: 10px; border-radius: 12px; border: 1px solid var(--border); 
+        }
+        
+        .recap-card { background: #fff; border: 1px solid var(--border); border-radius: 15px; padding: 18px; margin-bottom: 15px; }
+        .total-badge { background: var(--blue); color: white; padding: 5px 10px; border-radius: 8px; font-weight: 800; float: right; font-size: 14px; }
+        
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; }
+        .color-opt { height: 40px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
+        
         .hidden { display: none !important; }
+        .hist-item { padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 8px; background: #fcfcfc; border-radius: 10px; }
     </style>
 </head>
 <body>
+
 <header>
-    <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING TRANSPORT</b></div>
-    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
+    <div class="header-logo"><img src="logo.png"></div>
+    <div class="header-title">PLANNING & HEURES RBF</div>
+    <div class="header-right"><button id="logout-btn" onclick="logout()" style="background:var(--danger); border:none; color:white; padding:10px 14px; border-radius:10px; font-weight:bold; font-size:11px; cursor:pointer; display:none;">QUITTER</button></div>
 </header>
 
 <div id="login-screen">
-    <div class="login-card">
-        <img src="logo.png" style="width:160px; margin-bottom:15px;">
-        <div class="grid-auth">
-            <button class="btn-auth" style="background:var(--blue); grid-column:span 2;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
-            <button class="btn-auth" style="background:var(--success); grid-column:span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
-            <button class="btn-auth" style="background:#3b82f6;" onclick="askCode('damien')">🚛 DAMIEN</button>
-            <button class="btn-auth" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-            <button class="btn-auth" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
-            <button class="btn-auth" style="background:#64748b;" onclick="askCode('nicola')">👷 NICOLA</button>
+    <div style="min-height:90vh; display:flex; align-items:center; justify-content:center;">
+        <div style="background:white; padding:40px 30px; border-radius:30px; text-align:center; width:90%; max-width:400px; box-shadow:0 20px 30px rgba(0,0,0,0.15);">
+            <img src="logo.png" style="width:180px; margin-bottom:25px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <button class="btn-action" style="grid-column:span 2; padding:18px; font-size:15px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+                <button class="btn-action" style="grid-column:span 2; background:var(--success); padding:18px; font-size:15px;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+                <button class="btn-action" style="background:#3b82f6;" onclick="askCode('interne')">🚛 INTERNE</button>
+                <button class="btn-action" style="background:#f59e0b;" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+                <button class="btn-action" style="background:#8b5cf6;" onclick="askCode('jadiel')">👷 JADIEL</button>
+                <button class="btn-action" style="background:#64748b;" onclick="askCode('nicola')">👷 NICOLA</button>
+            </div>
         </div>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
-    <div id="admin-search-zone" class="search-container hidden">
+    <div id="admin-tools" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
-        <button class="btn-hist" onclick="showFullHistory()">HISTORIQUE GLOBAL</button>
+        <button class="btn-action" onclick="showFullHistory()">HISTORIQUE</button>
+        <button class="btn-action" style="background:var(--success)" onclick="viewAllPointages()">📊 RÉCAP HEURES</button>
     </div>
+
+    <button id="btn-show-pointer" class="btn-pointage hidden" onclick="openPointage()">⏰ SAISIR MES HEURES & RAPPORTS</button>
+    
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
-        <div id="wk-disp" style="font-weight:800; color:var(--blue); font-size:16px;"></div>
+        <div id="wk-disp" style="font-weight:900; color:var(--blue); font-size:18px;"></div>
         <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
+
     <div id="v-admin" class="table-container hidden">
         <table>
             <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
@@ -75,133 +172,226 @@
     <div id="v-driver" class="hidden"></div>
 </div>
 
-<div id="editor-overlay">
-    <div class="editor-box">
-        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
+<div id="pointage-overlay" class="overlay">
+    <div class="box">
+        <h3 style="margin-top:0; color:var(--blue); border-bottom:2px solid var(--yellow); padding-bottom:10px;">Enregistrement des heures</h3>
+        
+        <label style="font-size:13px; font-weight:bold; color:var(--danger);">📅 DATE CONCERNÉE :</label>
+        <input type="date" id="p-date" onchange="loadPointageForDate()">
+        
+        <div id="pointage-fields">
+            <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">🕗 HEURE DE DÉBUT :</label>
+            <input type="time" id="p-start">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px 0;">
+                <label style="font-weight:bold; font-size:13px;">☕ MES PAUSES :</label>
+                <button onclick="addPauseRow()" class="btn-action" style="padding:6px 12px; font-size:10px;">+ AJOUTER</button>
+            </div>
+            <div id="pause-container"></div>
+            
+            <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:5px;">🏁 HEURE DE FIN :</label>
+            <input type="time" id="p-end">
+            
+            <label style="font-size:13px; font-weight:bold; color:var(--blue); margin-top:10px; display:block;">📝 MON RAPPORT :</label>
+            <textarea id="p-rapport" style="height:100px; margin-top:8px;" placeholder="Détaillez votre journée..."></textarea>
+            
+            <button onclick="savePointage()" style="width:100%; padding:18px; background:var(--success); color:white; border:none; border-radius:15px; font-weight:bold; font-size:16px; cursor:pointer;">ENREGISTRER POUR CETTE DATE</button>
+        </div>
+        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:15px; font-weight:bold;">FERMER</button>
+    </div>
+</div>
+
+<div id="editor-overlay" class="overlay">
+    <div class="box">
+        <h3 id="ed-title" style="text-align:center; color:var(--blue); margin-top:0;">Mission</h3>
         <div id="ed-view-only" class="hidden"></div>
         <div id="ed-controls">
-            <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
-            <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
-            <textarea id="e-input" style="width:100%; height:100px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none;"></textarea>
-            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
-            <button id="save-btn" onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
-            <button id="del-btn" onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
+            <input type="text" id="e-chantier" placeholder="Chantier">
+            <textarea id="e-input" style="height:100px;" placeholder="Mission"></textarea>
+            <div id="zone-matos" class="hidden"><textarea id="e-matos" style="height:60px; border-color:var(--success);" placeholder="Matériel"></textarea></div>
+            <div class="color-picker" id="cp"></div>
+            <div id="file-list-admin" style="margin-bottom:15px;"></div>
+            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:12px; border:2px dashed #cbd5e1; margin-bottom:15px; font-weight:bold; font-size:12px;">📎 PHOTO / PDF</button>
+            <label style="display:flex; align-items:center; gap:12px; margin-bottom:25px; background:#f0fdf4; padding:10px; border-radius:10px;"><input type="checkbox" id="e-depot"> <b style="color:#166534;">DÉPÔT</b></label>
+            <button onclick="saveTask()" style="width:100%; padding:18px; background:var(--blue); color:white; border:none; border-radius:15px; font-weight:bold;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="width:100%; background:none; color:var(--danger); border:none; margin-top:15px; font-weight:bold;">SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">FERMER</button>
+        <button onclick="closeEditor()" style="width:100%; background:none; border:none; color:gray; margin-top:15px; font-weight:bold;">FERMER</button>
+    </div>
+</div>
+
+<div id="recap-overlay" class="overlay">
+    <div class="box" style="max-width:650px;">
+        <h3 style="margin-top:0; color:var(--blue); border-bottom:3px solid var(--yellow); padding-bottom:10px;">Récapitulatif Heures</h3>
+        <div id="recap-content"></div>
+        <button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:15px; margin-top:20px; font-weight:bold;">FERMER</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
-    // Liste des jours fériés 2026
-    const FERIES_2026 = ["06/04", "01/05", "08/05", "14/05", "25/05", "01/06", "14/07", "11/11", "25/12"];
-
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    (function(){ emailjs.init(PUBLIC_KEY); })();
+    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
+    const FERIES = ["2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25"];
 
-    function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
-    function getDayDate(w, dIdx) { let date = new Date(2026, 0, 5); date.setDate(date.getDate() + (w - 1) * 7 + dIdx); return date.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}); }
-    
-    let curW = getWeek(new Date()), curU = localStorage.getItem('rbf_u'), curK = null;
+    let curDate = new Date(), curW = 0, curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
-    function askCode(u) {
-        let p = prompt("Code " + u.toUpperCase());
-        let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
-        if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); }
-    }
+    function getWeek(d) { let date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
+    curW = getWeek(curDate);
+    function getDateFromWeek(w, y, dIdx) { let s = new Date(y, 0, 1 + (w - 1) * 7); let dow = s.getDay(); let ISO = s; if (dow <= 4) ISO.setDate(s.getDate() - s.getDay() + 1); else ISO.setDate(s.getDate() + 8 - s.getDay()); ISO.setDate(ISO.getDate() + dIdx); return ISO; }
 
-    function login(u) {
-        curU = u; document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-content').classList.remove('hidden');
-        document.getElementById('u-info').classList.remove('hidden');
-        if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
-        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); });
-    }
-
+    function askCode(u) { let p = prompt("Code " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'}; if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } }
+    function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('logout-btn').style.display = 'block'; if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden'); if(['interne','cedric','depot','jadiel','nicola'].includes(u)) document.getElementById('btn-show-pointer').classList.remove('hidden'); db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    function render() {
-        document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
-        const days = ["LUN","MAR","MER","JEU","VEN"];
-        for(let i=0; i<5; i++) {
-            let dStr = getDayDate(curW, i);
-            let th = document.getElementById('h'+i);
-            th.innerHTML = `${days[i]}<br>${dStr}`;
-            // Coloration jour férié
-            th.classList.toggle('is-ferie', FERIES_2026.includes(dStr));
-        }
+    // --- LOGIQUE DE POINTAGE FLEXIBLE ---
+    function openPointage() { 
+        let today = new Date().toISOString().split('T')[0]; 
+        document.getElementById('p-date').value = today;
+        loadPointageForDate();
+        document.getElementById('pointage-overlay').style.display='flex'; 
+    }
 
+    function loadPointageForDate() {
+        let selDate = document.getElementById('p-date').value;
+        if(!selDate) return;
+        document.getElementById('pause-container').innerHTML = ""; 
+        db.ref('pointages_v3/'+selDate+'/'+curU).once('value', s => { 
+            let d = s.val() || {}; 
+            document.getElementById('p-start').value = d.start||""; 
+            document.getElementById('p-end').value = d.end||""; 
+            document.getElementById('p-rapport').value = d.rapport||""; 
+            if(d.pauses) d.pauses.forEach(p => addPauseRow(p.s, p.e)); 
+        });
+    }
+
+    function addPauseRow(s="", e="") { 
+        const div = document.createElement('div'); div.className = 'pause-row'; 
+        div.innerHTML = `<input type="time" class="p-s" value="${s}"> <input type="time" class="p-e" value="${e}"> <button onclick="this.parentElement.remove()" style="background:var(--danger); color:white; border:none; border-radius:10px; height:35px; width:35px; cursor:pointer;">X</button>`; 
+        document.getElementById('pause-container').appendChild(div); 
+    }
+
+    function savePointage() { 
+        let selDate = document.getElementById('p-date').value;
+        if(!selDate) return alert("Choisissez une date !");
+        let pz = []; 
+        document.querySelectorAll('.pause-row').forEach(r => { 
+            let s=r.querySelector('.p-s').value, e=r.querySelector('.p-e').value; 
+            if(s&&e) pz.push({s,e}); 
+        }); 
+        db.ref('pointages_v3/'+selDate+'/'+curU).set({
+            start: document.getElementById('p-start').value, 
+            end: document.getElementById('p-end').value, 
+            rapport: document.getElementById('p-rapport').value, 
+            pauses: pz,
+            timestamp: Date.now()
+        }).then(() => { alert("Pointage enregistré pour le " + selDate); }); 
+    }
+
+    function timeToDec(t) { if(!t) return 0; let [h,m] = t.split(':').map(Number); return h + m/60; }
+    function calcTotalHeures(p) {
+        if(!p.start || !p.end) return 0;
+        let diff = timeToDec(p.end) - timeToDec(p.start);
+        if(p.pauses) p.pauses.forEach(pz => { diff -= (timeToDec(pz.e) - timeToDec(pz.s)); });
+        return diff > 0 ? diff : 0;
+    }
+
+    function viewAllPointages() {
+        db.ref('pointages_v3').limitToLast(30).once('value', s => {
+            let days = s.val() || {}, h = ""; 
+            Object.keys(days).sort().reverse().forEach(date => { 
+                h += `<div style="background:var(--blue); color:white; padding:12px; margin-top:20px; border-radius:10px; font-weight:bold;">📅 ${date}</div>`;
+                Object.keys(days[date]).forEach(user => { 
+                    let p = days[date][user]; 
+                    h += `<div class="recap-card">
+                        <span class="total-badge">${calcTotalHeures(p).toFixed(2)}h NET</span>
+                        <b style="color:var(--blue); text-transform:uppercase;">${user}</b><br>
+                        <small>${p.start||'--'} → ${p.end||'--'}</small><br>
+                        <div style="margin-top:10px; font-size:13px; background:#f0f9ff; padding:10px; border-radius:6px;">
+                            <b>Rapport :</b> ${p.rapport || '<i>Vide</i>'}
+                        </div>
+                    </div>`; 
+                });
+            }); 
+            document.getElementById('recap-content').innerHTML = h || "Aucune donnée."; 
+            document.getElementById('recap-overlay').style.display='flex';
+        });
+    }
+
+    function render() {
+        document.getElementById('wk-disp').textContent = `SEMAINE ${curW} — ${curY}`;
+        const daysShort = ["LUN","MAR","MER","JEU","VEN"];
+        const daysLong = ["LUNDI","MARDI","MERCREDI","JEUDI","VENDREDI"];
+        
+        for(let i=0; i<5; i++) { 
+            let d = getDateFromWeek(curW, curY, i); 
+            let iso = d.toISOString().split('T')[0];
+            let cell = document.getElementById('h'+i);
+            cell.innerHTML = `${daysShort[i]}<br><small>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</small>`; 
+            cell.classList.toggle('is-ferie', FERIES.includes(iso));
+        }
+        
         if (curU === 'admin' || curU === 'depot') {
-            document.getElementById('v-admin').classList.remove('hidden');
-            let h = "";
-            const users = [
-                {id:'damien',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'elec',s:4,d:false},
-                {id:'jadiel',s:2,d:false},{id:'nicola',s:2,d:false} // Maçons : 2 slots
-            ];
-            users.forEach(u => {
-                if (curU === 'depot' && !u.d) return;
+            document.getElementById('v-admin').classList.remove('hidden'); 
+            document.getElementById('v-driver').classList.add('hidden');
+            let h = ""; 
+            const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
+            users.forEach(u => { 
+                if (curU==='depot' && !u.d) return; 
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                for(let d=0; d<5; d++) {
-                    h += `<td>`;
-                    for(let s=1; s<=u.s; s++) {
-                        let k = `${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {};
-                        if (curU === 'depot' && !dta.toDepot) continue;
-                        let disp = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''}" onclick="openEd('${k}')">${disp}</div>`;
-                    }
-                    h += `</td>`;
-                }
+                for(let d=0; d<5; d++) { 
+                    h += `<td>`; 
+                    for(let s=1; s<=u.s; s++) { 
+                        let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", col:'default'}; 
+                        if (curU==='depot' && !dta.toDepot) continue;
+                        let bg = (dta.text && dta.col && dta.col!=='default') ? `background:${dta.col};` : '';
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')"><b>${dta.chantier ? '['+dta.chantier.toUpperCase()+']' : ''}</b><br>${dta.text||'...'}</div>`;
+                    } 
+                    h += `</td>`; 
+                } 
                 h += `</tr>`;
-            });
+            }); 
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
-            for(let d=0; d<5; d++) {
-                let c = ""; for(let s=1; s<=4; s++) {
-                    let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
-                    if(dta && dta.text) c += `<div style="padding:12px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:8px;"><b>${dta.chantier?.toUpperCase() || ''}</b><br>${dta.text}</div>`;
-                }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${getDayDate(curW, d)}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = ""; document.getElementById('v-admin').classList.add('hidden');
+            for(let d=0; d<5; d++) { 
+                let dD = getDateFromWeek(curW, curY, d), c = ""; 
+                for(let s=1; s<=4; s++) { 
+                    let dta = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`]; 
+                    if(dta&&(dta.text||dta.chantier)) {
+                        let docs = ""; if(dta.files) dta.files.forEach(f => docs += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:15px; border-radius:12px; margin-top:10px; text-decoration:none; text-align:center; font-weight:bold;">📄 DOCUMENT JOINT</a>`);
+                        let matos = dta.matos ? `<div style="margin-top:10px; color:#166534; font-size:12px; background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bcf0da;"><b>📦 MATÉRIEL :</b><br>${dta.matos}</div>` : '';
+                        c += `<div style="padding:18px; border-left:8px solid #3b82f6; margin-bottom:15px; background:white; border-radius:15px; box-shadow:0 3px 6px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}${matos}${docs}</div>`;
+                    }
+                } 
+                v.innerHTML += `<div style="margin:20px 15px;"><b style="font-size:18px; color:var(--blue); display:block; margin-bottom:10px; border-bottom:2px solid var(--yellow);">${daysLong[d]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b>${c || '<p style="color:gray; font-style:italic;">Aucune mission.</p>'}</div>`; 
             }
         }
     }
 
-    function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", chantier:"", toDepot:false};
-        
-        // Mode lecture seule pour Dépôt et Chauffeurs
-        if(curU !== 'admin') {
-            document.getElementById('ed-controls').classList.add('hidden');
-            document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text || 'Pas de détails'}</p>`;
-        } else {
-            document.getElementById('ed-view-only').classList.add('hidden');
-            document.getElementById('ed-controls').classList.remove('hidden');
-            document.getElementById('e-chantier').value = d.chantier || "";
-            document.getElementById('e-input').value = d.text || "";
-            document.getElementById('e-depot').checked = !!d.toDepot;
-        }
-        document.getElementById('editor-overlay').style.display = 'flex';
-    }
+    const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    const cp = document.getElementById('cp'); 
+    colors.forEach(c => { 
+        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'#eff6ff':c; 
+        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; }; 
+        cp.appendChild(d); 
+    });
 
-    function saveTask() {
-        let v = document.getElementById('e-input').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, chantier:ch, toDepot:c}).then(() => { closeEditor(); });
-    }
-
+    function openEd(k) { curK = k; if(curU!=='admin' && curU!=='depot') return; let d = window.data[k]||{text:"",files:[],col:'default'}; currentFiles = d.files||[]; selectedCol = d.col||'default'; document.getElementById('e-chantier').value = d.chantier||""; document.getElementById('e-input').value = d.text||""; document.getElementById('e-matos').value = d.matos||""; document.getElementById('e-depot').checked = !!d.toDepot; document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel')&&!k.includes('nicola')); renderFileListAdmin(); document.getElementById('ed-controls').classList.remove('hidden'); document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('editor-overlay').style.display='flex'; }
+    function saveTask() { db.ref('planning_v18/'+curK).set({text: document.getElementById('e-input').value, matos: document.getElementById('e-matos').value, chantier: document.getElementById('e-chantier').value, files: currentFiles, toDepot: document.getElementById('e-depot').checked, col: selectedCol}).then(() => closeEditor()); }
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
-    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
-    function changeWeek(v) { curW = Math.max(1, curW + v); render(); }
-    
-    function applySearch() {
-        const q = document.getElementById('search-input').value.toLowerCase();
-        document.querySelectorAll('.slot').forEach(s => s.style.opacity = (q !== "" && !s.innerText.toLowerCase().includes(q)) ? "0.1" : "1");
-    }
-
+    function closeEditor() { document.getElementById('editor-overlay').style.display='none'; }
+    function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFileListAdmin(); } }); }
+    function renderFileListAdmin() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:11px; background:#f1f5f9; padding:8px; border-radius:10px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()" style="border:none; background:var(--danger); color:white; padding:4px 8px; border-radius:6px; cursor:pointer;">X</button></div>`); }
+    function changeWeek(v) { curW += v; render(); }
+    function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
     function showFullHistory() {
-        alert("Utilisez la barre de recherche pour filtrer le planning actuel.");
+        const q = document.getElementById('search-input').value.trim().toLowerCase(); if (q.length < 2) return alert("Saisir 2 lettres.");
+        let res = []; Object.keys(window.data).forEach(k => { let item = window.data[k]; if (item.chantier && item.chantier.toLowerCase().includes(q)) { let p = k.split('_'); let exactDate = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); res.push({date: exactDate.toLocaleDateString(), qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier}); } });
+        if (!res.length) return alert("Rien trouvé.");
+        let h = res.map(r => `<div class="hist-item"><b>${r.date} - ${r.qui}</b> : [${r.ch}] ${r.txt}</div>`).join('');
+        document.getElementById('ed-title').textContent = "HISTORIQUE : "+q.toUpperCase(); document.getElementById('ed-view-only').innerHTML = h; document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('editor-overlay').style.display='flex';
     }
 
     if(curU) login(curU);
