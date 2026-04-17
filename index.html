@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V101 - RH FIX</title>
+    <title>RBF Planning V102 - TOTAL FIX</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -27,20 +27,30 @@
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         .holiday-badge { display: inline-block; background: var(--yellow); color: var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-top: 5px; font-weight: 900; text-transform: uppercase; }
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: 0.2s; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
+        .is-to-depot { border-left: 6px solid var(--success) !important; }
+        .has-link { border-bottom: 4px solid #8b5cf6 !important; }
         #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
         .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
         .btn-auth { padding: 16px 8px; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; color: white; font-size: 12px; text-transform: uppercase; }
         #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 95%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 12px; text-align: left; }
+        .form-group label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: var(--blue); text-transform: uppercase; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
-        .rh-row { border-bottom: 1px solid #eee; padding: 10px 0; font-size: 12px; display: grid; grid-template-columns: 100px 1fr 1fr; gap: 10px; }
-        .rh-day-title { background: #f1f5f9; padding: 5px 10px; font-weight: bold; color: var(--blue); margin-top: 15px; border-radius: 5px; font-size: 13px; }
+        .rh-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .rh-table th { background: #f1f5f9; color: var(--blue); text-align: left; padding: 8px; border-bottom: 2px solid #ddd; }
+        .rh-table td { padding: 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
+
 <header>
     <div class="header-logo"><img src="logo.png"> <b style="color:var(--blue); font-size:14px; margin-left:10px;">PLANNING TRANSPORT</b></div>
     <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
@@ -61,15 +71,15 @@
 </div>
 
 <div id="app-content" class="hidden">
-    <div id="driver-tools-zone" class="driver-tools hidden" style="display:flex; gap:10px; padding:10px;">
-        <button class="btn-tool" style="background:var(--blue); flex:1; padding:15px; border:none; border-radius:12px; color:white; font-weight:bold;" onclick="openReport('pointage')">🕒 POINTAGE</button>
-        <button class="btn-tool" style="background:var(--success); flex:1; padding:15px; border:none; border-radius:12px; color:white; font-weight:bold;" onclick="openReport('journalier')">🚛 RAPPORT</button>
+    <div id="driver-tools-zone" class="hidden" style="display:flex; gap:10px; padding:15px;">
+        <button onclick="openReport('pointage')" style="flex:1; background:var(--blue); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">🕒 POINTAGE</button>
+        <button onclick="openReport('journalier')" style="flex:1; background:var(--success); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">🚛 RAPPORT</button>
     </div>
 
     <div id="admin-search-zone" class="search-container hidden">
-        <input type="text" id="search-input" placeholder="🔍 Chantier..." oninput="applySearch()">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher chantier..." oninput="applySearch()">
         <button class="btn-nav-admin" onclick="showHistory()">HISTO</button>
-        <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH()">📊 RAPPORTS (RH)</button>
+        <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH()">📊 RH (HEURES)</button>
     </div>
     
     <div class="week-nav">
@@ -88,28 +98,25 @@
 </div>
 
 <div id="rh-overlay">
-    <div class="editor-box">
-        <h3 style="text-align:center; color:var(--blue); margin-top:0;">📊 Recapitulatif Semaine (RH)</h3>
-        <p id="rh-week-info" style="text-align:center; font-weight:bold; color:var(--success);"></p>
-        <div id="rh-content" style="margin:20px 0; border-top:1px solid #eee;">
-            </div>
-        <button onclick="document.getElementById('rh-overlay').style.display='none'" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">FERMER</button>
+    <div class="editor-box" style="max-width: 700px;">
+        <h3 style="text-align:center; color:var(--blue); margin-top:0;">📊 Recapitulatif RH - Semaine <span id="rh-wk"></span></h3>
+        <div id="rh-content"></div>
+        <button onclick="document.getElementById('rh-overlay').style.display='none'" style="width:100%; margin-top:20px; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">FERMER</button>
     </div>
 </div>
 
 <div id="history-overlay">
     <div class="editor-box">
-        <h3 style="text-align:center; color:var(--blue); margin-top:0;">📜 Historique Chantier</h3>
-        <p id="hist-chantier-name" style="text-align:center; font-weight:bold; color:var(--success);"></p>
-        <div id="history-results" style="margin:20px 0; max-height:400px; overflow-y:auto;"></div>
-        <button onclick="document.getElementById('history-overlay').style.display='none'" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">FERMER</button>
+        <h3 id="hist-chantier-name" style="text-align:center; color:var(--blue);">Historique</h3>
+        <div id="history-results" style="max-height:400px; overflow-y:auto;"></div>
+        <button onclick="document.getElementById('history-overlay').style.display='none'" style="width:100%; margin-top:10px; padding:15px; border:none; border-radius:12px; background:#f1f5f9;">FERMER</button>
     </div>
 </div>
 
 <div id="report-overlay">
     <div class="editor-box">
-        <h3 id="rep-title" style="text-align:center; color:var(--blue); margin-top:0;"></h3>
-        <div class="form-group"><label>DATE :</label><input type="date" id="rep-date"></div>
+        <h3 id="rep-title" style="text-align:center; color:var(--blue);">Rapport</h3>
+        <div class="form-group"><label>Date :</label><input type="date" id="rep-date"></div>
         <div id="form-pointage" class="hidden">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div class="form-group"><label>Début :</label><input type="time" id="p-start"></div>
@@ -118,31 +125,27 @@
             <div class="form-group"><label>Pause (min) :</label><input type="number" id="p-pause" value="45"></div>
         </div>
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>Départ :</label><input type="text" id="rj-dep"></div>
-            <div class="form-group"><label>Arrivée :</label><input type="text" id="rj-arr"></div>
-            <div class="form-group"><label>Détails :</label><textarea id="rj-text" style="height:100px;"></textarea></div>
+            <div class="form-group"><label>Lieu Départ :</label><input type="text" id="rj-dep"></div>
+            <div class="form-group"><label>Détails voyage :</label><textarea id="rj-text" style="height:80px;"></textarea></div>
         </div>
-        <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
+        <button onclick="saveReport()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">ENVOYER</button>
         <button onclick="closeReport()" style="width:100%; margin-top:10px; border:none; background:none; color:#94a3b8;">ANNULER</button>
     </div>
 </div>
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
-        <div id="ed-view-only" class="hidden"></div>
-        <div id="ed-controls">
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Chantier">
-            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd;" placeholder="Mission"></textarea>
-            <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:60px; border:1px solid var(--success); padding:12px; border-radius:12px;" placeholder="Logistique"></textarea></div>
-            <div class="color-picker" id="cp"></div>
-            <div id="file-list-admin"></div>
-            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold;">📎 FICHIER</button>
-            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
-            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold;">SUPPRIMER</button>
-        </div>
+        <h3 style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Édition Mission</h3>
+        <input type="text" id="e-chantier" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Nom du chantier">
+        <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:10px; border:1px solid #ddd;" placeholder="Détails de la mission"></textarea>
+        <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:60px; border:1px solid var(--success); padding:12px; border-radius:10px; margin-top:10px;" placeholder="Logistique / Matos spécifique"></textarea></div>
+        <div class="color-picker" id="cp"></div>
+        <div id="file-list-admin" style="margin-bottom:10px;"></div>
+        <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold;">📎 AJOUTER UN DOCUMENT</button>
+        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>ALERTE DÉPÔT</b></label>
+        <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold;">SAUVEGARDER</button>
+        <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold;">SUPPRIMER LA MISSION</button>
         <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8;">FERMER</button>
     </div>
 </div>
@@ -151,6 +154,13 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default';
+
+    const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    colors.forEach(c => {
+        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
+        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
+        document.getElementById('cp').appendChild(d);
+    });
 
     function getWeek(d) {
         const date = new Date(d.getTime()); date.setHours(0,0,0,0);
@@ -167,7 +177,6 @@
         return ISOweekStart;
     }
 
-    // AUTH
     function askCode(u) { 
         let p = prompt("Code " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
@@ -183,81 +192,72 @@
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
 
-    // FONCTION RH : VOIR TOUTES LES HEURES DE LA SEMAINE
     function openRH() {
         document.getElementById('rh-overlay').style.display = 'flex';
-        document.getElementById('rh-week-info').innerText = `SEMAINE ${curW} (${curY})`;
+        document.getElementById('rh-wk').innerText = curW;
         const container = document.getElementById('rh-content');
-        container.innerHTML = "⏳ Chargement des données...";
-
+        container.innerHTML = "Chargement...";
         db.ref('pointages_v18').once('value', s => {
-            const allPoints = s.val() || {};
-            let html = "";
-
-            for(let i=0; i<5; i++) { // Du Lundi au Vendredi
-                let d = getDateFromWeek(curW, curY, i);
-                let iso = d.toISOString().split('T')[0];
-                html += `<div class="rh-day-title">${d.toLocaleDateString('fr-FR', {weekday:'long', day:'2-digit', month:'long'})}</div>`;
-                
-                let dayData = allPoints[iso];
-                if(!dayData) {
-                    html += `<div style="padding:10px; font-size:11px; color:#999;">Aucun rapport enregistré.</div>`;
-                } else {
-                    html += `<div class="rh-row" style="font-weight:bold; background:#fafafa;"><span>Gars</span><span>Heures</span><span>Trajet / Infos</span></div>`;
-                    Object.values(dayData).forEach(r => {
-                        let heures = r.type === "POINTAGE" ? `<b>${r.debut || '?'} ➔ ${r.fin || '?'}</b><br><small>Pause: ${r.p_pause || '45'}m</small>` : "---";
-                        let trajet = r.type === "VOYAGE" ? `🚩 ${r.dep || ''} ➔ 🏁 ${r.txt || ''}` : "---";
-                        if(r.type === "POINTAGE") {
-                             html += `<div class="rh-row"><span>${r.user.toUpperCase()}</span><span>${heures}</span><span>${trajet}</span></div>`;
-                        } else {
-                             // On essaie de fusionner visuellement si c'est le même user mais un autre type de record
-                             html += `<div class="rh-row" style="border-bottom-style: dotted;"><span>${r.user.toUpperCase()}</span><span>Rapport Voyage</span><span>${trajet}</span></div>`;
-                        }
+            const all = s.val() || {}; let h = "";
+            for(let i=0; i<5; i++) {
+                let d = getDateFromWeek(curW, curY, i); let iso = d.toISOString().split('T')[0];
+                h += `<div style="background:#f1f5f9; padding:8px; margin-top:15px; font-weight:bold; border-radius:5px;">${d.toLocaleDateString('fr-FR', {weekday:'long', day:'2-digit', month:'2-digit'})}</div>`;
+                if(!all[iso]) { h += "<div style='font-size:11px; padding:5px; color:#999;'>Aucun rapport</div>"; }
+                else {
+                    h += `<table class="rh-table"><thead><tr><th>NOM</th><th>HEURES</th><th>INFOS</th></tr></thead><tbody>`;
+                    Object.values(all[iso]).forEach(r => {
+                        let hrs = r.type==="POINTAGE" ? `${r.debut} - ${r.fin} (${r.p_pause}m)` : "---";
+                        let nfo = r.type==="VOYAGE" ? `${r.dep} > ${r.txt}` : "---";
+                        h += `<tr><td><b>${r.user.toUpperCase()}</b></td><td>${hrs}</td><td>${nfo}</td></tr>`;
                     });
+                    h += `</tbody></table>`;
                 }
             }
-            container.innerHTML = html;
+            container.innerHTML = h;
         });
     }
 
-    // HISTORIQUE
     function showHistory() {
-        const query = document.getElementById('search-input').value.trim().toLowerCase();
-        if (!query) return alert("Tapez un nom de chantier.");
-        document.getElementById('history-overlay').style.display = 'flex';
+        const q = document.getElementById('search-input').value.trim().toLowerCase();
+        if(!q) return; document.getElementById('history-overlay').style.display='flex';
         db.ref('planning_v18').once('value', s => {
-            const allData = s.val() || {}; let html = "";
-            for (let key in allData) {
-                let m = allData[key];
-                if (m.chantier && m.chantier.toLowerCase().includes(query)) {
-                    let p = key.split('_');
-                    let dt = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])).toLocaleDateString('fr-FR');
-                    html += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${dt} (S${p[1]})</b> - ${p[2].toUpperCase()}<br>${m.text}</div>`;
+            const d = s.val() || {}; let h = "";
+            for(let k in d) {
+                if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) {
+                    let p = k.split('_'); let dt = getDateFromWeek(p[1], p[0], parseInt(p[3]));
+                    h += `<div style="padding:10px; border-bottom:1px solid #eee;">
+                        <span style="font-size:10px; background:var(--blue); color:white; padding:2px 5px; border-radius:4px;">${dt.toLocaleDateString('fr-FR')}</span> 
+                        <b>${p[2].toUpperCase()}</b> : ${d[k].text}</div>`;
                 }
             }
-            document.getElementById('history-results').innerHTML = html || "Rien trouvé.";
+            document.getElementById('history-results').innerHTML = h || "Aucun résultat";
         });
     }
 
-    // LOGIQUE DE BASE
-    async function fetchHolidays(year) { try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`); holidays = await r.json(); render(); } catch(e) { render(); } }
-    
+    async function fetchHolidays(y) { try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`); holidays = await r.json(); render(); } catch(e){ render(); } }
+
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
-        const days = ["LUN","MAR","MER","JEU","VEN"];
-        if (curU === 'admin' || curU === 'depot') {
+        const days = ["LUN","MAR","MER","JEU","VEN"], hIdx = [];
+        for(let i=0; i<5; i++) {
+            let d = getDateFromWeek(curW, curY, i); let iso = d.toISOString().split('T')[0];
+            if(holidays[iso]) { document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}<br><span class="holiday-badge">${holidays[iso]}</span>`; hIdx.push(i); }
+            else document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}`;
+        }
+
+        if(curU==='admin' || curU==='depot') {
             document.getElementById('v-admin').classList.remove('hidden');
-            document.getElementById('v-driver').classList.add('hidden');
-            let h = ""; const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
+            let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
-                if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dI=0; dI<5; dI++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {text:"", chantier:""};
+                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
+                        if(curU==='depot' && !dta.toDepot) continue;
+                        let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                         let txt = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                        h += `<div class="slot ${dta.text?'filled':''}" onclick="openEd('${k}')">${txt}</div>`;
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -267,40 +267,65 @@
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let dI=0; dI<5; dI++) {
-                let dD = getDateFromWeek(curW, curY, dI);
-                let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
+                let dD = getDateFromWeek(curW, curY, dI); let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
                 for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
-                    if(dta && dta.text) cards += `<div style="padding:10px; background:white; margin-bottom:5px; border-radius:10px; border-left:4px solid var(--blue);"><b>${dta.chantier || 'MISSION'}</b><br>${dta.text}</div>`;
+                    if(dta && dta.text) {
+                        let fl = ""; dta.files?.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; border-radius:8px; margin-top:5px; text-decoration:none; text-align:center;">📎 VOIR DOCUMENT</a>`);
+                        cards += `<div style="padding:12px; background:white; margin-bottom:8px; border-radius:12px; border-left:5px solid ${dta.col!=='default'?dta.col:'#3b82f6'};"><b>${dta.chantier?.toUpperCase() || ''}</b><p>${dta.text}</p>${dta.matos?`<div style='font-size:11px; color:green;'>📦 ${dta.matos}</div>`:''}${fl}</div>`;
+                    }
                 }
-                v.innerHTML += `<div style="margin-bottom:15px;"><b>${days[dI]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><div>${cards || '---'}</div></div>`;
+                v.innerHTML += `<div><b style="color:var(--blue);">${days[dI]} ${dD.getDate()}/${dD.getMonth()+1}</b><div style="margin:8px 0 15px 0;">${cards || '---'}</div></div>`;
             }
         }
     }
 
-    function openReport(type) { activeReportType = type; document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; document.getElementById('form-pointage').classList.toggle('hidden', type!=='pointage'); document.getElementById('form-journalier').classList.toggle('hidden', type!=='journalier'); document.getElementById('report-overlay').style.display='flex'; }
-    function closeReport() { document.getElementById('report-overlay').style.display='none'; }
-    function saveReport() { 
-        const d = document.getElementById('rep-date').value; 
-        let rep = { user: curU, type: activeReportType==="pointage"?"POINTAGE":"VOYAGE", date: d };
-        if(activeReportType==='pointage') { rep.debut=document.getElementById('p-start').value; rep.fin=document.getElementById('p-end').value; rep.p_pause=document.getElementById('p-pause').value; }
-        else { rep.dep=document.getElementById('rj-dep').value; rep.txt=document.getElementById('rj-text').value; }
-        db.ref(`pointages_v18/${d}/${curU}_${Date.now()}`).set(rep).then(() => { alert("Enregistré !"); closeReport(); });
+    function openEd(k) { 
+        curK = k; let d = window.data[k] || {files:[]}; 
+        if(curU!=='admin') return;
+        currentFiles = d.files || []; selectedCol = d.col || 'default';
+        document.getElementById('e-chantier').value = d.chantier || "";
+        document.getElementById('e-input').value = d.text || "";
+        document.getElementById('e-matos').value = d.matos || "";
+        document.getElementById('e-depot').checked = !!d.toDepot;
+        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
+        renderFiles(); document.getElementById('editor-overlay').style.display='flex';
     }
 
-    function openEd(k) { curK=k; let d=window.data[k]||{}; if(curU!=='admin') return; document.getElementById('e-chantier').value=d.chantier||""; document.getElementById('e-input').value=d.text||""; document.getElementById('editor-overlay').style.display='flex'; }
-    function saveTask() { db.ref('planning_v18/'+curK).update({text:document.getElementById('e-input').value, chantier:document.getElementById('e-chantier').value}).then(()=>closeEditor()); }
-    function closeEditor() { document.getElementById('editor-overlay').style.display='none'; }
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(()=>closeEditor()); }
-    function changeWeek(v) { curW+=v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} render(); }
+    function uploadFile(i) {
+        if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset');
+        fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{
+            if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); }
+        });
+    }
+    function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px;">📄 ${f.name} <span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red">X</span></div>`); }
+
+    function saveTask() { 
+        db.ref('planning_v18/'+curK).set({
+            text: document.getElementById('e-input').value,
+            chantier: document.getElementById('e-chantier').value,
+            matos: document.getElementById('e-matos').value,
+            toDepot: document.getElementById('e-depot').checked,
+            col: selectedCol,
+            files: currentFiles
+        }).then(() => closeEditor());
+    }
+
+    function openReport(t) { activeT=t; document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage'); document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier'); document.getElementById('report-overlay').style.display='flex'; }
+    function saveReport() {
+        const d = document.getElementById('rep-date').value;
+        let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d };
+        if(activeT==='pointage'){ r.debut=document.getElementById('p-start').value; r.fin=document.getElementById('p-end').value; r.p_pause=document.getElementById('p-pause').value; }
+        else { r.dep=document.getElementById('rj-dep').value; r.txt=document.getElementById('rj-text').value; }
+        db.ref(`pointages_v18/${d}/${curU}_${Date.now()}`).set(r).then(()=>{ alert("Envoyé !"); document.getElementById('report-overlay').style.display='none'; });
+    }
+
+    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function closeReport() { document.getElementById('report-overlay').style.display = 'none'; }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
+    function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); render(); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-
-    const colors_list = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
-    colors_list.forEach(c => {
-        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'#eee':c;
-        d.onclick = () => { selectedCol = c; }; document.getElementById('cp').appendChild(d);
-    });
 
     if(curU) login(curU);
 </script>
