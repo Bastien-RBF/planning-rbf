@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V95 - OPTIMISÉ</title>
+    <title>RBF Planning V96 - FIX DATE</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; text-rendering: optimizeLegibility; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
         header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .header-logo img { height: 40px; }
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -29,8 +29,7 @@
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         .is-holiday-col { background: #fffbeb !important; }
         .holiday-badge { display: inline-block; background: var(--yellow); color: var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-top: 5px; font-weight: 900; text-transform: uppercase; }
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: transform 0.1s; }
-        .slot:active { transform: scale(0.98); }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
         .slot.filtered-out { display: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
@@ -105,15 +104,15 @@
                 <div class="form-group"><label>Heure Début :</label><input type="time" id="p-start"></div>
                 <div class="form-group"><label>Heure Fin :</label><input type="time" id="p-end"></div>
             </div>
-            <div class="form-group"><label>Total Pauses (en minutes) :</label><input type="number" id="p-pause" placeholder="Ex: 60"></div>
+            <div class="form-group"><label>Total Pauses (min) :</label><input type="number" id="p-pause" placeholder="Ex: 60"></div>
         </div>
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>Lieu de Départ :</label><input type="text" id="rj-dep" placeholder="Ex: Dépôt"></div>
-            <div class="form-group"><label>Lieu d'Arrivée :</label><input type="text" id="rj-arr" placeholder="Ex: Chantier X"></div>
-            <div class="form-group"><label>Détail du voyage :</label><textarea id="rj-text" style="height:100px;" placeholder="Détails..."></textarea></div>
+            <div class="form-group"><label>Départ :</label><input type="text" id="rj-dep"></div>
+            <div class="form-group"><label>Arrivée :</label><input type="text" id="rj-arr"></div>
+            <div class="form-group"><label>Détail :</label><textarea id="rj-text" style="height:100px;"></textarea></div>
         </div>
-        <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; margin-top:10px;">ENREGISTRER</button>
-        <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold;">ANNULER</button>
+        <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
+        <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8;">ANNULER</button>
     </div>
 </div>
 
@@ -122,36 +121,26 @@
         <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
         <div id="ed-view-only" class="hidden"></div>
         <div id="ed-controls">
-            <label style="font-size:11px; font-weight:bold;">NOM DU CHANTIER :</label>
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;">
-            <label style="font-size:11px; font-weight:bold;">MISSION :</label>
-            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd;"></textarea>
-            <div id="zone-matos" class="hidden">
-                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 LOGISTIQUE :</label>
-                <textarea id="e-matos" style="width:100%; height:60px; border:1px solid var(--success); padding:12px; border-radius:12px;"></textarea>
-            </div>
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Chantier">
+            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd;" placeholder="Mission"></textarea>
+            <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:60px; border:1px solid var(--success); padding:12px; margin-top:10px;"></textarea></div>
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px;">📎 AJOUTER UN DOCUMENT</button>
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold;">📎 FICHIER</button>
             <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
             <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
             <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold;">SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold;">FERMER</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8;">FERMER</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
-    const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-
     let holidays = JSON.parse(localStorage.getItem('rbf_holidays') || '{}');
-    let curDate = new Date();
-    let curW = getWeek(curDate), curY = curDate.getFullYear();
-    let curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default', activeReportType = '';
+    let curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
 
     function getWeek(d) {
         const date = new Date(d.getTime()); date.setHours(0,0,0,0);
@@ -172,12 +161,13 @@
         if(holidays[year]) return render();
         try { 
             const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`); 
-            const data = await r.json(); holidays[year] = data; 
+            holidays[year] = await r.json(); 
             localStorage.setItem('rbf_holidays', JSON.stringify(holidays));
             render(); 
         } catch(e) { render(); }
     }
 
+    // Palette Couleurs
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colors.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
@@ -186,11 +176,9 @@
     });
 
     function askCode(u) { 
-        let p = prompt("Code " + u.toUpperCase()); 
-        let codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
+        let p = prompt("Code " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
     }
-
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
@@ -200,72 +188,18 @@
         fetchHolidays(curY);
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
-
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-
-    function openReport(type) {
-        activeReportType = type;
-        document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE' : '🚛 RAPPORT VOYAGE';
-        document.getElementById('form-pointage').classList.toggle('hidden', type !== 'pointage');
-        document.getElementById('form-journalier').classList.toggle('hidden', type !== 'journalier');
-        document.getElementById('report-overlay').style.display = 'flex';
-    }
-    function closeReport() { document.getElementById('report-overlay').style.display = 'none'; }
-
-    function saveReport() {
-        const today = new Date().toISOString().split('T')[0];
-        let reportData = { user: curU, date: today, timestamp: Date.now() };
-        if(activeReportType === 'pointage') {
-            reportData.type = "POINTAGE";
-            reportData.debut = document.getElementById('p-start').value;
-            reportData.fin = document.getElementById('p-end').value;
-            reportData.pause = document.getElementById('p-pause').value;
-            if(!reportData.debut) return alert("Heure début ?");
-        } else {
-            reportData.type = "VOYAGE";
-            reportData.dep = document.getElementById('rj-dep').value;
-            reportData.arr = document.getElementById('rj-arr').value;
-            reportData.txt = document.getElementById('rj-text').value;
-            if(!reportData.dep) return alert("Lieu départ ?");
-        }
-        db.ref(`pointages_v18/${today}/${curU}_${Date.now()}`).set(reportData).then(() => {
-            alert("Enregistré !");
-            closeReport();
-        });
-    }
-
-    function showFullHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if (q.length < 2) return alert("Tapez au moins 2 lettres.");
-        let res = []; 
-        Object.keys(window.data).forEach(k => {
-            let item = window.data[k]; 
-            if (item.chantier && item.chantier.toLowerCase().includes(q)) {
-                let p = k.split('_'); 
-                let d = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
-                res.push({qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier, date: d.toLocaleDateString('fr-FR'), ts: d.getTime()});
-            }
-        });
-        if (!res.length) return alert("Aucun résultat.");
-        res.sort((a,b) => b.ts - a.ts);
-        let h = `<div style="text-align:left; max-height:400px; overflow-y:auto;">`;
-        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:10px;"><b>${r.date} - ${r.qui}</b><br>${r.ch.toUpperCase()}: ${r.txt}</div>`);
-        h += `</div>`;
-        document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
-        document.getElementById('ed-view-only').innerHTML = h;
-        document.getElementById('ed-view-only').classList.remove('hidden'); 
-        document.getElementById('ed-controls').classList.add('hidden');
-        document.getElementById('editor-overlay').style.display = 'flex';
-    }
 
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
-        const days = ["LUN","MAR","MER","JEU","VEN"]; let hIdx = [];
-        const yearHolidays = holidays[curY] || {};
+        const days = ["LUN","MAR","MER","JEU","VEN"], hIdx = [], yearH = holidays[curY] || {};
+        
         for(let i=0; i<5; i++) {
-            let d = getDateFromWeek(curW, curY, i); let iso = d.toISOString().split('T')[0];
-            if (yearHolidays[iso]) {
-                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}<br><span class="holiday-badge">${yearHolidays[iso]}</span>`;
+            let d = getDateFromWeek(curW, curY, i);
+            // FIX: On formatte la date localement pour la comparaison avec l'API
+            let iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            if (yearH[iso]) {
+                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}<br><span class="holiday-badge">${yearH[iso]}</span>`;
                 hIdx.push(i);
             } else { document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`; }
         }
@@ -293,8 +227,9 @@
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let dI=0; dI<5; dI++) {
-                let dD = getDateFromWeek(curW, curY, dI); let iso = dD.toISOString().split('T')[0];
-                let hB = yearHolidays[iso] ? `<span class="holiday-badge" style="margin-left:10px;">${yearHolidays[iso]}</span>` : "";
+                let dD = getDateFromWeek(curW, curY, dI);
+                let iso = dD.getFullYear() + '-' + String(dD.getMonth() + 1).padStart(2, '0') + '-' + String(dD.getDate()).padStart(2, '0');
+                let hB = yearH[iso] ? `<span class="holiday-badge" style="margin-left:10px;">${yearH[iso]}</span>` : "";
                 let c = ""; for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
@@ -307,33 +242,30 @@
         }
     }
 
-    function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
-        if(curU !== 'admin' && curU !== 'depot') return;
-        if(curU !== 'admin') {
-             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-             document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p>${d.text}</p>`;
-             document.getElementById('editor-overlay').style.display = 'flex'; return;
+    // Fonctions Rapports / Editor (Stables)
+    function openReport(type) { activeReportType = type; document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE' : '🚛 RAPPORT VOYAGE'; document.getElementById('form-pointage').classList.toggle('hidden', type !== 'pointage'); document.getElementById('form-journalier').classList.toggle('hidden', type !== 'journalier'); document.getElementById('report-overlay').style.display = 'flex'; }
+    function closeReport() { document.getElementById('report-overlay').style.display = 'none'; }
+    function saveReport() {
+        const today = new Date().toISOString().split('T')[0];
+        let reportData = { user: curU, date: today, timestamp: Date.now() };
+        if(activeReportType === 'pointage') {
+            reportData.type = "POINTAGE"; reportData.debut = document.getElementById('p-start').value; reportData.fin = document.getElementById('p-end').value; reportData.pause = document.getElementById('p-pause').value;
+            if(!reportData.debut) return alert("Heure début ?");
+        } else {
+            reportData.type = "VOYAGE"; reportData.dep = document.getElementById('rj-dep').value; reportData.arr = document.getElementById('rj-arr').value; reportData.txt = document.getElementById('rj-text').value;
+            if(!reportData.dep) return alert("Lieu départ ?");
         }
-        currentFiles = d.files || []; selectedCol = d.col || 'default';
-        document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
-        document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
-        document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot;
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-        renderFiles();
-        document.getElementById('editor-overlay').style.display = 'flex';
+        db.ref(`pointages_v18/${today}/${curU}_${Date.now()}`).set(reportData).then(() => { alert("Enregistré !"); closeReport(); });
     }
-
-    function saveTask() {
-        let v = document.getElementById('e-input').value, m = document.getElementById('e-matos').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked;
-        db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => closeEditor());
-    }
+    function openEd(k) { curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'}; if(curU !== 'admin' && curU !== 'depot') return; if(curU !== 'admin') { document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p>${d.text}</p>`; document.getElementById('editor-overlay').style.display = 'flex'; return; } currentFiles = d.files || []; selectedCol = d.col || 'default'; document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden'); document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot; document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); renderFiles(); document.getElementById('editor-overlay').style.display = 'flex'; }
+    function saveTask() { let v = document.getElementById('e-input').value, m = document.getElementById('e-matos').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked; db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => closeEditor()); }
     function changeWeek(v) { curW += v; if(curW > 52) { curW = 1; curY++; fetchHolidays(curY); } else if(curW < 1) { curW = 52; curY--; fetchHolidays(curY); } else render(); }
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFiles(); } }); }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
     function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; margin-bottom:5px;">📄 ${f.name} <button onclick="currentFiles.splice(${i},1);renderFiles()">X</button></div>`); }
+    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFiles(); } }); }
+    function showFullHistory() { const q = document.getElementById('search-input').value.trim().toLowerCase(); if (q.length < 2) return alert("Tapez au moins 2 lettres."); let res = []; Object.keys(window.data).forEach(k => { let item = window.data[k]; if (item.chantier && item.chantier.toLowerCase().includes(q)) { let p = k.split('_'); let d = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); res.push({qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier, date: d.toLocaleDateString('fr-FR'), ts: d.getTime()}); } }); if (!res.length) return alert("Aucun résultat."); res.sort((a,b) => b.ts - a.ts); let h = `<div style="text-align:left; max-height:400px; overflow-y:auto;">`; res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:10px;"><b>${r.date} - ${r.qui}</b><br>${r.ch.toUpperCase()}: ${r.txt}</div>`); h += `</div>`; document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase(); document.getElementById('ed-view-only').innerHTML = h; document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('editor-overlay').style.display = 'flex'; }
 
     if(curU) login(curU);
 </script>
