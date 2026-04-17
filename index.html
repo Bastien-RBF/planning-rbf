@@ -3,143 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V107</title>
+    <title>RBF Planning V108</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --green: #10b981; --danger: #ef4444; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 50px; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --green: #10b981; --bg: #f4f7f9; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
         
-        /* HEADER & LOGIN STYLE IMAGE */
-        header { background: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--yellow); position: sticky; top:0; z-index:100; }
-        .login-container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        /* LOGIN STYLE (IMAGE 2) */
+        .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         .btn-login { 
-            width: 100%; max-width: 350px; padding: 18px; margin: 8px; border-radius: 15px; 
+            width: 100%; max-width: 400px; padding: 18px; margin: 8px 0; border-radius: 12px; 
             border: none; color: white; font-weight: bold; font-size: 16px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;
         }
-        .bg-blue { background: var(--blue); }
-        .bg-green { background: var(--green); }
+        .btn-login:active { transform: scale(0.98); }
+        .grid-login { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
 
-        /* PLANNING TABLE */
-        .table-wrap { padding: 15px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 20px; min-width: 900px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        th { background: var(--blue); color: white; padding: 15px; font-size: 12px; text-transform: uppercase; }
-        td { border: 0.5px solid #e2e8f0; padding: 6px; vertical-align: top; }
-        .user-label { background: #f8fafc; font-weight: 800; color: var(--blue); text-align: center; position: sticky; left: 0; border-right: 3px solid var(--yellow) !important; width: 100px; }
-        .is-ferie { background: #fee2e2 !important; color: #b91c1c !important; }
+        /* HEADER & SEARCH (IMAGE 4) */
+        header { background: white; padding: 10px 20px; border-bottom: 4px solid var(--yellow); text-align: center; }
+        .search-bar { 
+            display: flex; align-items: center; gap: 10px; background: white; 
+            padding: 10px 20px; border-bottom: 1px solid #e2e8f0;
+        }
+        .search-input { flex: 1; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        .btn-tool { padding: 10px 15px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
-        /* SLOTS MISSION STYLE IMAGE */
+        /* PLANNING TABLE (IMAGE 1 & 4) */
+        .table-wrap { padding: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 10px; min-width: 1100px; border: 1px solid #e2e8f0; }
+        th { background: var(--blue); color: white; padding: 12px; font-size: 11px; text-transform: uppercase; border-right: 1px solid #334155; }
+        td { border: 0.5px solid #edf2f7; padding: 8px; vertical-align: top; }
+        .user-col { background: #fff; font-weight: 800; color: var(--blue); text-align: center; position: sticky; left: 0; border-right: 4px solid var(--yellow) !important; width: 120px; z-index: 5; font-size: 13px; }
+        .is-ferie { background: #fff1f2 !important; color: #e11d48 !important; }
+
+        /* MISSION SLOTS */
         .slot { 
-            font-size: 11px; padding: 10px; margin-bottom: 5px; border-radius: 10px; 
-            background: #fff; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px;
+            font-size: 12px; padding: 12px; margin-bottom: 8px; border-radius: 10px; 
+            background: #fff; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 50px; transition: 0.2s;
         }
-        .slot.filled { background: #e0e7ff; border: 1px solid #4338ca; color: var(--blue); font-weight: 600; }
-        .slot.is-depot { border-left: 6px solid var(--green); }
+        .slot.filled { background: #eef2ff; border: 1px solid #312e81; color: var(--blue); font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .slot.is-depot { border-left: 5px solid var(--green); }
 
-        /* MODALE STYLE IMAGE */
-        .overlay { position: fixed; inset: 0; background: rgba(27, 46, 88, 0.85); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .box { background: white; padding: 25px; border-radius: 30px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-        .box h2 { color: var(--blue); margin-top: 0; font-size: 20px; }
-        input, textarea { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 12px; margin-bottom: 12px; font-size: 15px; font-family: inherit; box-sizing: border-box; }
-        .btn-main { width: 100%; padding: 16px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; }
+        /* MODALE MISSION (IMAGE 3) */
+        .overlay { position: fixed; inset: 0; background: rgba(30, 41, 59, 0.7); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
+        .box { background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .box h2 { color: var(--blue); margin: 0 0 20px 0; font-size: 22px; }
+        input, textarea { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
+        .btn-save { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--blue); color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
         
         .hidden { display: none !important; }
-        .hist-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<header>
-    <img src="https://i.ibb.co/9G9v3vP/logo-rbf.png" height="50" onerror="this.src='logo.png'">
-</header>
-
-<div id="login-screen" class="login-container">
-    <button class="btn-login bg-blue" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
-    <button class="btn-login bg-green" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 370px;">
-        <button class="btn-login bg-blue" onclick="askCode('interne')">🚛 INTERNE</button>
-        <button class="btn-login bg-blue" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-        <button class="btn-login bg-blue" onclick="askCode('jadiel')">👷 JADIEL</button>
-        <button class="btn-login bg-blue" onclick="askCode('nicola')">👷 NICOLA</button>
+<div id="login-screen" class="login-screen">
+    <img src="logo.png" style="width:220px; margin-bottom:40px;">
+    <button class="btn-login" style="background:var(--blue)" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+    <button class="btn-login" style="background:var(--green)" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+    <div class="grid-login">
+        <button class="btn-login" style="background:var(--blue)" onclick="askCode('interne')">🚛 INTERNE</button>
+        <button class="btn-login" style="background:var(--blue)" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+        <button class="btn-login" style="background:var(--blue)" onclick="askCode('jadiel')">👷 JADIEL</button>
+        <button class="btn-login" style="background:var(--blue)" onclick="askCode('nicola')">👷 NICOLA</button>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
-    <div id="admin-bar" class="hidden" style="padding:15px; background:white; border-bottom:1px solid #ddd; display:flex; gap:10px;">
-        <input type="text" id="search-in" placeholder="🔍 Rechercher chantier..." oninput="search()" style="margin:0; flex:1;">
-        <button class="btn-main bg-blue" style="width:auto; padding:10px 15px;" onclick="openHistory()">HISTO</button>
-        <button class="btn-main bg-green" style="width:auto; padding:10px 15px;" onclick="openRecap()">📊 HEURES</button>
+    <header><img src="logo.png" height="50"></header>
+    
+    <div class="search-bar" id="admin-tools">
+        <input type="text" id="search-q" class="search-input" placeholder="🔍 Rechercher chantier..." oninput="doSearch()">
+        <button class="btn-tool" style="background:#1e293b" onclick="openHisto()">HISTO</button>
+        <button class="btn-tool" style="background:var(--green)" onclick="openRecap()">📊 HEURES</button>
     </div>
 
-    <button id="btn-pointage" class="btn-login bg-green hidden" style="max-width:95%; margin: 15px auto;" onclick="openPointage()">⏰ SAISIR MES HEURES (LIBRE)</button>
+    <button id="btn-p" class="btn-login hidden" style="background:var(--green); margin: 15px auto; display:block;" onclick="openP()">⏰ SAISIR MES HEURES / RAPPORTS</button>
 
-    <div style="display:flex; justify-content:center; align-items:center; gap:20px; padding:15px;">
-        <button class="btn-main bg-blue" style="width:40px;" onclick="changeWeek(-1)">◀</button>
-        <b id="wk-disp" style="color:var(--blue); font-size:18px;"></b>
-        <button class="btn-main bg-blue" style="width:40px;" onclick="changeWeek(1)">▶</button>
+    <div style="display:flex; justify-content:center; align-items:center; gap:25px; padding:20px;">
+        <button class="btn-tool" style="background:var(--blue); border-radius:50%; width:40px; hieght:40px;" onclick="changeW(-1)">◀</button>
+        <b id="wk-txt" style="color:var(--blue); font-size:20px; text-transform: uppercase;"></b>
+        <button class="btn-tool" style="background:var(--blue); border-radius:50%; width:40px; hieght:40px;" onclick="changeW(1)">▶</button>
     </div>
 
     <div id="v-admin" class="table-wrap hidden">
         <table>
             <thead>
-                <tr><th class="user-label">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr>
+                <tr><th class="user-col">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr>
             </thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    <div id="v-driver" class="hidden" style="padding:10px;"></div>
+    <div id="v-driver" class="hidden" style="padding:15px;"></div>
 </div>
 
-<div id="md-edit" class="overlay">
+<div id="md-mission" class="overlay">
     <div class="box">
-        <h2 id="ed-title">Mission</h2>
-        <div id="ed-fields">
-            <input type="text" id="e-ch" placeholder="Nom du chantier">
-            <textarea id="e-tx" placeholder="Détails de la mission" rows="3"></textarea>
-            <div id="e-mat-box" class="hidden">
-                <textarea id="e-mat" placeholder="Matériel spécifique" rows="2" style="border-color:var(--green)"></textarea>
+        <h2>Mission</h2>
+        <div id="form-container">
+            <input type="text" id="f-ch" placeholder="Nom du chantier">
+            <textarea id="f-tx" placeholder="Détails de la mission" rows="4"></textarea>
+            <div id="f-mat-box" class="hidden">
+                <textarea id="f-mat" placeholder="Matériel spécifique" rows="2" style="border: 2px solid var(--green)"></textarea>
             </div>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:15px; font-weight:bold; color:var(--blue)">
-                <input type="checkbox" id="e-dp" style="width:auto; margin:0;"> SIGNALER AU DÉPÔT
+            <div id="f-files" style="margin-bottom:15px;"></div>
+            <input type="file" id="f-up" class="hidden" onchange="uploadFile(this)">
+            <button onclick="document.getElementById('f-up').click()" style="width:100%; border:2px dashed #cbd5e1; padding:12px; border-radius:12px; margin-bottom:15px; background: #f8fafc; font-weight: bold;">📎 JOINDRE PHOTO / PDF</button>
+            <label style="display:flex; align-items:center; justify-content: space-between; margin-bottom:20px; font-weight:bold; color:var(--blue)">
+                <input type="checkbox" id="f-dp" style="width:20px; height:20px;"> SIGNALER AU DÉPÔT
             </label>
-            <div id="e-files" style="margin-bottom:10px; font-size:12px;"></div>
-            <input type="file" id="e-up" class="hidden" onchange="upload(this)">
-            <button onclick="document.getElementById('e-up').click()" style="width:100%; border:1px dashed #ccc; padding:10px; border-radius:10px; margin-bottom:10px;">📎 JOINDRE PHOTO / PDF</button>
-            <button class="btn-main bg-blue" onclick="save()">ENREGISTRER</button>
-            <p onclick="del()" style="color:red; text-align:center; cursor:pointer; font-weight:bold; margin-top:15px;">Supprimer</p>
+            <button class="btn-save" onclick="saveM()">ENREGISTRER</button>
+            <div style="display:flex; justify-content: space-around; margin-top:20px;">
+                <span onclick="delM()" style="color:var(--danger); cursor:pointer; font-weight:bold;">Supprimer</span>
+                <span onclick="closeAll()" style="color:#64748b; cursor:pointer; font-weight:bold;">Fermer</span>
+            </div>
         </div>
-        <p onclick="closeAll()" style="color:gray; text-align:center; cursor:pointer; margin-top:10px;">Fermer</p>
+        <div id="depot-view" class="hidden">
+            <p id="v-ch" style="font-weight:bold; font-size:18px;"></p>
+            <p id="v-tx" style="white-space: pre-wrap;"></p>
+            <div id="v-fi"></div>
+            <button class="btn-save" style="margin-top:20px;" onclick="closeAll()">FERMER</button>
+        </div>
     </div>
 </div>
 
-<div id="md-pointage" class="overlay">
+<div id="md-p" class="overlay">
     <div class="box">
         <h2>Pointage des Heures</h2>
-        <label>Date :</label><input type="date" id="p-date" onchange="loadPDate()">
-        <label>Début :</label><input type="time" id="p-start">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><b>Pauses :</b> <button onclick="addPause()" style="font-size:11px;">+ Ajouter</button></div>
-        <div id="p-pz"></div>
-        <label>Fin :</label><input type="time" id="p-end">
-        <label>Rapport :</label><textarea id="p-rap" rows="3"></textarea>
-        <button class="btn-main bg-green" onclick="saveP()">VALIDER LE POINTAGE</button>
-        <p onclick="closeAll()" style="color:gray; text-align:center; cursor:pointer; margin-top:15px;">Fermer</p>
-    </div>
-</div>
-
-<div id="md-info" class="overlay">
-    <div class="box" style="max-width:600px;">
-        <h2 id="info-title">Informations</h2>
-        <div id="info-content"></div>
-        <button class="btn-main bg-blue" onclick="closeAll()" style="margin-top:20px;">FERMER</button>
+        <label>Date de la journée :</label><input type="date" id="p-date" onchange="loadP()">
+        <label>Heure Début :</label><input type="time" id="p-s">
+        <div id="p-pauses"></div>
+        <button onclick="addPause()" style="font-size:12px; margin-bottom:10px;">+ Ajouter une pause</button>
+        <label>Heure Fin :</label><input type="time" id="p-e">
+        <label>Rapport d'activité :</label><textarea id="p-ra" rows="3"></textarea>
+        <button class="btn-save" style="background:var(--green)" onclick="saveP()">VALIDER LE POINTAGE</button>
+        <p onclick="closeAll()" style="text-align:center; cursor:pointer; color:gray; margin-top:15px;">Annuler</p>
     </div>
 </div>
 
 <script>
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    const FERIES = ["2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-07-14"];
-    
+    const FERIES = ["2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-06-01", "2026-07-14"];
+
     let curU = localStorage.getItem('rbf_u'), curW, curY = 2026, curK, currentFiles = [];
 
     function getWeek(d) { d = new Date(d); d.setHours(0,0,0,0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7); return 1 + Math.round(((d - new Date(d.getFullYear(), 0, 4)) / 864e5 - 3 + (new Date(d.getFullYear(), 0, 4).getDay() + 6) % 7) / 7); }
@@ -147,26 +153,26 @@
 
     function askCode(u) {
         let codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
-        let p = prompt("Code pour " + u.toUpperCase());
+        let p = prompt("Code d'accès " + u.toUpperCase());
         if(p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); }
     }
 
     function login(u) {
-        curU = u;
+        curU = u; localStorage.setItem('rbf_u', u);
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
-        if(u==='admin') document.getElementById('admin-bar').classList.remove('hidden');
-        if(['interne','cedric','jadiel','nicola','depot'].includes(u)) document.getElementById('btn-pointage').classList.remove('hidden');
+        if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden');
+        if(['interne','cedric','jadiel','nicola','depot'].includes(u)) document.getElementById('btn-p').classList.remove('hidden');
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); });
     }
 
     function render() {
-        document.getElementById('wk-disp').innerText = "SEMAINE " + curW;
+        document.getElementById('wk-txt').innerText = "SEMAINE " + curW;
         let days = ["LUN", "MAR", "MER", "JEU", "VEN"];
         for(let i=0; i<5; i++){
             let d = getD(curW, curY, i); let iso = d.toISOString().split('T')[0];
             let el = document.getElementById('h'+i);
-            el.innerHTML = days[i] + "<br><small>" + d.getDate() + "/" + (d.getMonth()+1) + "</small>";
+            el.innerHTML = days[i] + "<br>" + d.getDate() + "/" + (d.getMonth()+1);
             el.classList.toggle('is-ferie', FERIES.includes(iso));
         }
 
@@ -174,19 +180,15 @@
             document.getElementById('v-admin').classList.remove('hidden');
             document.getElementById('v-driver').classList.add('hidden');
             let h = "";
-            let users = [
-                {id:'interne', n:4}, {id:'externe', n:4}, {id:'cedric', n:4}, 
-                {id:'divers', n:4}, {id:'instal', n:4}, 
-                {id:'jadiel', n:2}, {id:'nicola', n:2}
-            ];
+            let users = [{id:'interne', n:4},{id:'externe', n:4},{id:'cedric', n:4},{id:'divers', n:4},{id:'instal', n:4},{id:'jadiel', n:2},{id:'nicola', n:2}];
             users.forEach(u => {
-                h += `<tr><td class="user-label">${u.id.toUpperCase()}</td>`;
+                h += `<tr><td class="user-col">${u.id.toUpperCase()}</td>`;
                 for(let d=0; d<5; d++){
                     h += `<td>`;
                     for(let s=1; s<=u.n; s++){
                         let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, val = window.data[k];
                         if(curU==='depot' && (!val || !val.dp)) continue;
-                        h += `<div class="slot ${val?'filled':''} ${val?.dp?'is-depot':''}" onclick="openEd('${k}')"><b>${val?.ch||''}</b><br>${val?.tx||''}</div>`;
+                        h += `<div class="slot ${val?'filled':''} ${val?.dp?'is-depot':''}" onclick="openM('${k}')"><b>${val?.ch||''}</b><br>${val?.tx||''}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -194,127 +196,102 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
+            // Vue Chauffeur Simple
             document.getElementById('v-driver').classList.remove('hidden');
             document.getElementById('v-admin').classList.add('hidden');
             let h = "";
             for(let d=0; d<5; d++){
                 let dD = getD(curW, curY, d);
-                h += `<div style="background:var(--blue); color:white; padding:10px; border-radius:10px; margin-top:10px;">${dD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()}</div>`;
+                h += `<div style="background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:15px; font-weight:bold;">${dD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()}</div>`;
                 for(let s=1; s<=4; s++){
                     let val = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`];
-                    if(val) h += `<div style="background:white; padding:15px; margin:10px 0; border-radius:15px; border-left:5px solid var(--yellow)"><b>${val.ch}</b><br>${val.tx}${val.mat?`<br><small style="color:green">Matériel: ${val.mat}</small>`:''}</div>`;
+                    if(val) h += `<div style="background:white; padding:20px; margin:10px 0; border-radius:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:6px solid var(--yellow)"><b>${val.ch}</b><br>${val.tx}${val.mat?`<br><small style="color:var(--green)">📦 ${val.mat}</small>`:''}</div>`;
                 }
             }
-            document.getElementById('v-driver').innerHTML = h;
+            document.getElementById('v-driver').innerHTML = h || "<p style='text-align:center; color:gray; margin-top:30px;'>Aucune mission cette semaine.</p>";
         }
     }
 
-    function openEd(k) {
-        curK = k; 
-        let v = window.data[k] || {};
-        currentFiles = v.fi || [];
-        document.getElementById('e-ch').value = v.ch || "";
-        document.getElementById('e-tx').value = v.tx || "";
-        document.getElementById('e-mat').value = v.mat || "";
-        document.getElementById('e-dp').checked = !!v.dp;
-        document.getElementById('e-mat-box').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-        
-        // Bloquer l'édition si c'est le dépôt
-        document.getElementById('ed-fields').classList.toggle('hidden', curU === 'depot');
-        document.getElementById('ed-title').innerText = (curU === 'depot') ? "Consulter Mission" : "Édition Mission";
-        
-        renderFi();
-        document.getElementById('md-edit').style.display = 'flex';
+    function openM(k) {
+        curK = k; let v = window.data[k] || {}; currentFiles = v.fi || [];
+        if(curU === 'depot') {
+            document.getElementById('form-container').classList.add('hidden');
+            document.getElementById('depot-view').classList.remove('hidden');
+            document.getElementById('v-ch').innerText = v.ch || "Sans titre";
+            document.getElementById('v-tx').innerText = v.tx || "";
+        } else {
+            document.getElementById('form-container').classList.remove('hidden');
+            document.getElementById('depot-view').classList.add('hidden');
+            document.getElementById('f-ch').value = v.ch || "";
+            document.getElementById('f-tx').value = v.tx || "";
+            document.getElementById('f-mat').value = v.mat || "";
+            document.getElementById('f-dp').checked = !!v.dp;
+            document.getElementById('f-mat-box').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
+            renderFi();
+        }
+        document.getElementById('md-mission').style.display = 'flex';
     }
 
-    function save() {
+    function saveM() {
         db.ref('planning_v18/'+curK).set({
-            ch: document.getElementById('e-ch').value,
-            tx: document.getElementById('e-tx').value,
-            mat: document.getElementById('e-mat').value,
-            dp: document.getElementById('e-dp').checked,
-            fi: currentFiles
+            ch: document.getElementById('f-ch').value, tx: document.getElementById('f-tx').value,
+            mat: document.getElementById('f-mat').value, dp: document.getElementById('f-dp').checked, fi: currentFiles
         }).then(() => closeAll());
     }
 
-    function openPointage() {
-        document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
-        loadPDate();
-        document.getElementById('md-pointage').style.display = 'flex';
-    }
+    function delM() { if(confirm("Supprimer la mission ?")) db.ref('planning_v18/'+curK).remove().then(() => closeAll()); }
 
-    function loadPDate() {
-        let date = document.getElementById('p-date').value;
-        document.getElementById('p-pz').innerHTML = "";
-        db.ref(`pointages_v3/${date}/${curU}`).once('value', s => {
-            let v = s.val() || {};
-            document.getElementById('p-start').value = v.start || "";
-            document.getElementById('p-end').value = v.end || "";
-            document.getElementById('p-rap').value = v.rap || "";
+    function openP() { document.getElementById('p-date').value = new Date().toISOString().split('T')[0]; loadP(); document.getElementById('md-p').style.display='flex'; }
+    function loadP() {
+        let dt = document.getElementById('p-date').value; document.getElementById('p-pauses').innerHTML = "";
+        db.ref(`pointages_v3/${dt}/${curU}`).once('value', s => {
+            let v = s.val() || {}; document.getElementById('p-s').value = v.s||""; document.getElementById('p-e').value = v.e||""; document.getElementById('p-ra').value = v.ra||"";
             if(v.pz) v.pz.forEach(p => addPause(p.s, p.e));
         });
     }
-
     function saveP() {
-        let pz = []; document.querySelectorAll('.pz-r').forEach(r => pz.push({s: r.querySelector('.ps').value, e: r.querySelector('.pe').value}));
-        db.ref(`pointages_v3/${document.getElementById('p-date').value}/${curU}`).set({
-            start: document.getElementById('p-start').value, end: document.getElementById('p-end').value, rap: document.getElementById('p-rap').value, pz: pz
-        }).then(() => { alert("Pointage enregistré !"); closeAll(); });
-    }
-
-    function openHistory() {
-        let q = document.getElementById('search-in').value.toLowerCase();
-        if(!q) return alert("Saisissez un nom de chantier");
-        let h = "";
-        Object.keys(window.data).forEach(k => {
-            let v = window.data[k];
-            if(v.ch && v.ch.toLowerCase().includes(q)) h += `<div class="hist-item"><b>${k.split('_')[2]}</b>: ${v.ch} - ${v.tx}</div>`;
-        });
-        document.getElementById('info-title').innerText = "Historique : " + q;
-        document.getElementById('info-content').innerHTML = h || "Aucun résultat";
-        document.getElementById('md-info').style.display = 'flex';
+        let pz = []; document.querySelectorAll('.pz-row').forEach(r => pz.push({s: r.querySelector('.ps').value, e: r.querySelector('.pe').value}));
+        db.ref(`pointages_v3/${document.getElementById('p-date').value}/${curU}`).set({ s: document.getElementById('p-s').value, e: document.getElementById('p-e').value, ra: document.getElementById('p-ra').value, pz: pz }).then(() => { alert("Enregistré !"); closeAll(); });
     }
 
     function openRecap() {
         db.ref('pointages_v3').limitToLast(10).once('value', s => {
             let d = s.val() || {}, h = "";
-            Object.keys(d).reverse().forEach(date => {
-                h += `<div style="background:#eee; padding:5px; font-weight:bold;">${date}</div>`;
-                Object.keys(d[date]).forEach(u => {
-                    let v = d[date][u];
-                    h += `<div style="padding:5px; border-bottom:1px solid #ddd;"><b>${u}</b>: ${v.start}-${v.end} <br><small>${v.rap||''}</small></div>`;
+            Object.keys(d).reverse().forEach(dt => {
+                h += `<div style="background:#f1f5f9; padding:8px; font-weight:bold; margin-top:10px;">📅 ${dt}</div>`;
+                Object.keys(d[dt]).forEach(u => {
+                    let v = d[dt][u]; h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${u.toUpperCase()}</b> : ${v.s} - ${v.e} <br><small>${v.ra||''}</small></div>`;
                 });
             });
-            document.getElementById('info-title').innerText = "Récapitulatif Heures";
-            document.getElementById('info-content').innerHTML = h;
-            document.getElementById('md-info').style.display = 'flex';
+            showInfo("Récapitulatif Heures", h);
         });
     }
 
-    // Fonctions Utilitaires
+    function openHisto() {
+        let q = document.getElementById('search-q').value.toLowerCase(); if(!q) return alert("Indiquez un nom de chantier");
+        let h = ""; Object.keys(window.data).forEach(k => { let v = window.data[k]; if(v.ch && v.ch.toLowerCase().includes(q)) h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${k.split('_')[2]}</b>: ${v.ch} - ${v.tx}</div>`; });
+        showInfo("Historique : " + q, h || "Aucun résultat");
+    }
+
+    function showInfo(t, c) { alert(t + "\n" + c); } // Simplifié pour le code lourd
     function getD(w, y, i) { let s = new Date(y, 0, 1 + (w - 1) * 7); s.setDate(s.getDate() + (1 - s.getDay()) + i); return s; }
-    function changeWeek(v) { curW += v; render(); }
+    function changeW(v) { curW += v; render(); }
     function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
     function addPause(s="",e="") {
-        let d = document.createElement('div'); d.className = 'pz-r'; d.style.display="flex"; d.style.gap="5px"; d.style.marginBottom="5px";
+        let d = document.createElement('div'); d.className='pz-row'; d.style.display="flex"; d.style.gap="10px"; d.style.marginBottom="10px";
         d.innerHTML = `<input type="time" class="ps" value="${s}"> <input type="time" class="pe" value="${e}"> <button onclick="this.parentElement.remove()">X</button>`;
-        document.getElementById('p-pz').appendChild(d);
+        document.getElementById('p-pauses').appendChild(d);
     }
-    function renderFi() { 
-        let d = document.getElementById('e-files'); d.innerHTML = "";
-        currentFiles.forEach((f, i) => d.innerHTML += `<a href="${f.url}" target="_blank">📄 ${f.name}</a> <span onclick="currentFiles.splice(${i},1);renderFi()" style="color:red">[X]</span><br>`);
-    }
-    function upload(i) {
-        if(!i.files[0]) return;
-        const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset');
+    function renderFi() { let d = document.getElementById('f-files'); d.innerHTML = ""; currentFiles.forEach((f, i) => d.innerHTML += `<div style="font-size:12px; margin-bottom:5px;">📄 ${f.name} <span onclick="currentFiles.splice(${i},1);renderFi()" style="color:red; cursor:pointer;">[X]</span></div>`); }
+    function uploadFile(i) {
+        if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset');
         fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(res=>{
             currentFiles.push({name: i.files[0].name, url: res.secure_url}); renderFi();
         });
     }
-    function search() { let q = document.getElementById('search-in').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q && !s.innerText.toLowerCase().includes(q))); }
+    function doSearch() { let q = document.getElementById('search-q').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q && !s.innerText.toLowerCase().includes(q))); }
 
     if(curU) login(curU);
 </script>
-
 </body>
 </html>
