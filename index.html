@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V104 - RH & MODIF</title>
+    <title>RBF Planning V105 - JOURNAL DE BORD</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -48,6 +48,7 @@
         .rh-table th { background: #f1f5f9; text-align: left; padding: 5px; border-bottom: 1px solid #ddd; }
         .rh-table td { padding: 5px; border-bottom: 1px solid #eee; }
         .btn-edit-rep { font-size: 9px; padding: 4px 8px; background: #eee; border-radius: 5px; cursor: pointer; border: 1px solid #ccc; }
+        .journal-card { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--success); }
     </style>
 </head>
 <body>
@@ -74,8 +75,8 @@
 <div id="app-content" class="hidden">
     <div id="driver-tools-zone" class="hidden" style="display:flex; flex-direction:column; gap:10px; padding:15px;">
         <div style="display:flex; gap:10px;">
-            <button onclick="openReport('pointage')" style="flex:1; background:var(--blue); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">🕒 POINTAGE</button>
-            <button onclick="openReport('journalier')" style="flex:1; background:var(--success); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">🚛 RAPPORT</button>
+            <button onclick="openReport('pointage')" style="flex:1; background:var(--blue); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">🕒 POINTAGE (HEURES)</button>
+            <button onclick="openReport('journalier')" style="flex:1; background:var(--success); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">📝 JOURNAL DE BORD</button>
         </div>
         <div id="driver-last-reps" style="margin-top:10px; background:white; border-radius:12px; padding:10px; font-size:12px;">
             <b>⏳ MES DERNIERS ENREGISTREMENTS :</b>
@@ -86,7 +87,8 @@
     <div id="admin-search-zone" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher chantier..." oninput="applySearch()">
         <button class="btn-nav-admin" onclick="showHistory()">HISTO</button>
-        <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH()">📊 RH (HEURES)</button>
+        <button class="btn-nav-admin" style="background:var(--blue)" onclick="openRH('HEURES')">🕒 RH (HEURES)</button>
+        <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH('JOURNAL')">📝 JOURNAUX DE BORD</button>
     </div>
     
     <div class="week-nav">
@@ -106,8 +108,8 @@
 
 <div id="rh-overlay">
     <div class="editor-box" style="max-width: 650px;">
-        <h3 style="text-align:center; color:var(--blue);">📊 RELEVÉ DES HEURES (RH)</h3>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <h3 id="rh-modal-title" style="text-align:center; color:var(--blue);">📊 RELEVÉ</h3>
+        <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
             <label style="font-size:12px; font-weight:bold;">MOIS :</label>
             <input type="month" id="rh-month-select" onchange="renderRH()">
         </div>
@@ -136,8 +138,8 @@
             <div class="form-group"><label>Pause (min) :</label><input type="number" id="p-pause" value="45"></div>
         </div>
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>Lieu Départ :</label><input type="text" id="rj-dep"></div>
-            <div class="form-group"><label>Détails voyage :</label><textarea id="rj-text" style="height:80px;"></textarea></div>
+            <div class="form-group"><label>Résumé de la journée (Lieux, travaux, imprévus...) :</label>
+            <textarea id="rj-text" style="height:120px;" placeholder="Ex: Matin dépôt, puis livraison chantier X, après-midi prépa pour demain..."></textarea></div>
         </div>
         <button onclick="saveReport()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">ENREGISTRER</button>
         <button id="btn-del-rep" onclick="deleteReport()" class="hidden" style="width:100%; margin-top:10px; border:none; color:var(--danger); background:none; font-weight:bold;">SUPPRIMER L'ENTRÉE</button>
@@ -165,14 +167,7 @@
 <script>
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default', curRepId = null;
-
-    const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
-    colorOpts.forEach(c => {
-        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
-        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
-        document.getElementById('cp').appendChild(d);
-    });
+    let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default', curRepId = null, rhMode = 'HEURES';
 
     function getWeek(d) {
         let date = new Date(d.getTime()); date.setHours(0,0,0,0);
@@ -209,15 +204,14 @@
 
     function loadLastReports() {
         db.ref('pointages_v18').limitToLast(10).on('value', s => {
-            const all = s.val() || {}; let h = "";
-            let reps = [];
+            const all = s.val() || {}; let h = ""; let reps = [];
             for(let date in all) {
                 for(let id in all[date]) {
                     if(all[date][id].user === curU) reps.push({...all[date][id], id, date});
                 }
             }
             reps.sort((a,b) => b.id.split('_')[1] - a.id.split('_')[1]).slice(0,5).forEach(r => {
-                let info = r.type==='POINTAGE' ? `${r.debut}-${r.fin}` : `Voyage: ${r.dep}`;
+                let info = r.type==='POINTAGE' ? `🕒 Heures` : `📝 Journal`;
                 h += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:5px 0;">
                     <span>📅 ${r.date} | ${info}</span>
                     <button class="btn-edit-rep" onclick="editOldReport('${r.date}', '${r.id}')">MODIFIER</button>
@@ -236,7 +230,6 @@
                 document.getElementById('p-end').value = r.fin;
                 document.getElementById('p-pause').value = r.p_pause;
             } else {
-                document.getElementById('rj-dep').value = r.dep;
                 document.getElementById('rj-text').value = r.txt;
             }
             document.getElementById('btn-del-rep').classList.remove('hidden');
@@ -244,8 +237,10 @@
         });
     }
 
-    function openRH() {
+    function openRH(mode) {
+        rhMode = mode;
         document.getElementById('rh-overlay').style.display = 'flex';
+        document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ DES HEURES" : "📝 JOURNAUX DE BORD";
         document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7);
         renderRH();
     }
@@ -256,40 +251,42 @@
         container.innerHTML = "Chargement...";
         db.ref('pointages_v18').once('value', s => {
             const all = s.val() || {}; let h = "";
-            let days = Object.keys(all).filter(d => d.startsWith(month)).sort();
-            if(days.length === 0) { container.innerHTML = "Aucune heure enregistrée pour ce mois."; return; }
+            let days = Object.keys(all).filter(d => d.startsWith(month)).sort((a,b)=>b.localeCompare(a));
+            if(days.length === 0) { container.innerHTML = "Aucune donnée pour ce mois."; return; }
             
             days.forEach(d => {
-                let found = Object.values(all[d]).filter(r => r.type === 'POINTAGE');
+                let typeFilter = rhMode === 'HEURES' ? 'POINTAGE' : 'VOYAGE';
+                let found = Object.values(all[d]).filter(r => r.type === typeFilter);
                 if(found.length > 0) {
                     h += `<div style="background:#f1f5f9; padding:5px; margin-top:10px; font-weight:bold; font-size:12px; border-radius:5px;">📅 ${d}</div>`;
-                    h += `<table class="rh-table"><thead><tr><th>GARS</th><th>DEBUT</th><th>FIN</th><th>PAUSE</th></tr></thead><tbody>`;
-                    found.forEach(r => {
-                        h += `<tr><td><b>${r.user.toUpperCase()}</b></td><td>${r.debut}</td><td>${r.fin}</td><td>${r.p_pause}m</td></tr>`;
-                    });
-                    h += `</tbody></table>`;
+                    if(rhMode === 'HEURES') {
+                        h += `<table class="rh-table"><thead><tr><th>GARS</th><th>DEBUT</th><th>FIN</th><th>PAUSE</th></tr></thead><tbody>`;
+                        found.forEach(r => { h += `<tr><td><b>${r.user.toUpperCase()}</b></td><td>${r.debut}</td><td>${r.fin}</td><td>${r.p_pause}m</td></tr>`; });
+                        h += `</tbody></table>`;
+                    } else {
+                        found.forEach(r => { h += `<div class="journal-card"><b>${r.user.toUpperCase()} :</b><br><span style="font-size:11px;">${r.txt}</span></div>`; });
+                    }
                 }
             });
-            container.innerHTML = h || "Pas d'heures sur ce mois.";
+            container.innerHTML = h || "Rien à afficher.";
         });
     }
+
+    // --- RESTE DU CODE (SANS CHANGEMENT) ---
+    const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    colorOpts.forEach(c => {
+        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
+        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
+        document.getElementById('cp').appendChild(d);
+    });
 
     function showHistory() {
         const q = document.getElementById('search-input').value.trim().toLowerCase();
         if(!q) return; document.getElementById('history-overlay').style.display='flex';
         db.ref('planning_v18').once('value', s => {
             const d = s.val() || {}; let h = ""; let matches = [];
-            for(let k in d) {
-                if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) {
-                    let p = k.split('_'); let dt = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
-                    matches.push({ date: dt, user: p[2], text: d[k].text, wk: p[1] });
-                }
-            }
-            matches.sort((a,b) => b.date - a.date).forEach(m => {
-                h += `<div style="padding:10px; border-bottom:1px solid #eee;">
-                    <div style="font-size:10px; margin-bottom:4px;"><span style="background:var(--blue); color:white; padding:2px 6px; border-radius:4px;">${m.date.toLocaleDateString('fr-FR')}</span> <span style="background:var(--yellow); padding:2px 4px; border-radius:4px;">S${m.wk}</span></div>
-                    <b>${m.user.toUpperCase()}</b> : ${m.text}</div>`;
-            });
+            for(let k in d) { if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { let p = k.split('_'); let dt = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); matches.push({ date: dt, user: p[2], text: d[k].text, wk: p[1] }); } }
+            matches.sort((a,b) => b.date - a.date).forEach(m => { h += `<div style="padding:10px; border-bottom:1px solid #eee;"><div style="font-size:10px; margin-bottom:4px;"><span style="background:var(--blue); color:white; padding:2px 6px; border-radius:4px;">${m.date.toLocaleDateString('fr-FR')}</span> <span style="background:var(--yellow); padding:2px 4px; border-radius:4px;">S${m.wk}</span></div><b>${m.user.toUpperCase()}</b> : ${m.text}</div>`; });
             document.getElementById('history-results').innerHTML = h || "Aucun résultat";
         });
     }
@@ -305,15 +302,13 @@
             if(holidays[iso]) { document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}<br><span class="holiday-badge">${holidays[iso]}</span>`; hIdx.push(i); }
             else document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}`;
         }
-
         if(curU==='admin' || curU==='depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dI=0; dI<5; dI++) {
-                    let isH = hIdx.includes(dI);
-                    h += `<td style="${isH?'background:#fffbeb':''}">`;
+                    let isH = hIdx.includes(dI); h += `<td style="${isH?'background:#fffbeb':''}">`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
                         if(curU==='depot' && !dta.toDepot) continue;
@@ -342,41 +337,10 @@
         }
     }
 
-    function openEd(k) { 
-        curK = k; let d = window.data[k] || {files:[]}; if(curU!=='admin') return;
-        currentFiles = d.files || []; selectedCol = d.col || 'default';
-        document.getElementById('e-chantier').value = d.chantier || "";
-        document.getElementById('e-input').value = d.text || "";
-        document.getElementById('e-matos').value = d.matos || "";
-        document.getElementById('e-depot').checked = !!d.toDepot;
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-        renderFiles(); document.getElementById('editor-overlay').style.display='flex';
-    }
-
-    function openReport(t, isEdit = false) { 
-        activeT=t; if(!isEdit) { curRepId = null; document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; document.getElementById('btn-del-rep').classList.add('hidden'); }
-        document.getElementById('rep-title-ui').innerText = t==='pointage'?"🕒 Pointage Heures":"🚛 Rapport Voyage";
-        document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage'); 
-        document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier'); 
-        document.getElementById('report-overlay').style.display='flex'; 
-    }
-
-    function saveReport() {
-        const d = document.getElementById('rep-date').value; if(!d) return;
-        let id = curRepId || `${curU}_${Date.now()}`;
-        let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d };
-        if(activeT==='pointage'){ r.debut=document.getElementById('p-start').value; r.fin=document.getElementById('p-end').value; r.p_pause=document.getElementById('p-pause').value; }
-        else { r.dep=document.getElementById('rj-dep').value; r.txt=document.getElementById('rj-text').value; }
-        db.ref(`pointages_v18/${d}/${id}`).set(r).then(()=>{ alert("Enregistré !"); closeReport(); });
-    }
-
-    function deleteReport() {
-        if(confirm("Supprimer cet enregistrement ?")) {
-            const d = document.getElementById('rep-date').value;
-            db.ref(`pointages_v18/${d}/${curRepId}`).remove().then(() => { alert("Supprimé"); closeReport(); });
-        }
-    }
-
+    function openEd(k) { curK = k; let d = window.data[k] || {files:[]}; if(curU!=='admin') return; currentFiles = d.files || []; selectedCol = d.col || 'default'; document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot; document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); renderFiles(); document.getElementById('editor-overlay').style.display='flex'; }
+    function openReport(t, isEdit = false) { activeT=t; if(!isEdit) { curRepId = null; document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; document.getElementById('btn-del-rep').classList.add('hidden'); document.getElementById('rj-text').value=""; } document.getElementById('rep-title-ui').innerText = t==='pointage'?"🕒 Pointage Heures":"📝 Journal de Bord"; document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage'); document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier'); document.getElementById('report-overlay').style.display='flex'; }
+    function saveReport() { const d = document.getElementById('rep-date').value; if(!d) return; let id = curRepId || `${curU}_${Date.now()}`; let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d }; if(activeT==='pointage'){ r.debut=document.getElementById('p-start').value; r.fin=document.getElementById('p-end').value; r.p_pause=document.getElementById('p-pause').value; } else { r.txt=document.getElementById('rj-text').value; } db.ref(`pointages_v18/${d}/${id}`).set(r).then(()=>{ alert("Enregistré !"); closeReport(); }); }
+    function deleteReport() { if(confirm("Supprimer ?")) { const d = document.getElementById('rep-date').value; db.ref(`pointages_v18/${d}/${curRepId}`).remove().then(() => { alert("Supprimé"); closeReport(); }); } }
     function closeReport() { document.getElementById('report-overlay').style.display='none'; }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function saveTask() { db.ref('planning_v18/'+curK).set({text:document.getElementById('e-input').value, chantier:document.getElementById('e-chantier').value, matos:document.getElementById('e-matos').value, toDepot:document.getElementById('e-depot').checked, col:selectedCol, files:currentFiles}).then(() => closeEditor()); }
@@ -386,7 +350,6 @@
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
     function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); } }); }
     function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer;">X</span></div>`); }
-
     if(curU) login(curU);
 </script>
 </body>
