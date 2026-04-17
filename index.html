@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V100</title>
+    <title>RBF Planning V101</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
@@ -35,31 +35,29 @@
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         
         .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 45px; color: var(--blue); white-space: pre-wrap; transition: 0.2s; }
-        .slot:hover { border-color: var(--blue); background: #f1f5f9; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
 
         .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(4px); }
-        .box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 480px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 550px; max-height: 90vh; overflow-y: auto; position: relative; }
         
         input[type="time"], input[type="text"], textarea { width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; margin-bottom: 10px; font-size: 15px; box-sizing: border-box; outline: none; font-family: inherit; }
         .pause-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 8px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        
+        .recap-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .total-badge { background: var(--blue); color: white; padding: 4px 8px; border-radius: 6px; font-weight: bold; float: right; }
         
         .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
-
-        /* Historique Style */
-        .hist-item { padding: 12px; border-bottom: 1px solid #eee; margin-bottom: 5px; background: #fcfcfc; border-radius: 8px; }
-        .hist-date { font-weight: bold; color: var(--blue); font-size: 11px; margin-bottom: 4px; display: block; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="header-logo"><img src="logo.png" style="height:35px;"></div>
+    <div class="header-logo"><img src="logo.png"></div>
     <div class="header-title">PLANNING TRANSPORT</div>
     <div class="header-right"><button id="logout-btn" onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:10px; cursor:pointer; display:none;">QUITTER</button></div>
 </header>
@@ -84,7 +82,7 @@
     <div id="admin-tools" class="search-container hidden">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
         <button class="btn-action" onclick="showFullHistory()">HISTORIQUE</button>
-        <button class="btn-action" style="background:var(--success)" onclick="viewAllPointages()">📊 RÉCAP JOURNÉES</button>
+        <button class="btn-action" style="background:var(--success)" onclick="viewAllPointages()">📊 RÉCAP HEURES</button>
     </div>
     <button id="btn-show-pointer" class="btn-pointage hidden" onclick="openPointage()">⏰ POINTER & RAPPORT DU JOUR</button>
     
@@ -105,50 +103,47 @@
 
 <div id="pointage-overlay" class="overlay">
     <div class="box">
-        <h3 style="margin-top:0; color:var(--blue);">Pointage & Rapport</h3>
-        <label style="font-size:12px; font-weight:bold;">🕗 DÉBUT :</label><input type="time" id="p-start">
+        <h3 style="margin-top:0; color:var(--blue);">Ma Journée</h3>
+        <label style="font-size:12px; font-weight:bold;">🕗 DÉBUT DE JOURNÉE :</label><input type="time" id="p-start">
         <div style="display:flex; justify-content:space-between; align-items:center; margin:10px 0;">
             <label style="font-weight:bold; font-size:12px;">☕ PAUSES :</label>
-            <button onclick="addPauseRow()" class="btn-action" style="padding:5px 10px; font-size:10px;">+ AJOUTER PAUSE</button>
+            <button onclick="addPauseRow()" class="btn-action" style="padding:5px 10px; font-size:10px;">+ AJOUTER</button>
         </div>
         <div id="pause-container"></div>
-        <label style="font-size:12px; font-weight:bold;">🏁 FIN :</label><input type="time" id="p-end">
+        <label style="font-size:12px; font-weight:bold;">🏁 FIN DE JOURNÉE :</label><input type="time" id="p-end">
         <hr style="border:none; border-top:1px solid #eee; margin:15px 0;">
-        <label style="font-size:12px; font-weight:bold; color:var(--blue);">📝 RAPPORT D'ACTIVITÉ :</label>
-        <textarea id="p-rapport" style="height:100px; margin-top:5px;" placeholder="Détaillez votre journée ici..."></textarea>
-        <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">VALIDER MA JOURNÉE</button>
-        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px; cursor:pointer;">FERMER</button>
+        <label style="font-size:12px; font-weight:bold; color:var(--blue);">📝 RAPPORT :</label>
+        <textarea id="p-rapport" style="height:80px; margin-top:5px;"></textarea>
+        <button onclick="savePointage()" style="width:100%; padding:15px; background:var(--success); color:white; border:none; border-radius:12px; font-weight:bold;">VALIDER</button>
+        <button onclick="document.getElementById('pointage-overlay').style.display='none'" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">ANNULER</button>
     </div>
 </div>
 
 <div id="editor-overlay" class="overlay">
     <div class="box">
-        <h3 id="ed-title" style="text-align:center; color:var(--blue); margin-top:0;">Édition Mission</h3>
+        <h3 id="ed-title" style="text-align:center; color:var(--blue);">Édition Mission</h3>
         <div id="ed-view-only" class="hidden"></div>
         <div id="ed-controls">
-            <label style="font-size:11px; font-weight:bold;">CHANTIER :</label><input type="text" id="e-chantier">
-            <label style="font-size:11px; font-weight:bold;">MISSION :</label><textarea id="e-input" style="height:80px;"></textarea>
-            <div id="zone-matos" class="hidden">
-                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL :</label>
-                <textarea id="e-matos" style="height:60px; border-color:var(--success);"></textarea>
-            </div>
+            <input type="text" id="e-chantier" placeholder="Chantier">
+            <textarea id="e-input" style="height:80px;" placeholder="Mission"></textarea>
+            <div id="zone-matos" class="hidden"><textarea id="e-matos" style="height:50px; border-color:var(--success);" placeholder="Matériel"></textarea></div>
             <div class="color-picker" id="cp"></div>
             <div id="file-list-admin" style="margin-bottom:10px;"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px; cursor:pointer;">📎 JOINDRE UN DOCUMENT</button>
-            <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:13px;"><input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>SIGNALER AU DÉPÔT</b></label>
-            <button onclick="saveTask()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="width:100%; background:none; color:red; border:none; margin-top:10px; font-weight:bold; cursor:pointer;">SUPPRIMER LA MISSION</button>
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px;">📎 DOC / PHOTO</button>
+            <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; font-size:13px;"><input type="checkbox" id="e-depot"> <b>SIGNALER AU DÉPÔT</b></label>
+            <button onclick="saveTask()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="width:100%; background:none; color:red; border:none; margin-top:10px;">SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; background:none; border:none; color:gray; margin-top:10px; font-weight:bold; cursor:pointer;">QUITTER</button>
+        <button onclick="closeEditor()" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">FERMER</button>
     </div>
 </div>
 
 <div id="recap-overlay" class="overlay">
     <div class="box" style="max-width:600px;">
-        <h3 style="margin-top:0; color:var(--blue);">Journaux & Pointages</h3>
+        <h3 style="margin-top:0; color:var(--blue);">Récapitulatif des Heures</h3>
         <div id="recap-content"></div>
-        <button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:12px; margin-top:20px; font-weight:bold; cursor:pointer;">FERMER</button>
+        <button onclick="document.getElementById('recap-overlay').style.display='none'" style="width:100%; padding:12px; background:var(--blue); color:white; border:none; border-radius:12px; margin-top:20px; font-weight:bold;">FERMER</button>
     </div>
 </div>
 
@@ -156,8 +151,6 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
-    
-    // LISTE DES JOURS FÉRIÉS 2026
     const FERIES = ["2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25"];
 
     let curDate = new Date(), curW = 0, curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default';
@@ -170,34 +163,40 @@
     function login(u) { curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('logout-btn').style.display = 'block'; if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden'); if(['interne','cedric','depot','jadiel','nicola'].includes(u)) document.getElementById('btn-show-pointer').classList.remove('hidden'); db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
-    function addPauseRow(s="", e="") { const div = document.createElement('div'); div.className = 'pause-row'; div.innerHTML = `<input type="time" class="p-s" value="${s}"> <input type="time" class="p-e" value="${e}"> <button onclick="this.parentElement.remove()" style="background:var(--danger); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer;">×</button>`; document.getElementById('pause-container').appendChild(div); }
-    
-    function openPointage() { 
-        let t = new Date().toISOString().split('T')[0]; 
-        document.getElementById('pause-container').innerHTML = ""; 
-        db.ref('pointages_v3/'+t+'/'+curU).once('value', s => { 
-            let d = s.val() || {}; 
-            document.getElementById('p-start').value = d.start||""; 
-            document.getElementById('p-end').value = d.end||""; 
-            document.getElementById('p-rapport').value = d.rapport||""; 
-            if(d.pauses) d.pauses.forEach(p => addPauseRow(p.s, p.e)); 
-        }); 
-        document.getElementById('pointage-overlay').style.display='flex'; 
+    function addPauseRow(s="", e="") { const div = document.createElement('div'); div.className = 'pause-row'; div.innerHTML = `<input type="time" class="p-s" value="${s}"> <input type="time" class="p-e" value="${e}"> <button onclick="this.parentElement.remove()" style="background:var(--danger); color:white; border:none; border-radius:50%; width:24px; height:24px;">×</button>`; document.getElementById('pause-container').appendChild(div); }
+    function openPointage() { let t = new Date().toISOString().split('T')[0]; document.getElementById('pause-container').innerHTML = ""; db.ref('pointages_v3/'+t+'/'+curU).once('value', s => { let d = s.val() || {}; document.getElementById('p-start').value = d.start||""; document.getElementById('p-end').value = d.end||""; document.getElementById('p-rapport').value = d.rapport||""; if(d.pauses) d.pauses.forEach(p => addPauseRow(p.s, p.e)); }); document.getElementById('pointage-overlay').style.display='flex'; }
+    function savePointage() { let t = new Date().toISOString().split('T')[0], pz = []; document.querySelectorAll('.pause-row').forEach(r => { let s=r.querySelector('.p-s').value, e=r.querySelector('.p-e').value; if(s&&e) pz.push({s,e}); }); db.ref('pointages_v3/'+t+'/'+curU).set({start: document.getElementById('p-start').value, end: document.getElementById('p-end').value, rapport: document.getElementById('p-rapport').value, pauses: pz, timestamp: Date.now()}).then(() => { alert("Validé !"); document.getElementById('pointage-overlay').style.display='none'; }); }
+
+    function timeToDec(t) { if(!t) return 0; let [h,m] = t.split(':').map(Number); return h + m/60; }
+    function calcTotal(p) {
+        if(!p.start || !p.end) return 0;
+        let diff = timeToDec(p.end) - timeToDec(p.start);
+        if(p.pauses) p.pauses.forEach(pz => { diff -= (timeToDec(pz.e) - timeToDec(pz.s)); });
+        return diff > 0 ? diff : 0;
     }
 
-    function savePointage() { 
-        let t = new Date().toISOString().split('T')[0], pz = []; 
-        document.querySelectorAll('.pause-row').forEach(r => { 
-            let s=r.querySelector('.p-s').value, e=r.querySelector('.p-e').value; 
-            if(s&&e) pz.push({s,e}); 
-        }); 
-        db.ref('pointages_v3/'+t+'/'+curU).set({
-            start: document.getElementById('p-start').value, 
-            end: document.getElementById('p-end').value, 
-            rapport: document.getElementById('p-rapport').value, 
-            pauses: pz,
-            timestamp: Date.now()
-        }).then(() => { alert("Pointage et rapport enregistrés !"); document.getElementById('pointage-overlay').style.display='none'; }); 
+    function viewAllPointages() {
+        db.ref('pointages_v3').limitToLast(15).once('value', s => {
+            let days = s.val() || {}, h = ""; 
+            Object.keys(days).sort().reverse().forEach(date => { 
+                h += `<div style="background:var(--blue); color:white; padding:10px; margin-top:15px; border-radius:8px; font-weight:bold;">📅 ${date}</div>`;
+                Object.keys(days[date]).forEach(u => { 
+                    let p = days[date][u]; 
+                    let total = calcTotal(p);
+                    h += `<div class="recap-card">
+                        <span class="total-badge">${total.toFixed(2)}h NET</span>
+                        <b style="color:var(--blue); font-size:16px;">${u.toUpperCase()}</b><br>
+                        <small>Amplitude: ${p.start||'--'} à ${p.end||'--'}</small><br>
+                        ${p.pauses ? `<small style="color:var(--danger);">Pauses: ${p.pauses.map(pz => pz.s+'-'+pz.e).join(', ')}</small><br>` : ''}
+                        <div style="margin-top:10px; font-size:12px; border-top:1px solid #eee; padding-top:5px;">
+                            <b>Rapport:</b> ${p.rapport || '<i>Aucun</i>'}
+                        </div>
+                    </div>`; 
+                });
+            }); 
+            document.getElementById('recap-content').innerHTML = h || "Rien à afficher."; 
+            document.getElementById('recap-overlay').style.display='flex';
+        });
     }
 
     function render() {
@@ -214,43 +213,28 @@
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden'); 
             document.getElementById('v-driver').classList.add('hidden');
-            let h = ""; 
-            const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
-            
+            let h = ""; const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
             users.forEach(u => { 
                 if (curU==='depot' && !u.d) return; 
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                for(let d=0; d<5; d++) { 
-                    h += `<td>`; 
-                    for(let s=1; s<=u.s; s++) { 
-                        let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", col:'default'}; 
-                        if (curU==='depot' && !dta.toDepot) continue;
-                        let bg = (dta.text && dta.col && dta.col!=='default') ? `background:${dta.col};` : '';
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')"><b>${dta.chantier ? '['+dta.chantier.toUpperCase()+']' : ''}</b><br>${dta.text||'...'}</div>`;
-                    } 
-                    h += `</td>`; 
-                } 
-                h += `</tr>`;
-            }); 
-            document.getElementById('b-admin').innerHTML = h;
+                for(let d=0; d<5; d++) { h += `<td>`; for(let s=1; s<=u.s; s++) { 
+                    let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, dta = window.data[k] || {text:"", col:'default'}; 
+                    if (curU==='depot' && !dta.toDepot) continue;
+                    let bg = (dta.text && dta.col && dta.col!=='default') ? `background:${dta.col};` : '';
+                    h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')"><b>${dta.chantier ? '['+dta.chantier.toUpperCase()+']' : ''}</b><br>${dta.text||'...'}</div>`;
+                } h += `</td>`; } h += `</tr>`;
+            }); document.getElementById('b-admin').innerHTML = h;
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = ""; document.getElementById('v-admin').classList.add('hidden');
-            for(let d=0; d<5; d++) { 
-                let dD = getDateFromWeek(curW, curY, d), c = ""; 
-                for(let s=1; s<=4; s++) { 
-                    let dta = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`]; 
-                    if(dta&&(dta.text||dta.chantier)) {
-                        let docs = ""; if(dta.files) dta.files.forEach(f => docs += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:5px; text-decoration:none; text-align:center; font-weight:bold;">📄 VOIR DOCUMENT</a>`);
-                        let matos = dta.matos ? `<div style="margin-top:5px; color:#166534; font-size:11px; background:#f0fdf4; padding:5px; border-radius:5px;"><b>📦 Matériel :</b> ${dta.matos}</div>` : '';
-                        c += `<div style="padding:15px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:12px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}${matos}${docs}</div>`;
-                    }
-                } 
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:gray;">Repos ou aucune mission</p>'}</div>`; 
-            }
+            for(let d=0; d<5; d++) { let dD = getDateFromWeek(curW, curY, d), c = ""; for(let s=1; s<=4; s++) { 
+                let dta = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`]; if(dta&&(dta.text||dta.chantier)) {
+                    let docs = ""; if(dta.files) dta.files.forEach(f => docs += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:5px; text-decoration:none; text-align:center; font-weight:bold;">📄 DOCUMENT</a>`);
+                    c += `<div style="padding:15px; border-left:6px solid #3b82f6; margin-bottom:10px; background:white; border-radius:12px;"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}${docs}</div>`;
+                }
+            } v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[d]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:gray;">Repos</p>'}</div>`; }
         }
     }
 
-    // GESTION COULEURS
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     const cp = document.getElementById('cp'); 
     colors.forEach(c => { 
@@ -259,101 +243,20 @@
         cp.appendChild(d); 
     });
 
-    function openEd(k) { 
-        curK = k; 
-        if(curU!=='admin' && curU!=='depot') return;
-        let d = window.data[k]||{text:"",files:[],col:'default'}; 
-        currentFiles = d.files||[]; 
-        selectedCol = d.col||'default'; 
-        document.getElementById('e-chantier').value = d.chantier||""; 
-        document.getElementById('e-input').value = d.text||""; 
-        document.getElementById('e-matos').value = d.matos||""; 
-        document.getElementById('e-depot').checked = !!d.toDepot; 
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel')&&!k.includes('nicola')); 
-        renderFileListAdmin(); 
-        document.getElementById('ed-controls').classList.remove('hidden'); 
-        document.getElementById('ed-view-only').classList.add('hidden'); 
-        document.getElementById('editor-overlay').style.display='flex'; 
-    }
-
-    function saveTask() { 
-        db.ref('planning_v18/'+curK).set({
-            text: document.getElementById('e-input').value, 
-            matos: document.getElementById('e-matos').value, 
-            chantier: document.getElementById('e-chantier').value, 
-            files: currentFiles, 
-            toDepot: document.getElementById('e-depot').checked, 
-            col: selectedCol
-        }).then(() => closeEditor()); 
-    }
-
-    function deleteTask() { if(confirm("Supprimer cette mission ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
+    function openEd(k) { curK = k; if(curU!=='admin' && curU!=='depot') return; let d = window.data[k]||{text:"",files:[],col:'default'}; currentFiles = d.files||[]; selectedCol = d.col||'default'; document.getElementById('e-chantier').value = d.chantier||""; document.getElementById('e-input').value = d.text||""; document.getElementById('e-matos').value = d.matos||""; document.getElementById('e-depot').checked = !!d.toDepot; document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel')&&!k.includes('nicola')); renderFileListAdmin(); document.getElementById('editor-overlay').style.display='flex'; }
+    function saveTask() { db.ref('planning_v18/'+curK).set({text: document.getElementById('e-input').value, matos: document.getElementById('e-matos').value, chantier: document.getElementById('e-chantier').value, files: currentFiles, toDepot: document.getElementById('e-depot').checked, col: selectedCol}).then(() => closeEditor()); }
+    function deleteTask() { if(confirm("Supprimer?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
     function closeEditor() { document.getElementById('editor-overlay').style.display='none'; }
-    
-    function uploadFile(i) { 
-        if(!i.files[0]) return; 
-        const fd = new FormData(); 
-        fd.append('file', i.files[0]); 
-        fd.append('upload_preset', UPLOAD_PRESET); 
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd})
-            .then(r=>r.json())
-            .then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFileListAdmin(); } }); 
-    }
-
-    function renderFileListAdmin() { 
-        let d = document.getElementById('file-list-admin'); 
-        d.innerHTML = ""; 
-        currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; background:#f1f5f9; padding:8px; border-radius:8px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()" style="border:none; background:var(--danger); color:white; border-radius:4px; padding:2px 6px; cursor:pointer;">X</button></div>`); 
-    }
-    
+    function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFileListAdmin(); } }); }
+    function renderFileListAdmin() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; background:#f1f5f9; padding:5px; border-radius:5px; margin-bottom:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()" style="color:red; border:none;">X</button></div>`); }
     function changeWeek(v) { curW += v; render(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-    
     function showFullHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase(); 
-        if (q.length < 2) return alert("Cherchez au moins 2 lettres.");
-        let res = []; 
-        Object.keys(window.data).forEach(k => { 
-            let item = window.data[k]; 
-            if (item.chantier && item.chantier.toLowerCase().includes(q)) { 
-                let p = k.split('_'); 
-                let exactDate = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
-                res.push({
-                    date: exactDate.toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'}),
-                    qui: p[2].toUpperCase(), 
-                    txt: item.text, 
-                    ch: item.chantier
-                }); 
-            } 
-        });
-        if (!res.length) return alert("Aucun historique pour ce chantier.");
-        let h = res.map(r => `<div class="hist-item"><span class="hist-date">📅 ${r.date}</span><b>${r.qui}</b> : [${r.ch}] ${r.txt}</div>`).join('');
-        document.getElementById('ed-title').textContent = "HISTORIQUE : "+q.toUpperCase(); 
-        document.getElementById('ed-view-only').innerHTML = h; 
-        document.getElementById('ed-view-only').classList.remove('hidden'); 
-        document.getElementById('ed-controls').classList.add('hidden'); 
-        document.getElementById('editor-overlay').style.display='flex';
-    }
-    
-    function viewAllPointages() {
-        db.ref('pointages_v3').limitToLast(15).once('value', s => {
-            let days = s.val() || {}, h = ""; 
-            Object.keys(days).sort().reverse().forEach(date => { 
-                h += `<div style="background:var(--blue); color:white; padding:10px; margin-top:15px; border-radius:8px; font-weight:bold; font-size:12px;">📅 JOURNÉE DU ${date}</div>`;
-                Object.keys(days[date]).forEach(u => { 
-                    let p = days[date][u]; 
-                    h += `<div style="padding:12px; background:white; border-bottom:1px solid #eee;">
-                        <b style="color:var(--blue);">${u.toUpperCase()}</b> | ${p.start||'--'} à ${p.end||'--'}<br>
-                        <div style="margin-top:8px; padding:10px; background:#f8fafc; border-left:4px solid var(--yellow); border-radius:4px;">
-                            <b style="font-size:10px; color:gray; display:block;">RAPPORT :</b>
-                            ${p.rapport ? p.rapport.replace(/\n/g, '<br>') : '<i>Aucun rapport saisi</i>'}
-                        </div>
-                    </div>`; 
-                });
-            }); 
-            document.getElementById('recap-content').innerHTML = h || "Aucun pointage enregistré récemment."; 
-            document.getElementById('recap-overlay').style.display='flex';
-        });
+        const q = document.getElementById('search-input').value.trim().toLowerCase(); if (q.length < 2) return alert("Cherchez un nom.");
+        let res = []; Object.keys(window.data).forEach(k => { let item = window.data[k]; if (item.chantier && item.chantier.toLowerCase().includes(q)) { let p = k.split('_'); let d = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); res.push({date: d.toLocaleDateString(), qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier}); } });
+        if (!res.length) return alert("Rien trouvé.");
+        let h = res.map(r => `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${r.date} - ${r.qui}</b><br>[${r.ch}] ${r.txt}</div>`).join('');
+        document.getElementById('ed-title').textContent = "HISTORIQUE : "+q.toUpperCase(); document.getElementById('ed-view-only').innerHTML = h; document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('editor-overlay').style.display='flex';
     }
 
     if(curU) login(curU);
