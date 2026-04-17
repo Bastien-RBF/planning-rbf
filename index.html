@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V100 - VISION RAPPORTS</title>
+    <title>RBF Planning V101 - FINAL FIX</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -29,6 +29,7 @@
         .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
+        .has-link { border-bottom: 4px solid #8b5cf6 !important; }
         #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
         .login-card { background: white; padding: 35px 25px; border-radius: 24px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
         .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 25px; }
@@ -36,15 +37,16 @@
         #editor-overlay, #report-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
         .hidden { display: none !important; }
-        .driver-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px; }
-        .btn-tool { padding: 15px; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; font-size: 11px; text-align: center; }
+        .driver-tools { display: flex; gap: 10px; margin: 10px; justify-content: center; }
+        .btn-tool { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; }
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: var(--blue); text-transform: uppercase; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
-        .history-card { background: #fff; margin: 15px; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; }
-        .hist-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
-        .status-ok { color: var(--success); font-weight: bold; }
-        .status-none { color: #94a3b8; }
+        .color-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 15px 0; }
+        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
+        .hist-card { background: white; margin: 15px; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .hist-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #e2e8f0; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -68,15 +70,14 @@
 </div>
 
 <div id="app-content" class="hidden">
-    <div id="driver-zone" class="hidden">
-        <div class="driver-tools">
-            <button class="btn-tool" style="background:var(--blue);" onclick="openReport('pointage')">🕒 POINTAGE</button>
-            <button class="btn-tool" style="background:var(--success);" onclick="openReport('journalier')">🚛 RAPPORT VOYAGE</button>
-        </div>
-        <div id="v-driver-history" class="history-card">
-            <b style="color:var(--blue); font-size:13px;">MES RAPPORTS (7 DERNIERS JOURS)</b>
-            <div id="hist-list" style="margin-top:10px;"></div>
-        </div>
+    <div id="driver-tools-zone" class="driver-tools hidden">
+        <button class="btn-tool" style="background:var(--blue);" onclick="openReport('pointage')">🕒 <span>POINTAGE</span></button>
+        <button class="btn-tool" style="background:var(--success);" onclick="openReport('journalier')">🚛 <span>RAPPORT VOYAGE</span></button>
+    </div>
+    
+    <div id="driver-hist-zone" class="hist-card hidden">
+        <b style="color:var(--blue); font-size:11px; text-transform:uppercase;">État de mes rapports (7J) :</b>
+        <div id="hist-list" style="margin-top:10px;"></div>
     </div>
 
     <div id="admin-search-zone" class="search-container hidden">
@@ -95,40 +96,59 @@
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    
-    <div id="v-driver-planning" style="padding:15px;" class="hidden"></div>
+    <div id="v-driver" style="padding:15px;" class="hidden"></div>
 </div>
 
 <div id="report-overlay">
     <div class="editor-box">
         <h3 id="rep-title" style="text-align:center; color:var(--blue); margin-top:0;"></h3>
-        
-        <div id="form-pointage" class="hidden">
-            <div class="form-group"><label>DATE DU POINTAGE :</label><input type="date" id="p-date-select"></div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <div class="form-group"><label>Heure Début :</label><input type="time" id="p-start"></div>
-                <div class="form-group"><label>Heure Fin :</label><input type="time" id="p-end"></div>
-            </div>
-            <div class="form-group"><label>Total Pauses (min) :</label><input type="number" id="p-pause" placeholder="60"></div>
+        <div class="form-group">
+            <label>DATE CONCERNÉE :</label>
+            <input type="date" id="rep-date">
         </div>
-
+        <div id="form-pointage" class="hidden">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="form-group"><label>Début :</label><input type="time" id="p-start"></div>
+                <div class="form-group"><label>Fin :</label><input type="time" id="p-end"></div>
+            </div>
+            <div class="form-group"><label>Pause (min) :</label><input type="number" id="p-pause"></div>
+        </div>
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>DATE DU VOYAGE :</label><input type="date" id="rj-date-select"></div>
             <div class="form-group"><label>Départ :</label><input type="text" id="rj-dep"></div>
             <div class="form-group"><label>Arrivée :</label><input type="text" id="rj-arr"></div>
-            <div class="form-group"><label>Détails :</label><textarea id="rj-text" style="height:80px;"></textarea></div>
+            <div class="form-group"><label>Détails :</label><textarea id="rj-text" style="height:100px;"></textarea></div>
         </div>
-
         <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
-        <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight:bold;">ANNULER</button>
+        <button onclick="closeReport()" style="width:100%; margin-top:10px; border:none; background:none; color:#94a3b8;">ANNULER</button>
+    </div>
+</div>
+
+<div id="editor-overlay">
+    <div class="editor-box">
+        <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
+        <div id="ed-view-only" class="hidden"></div>
+        <div id="ed-controls">
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Chantier">
+            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd;" placeholder="Mission"></textarea>
+            <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:60px; border:1px solid var(--success); padding:12px; border-radius:12px;" placeholder="Logistique"></textarea></div>
+            <div class="color-picker" id="cp"></div>
+            <div id="file-list-admin"></div>
+            <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+            <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold;">📎 FICHIER</button>
+            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
+            <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold;">SUPPRIMER</button>
+        </div>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8;">FERMER</button>
     </div>
 </div>
 
 <script>
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u');
+    let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default';
 
+    // Utilitaires Dates
     function getWeek(d) {
         const date = new Date(d.getTime()); date.setHours(0,0,0,0);
         date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
@@ -144,6 +164,14 @@
         return ISOweekStart;
     }
 
+    // Couleurs
+    const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    colors.forEach(c => {
+        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
+        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
+        document.getElementById('cp').appendChild(d);
+    });
+
     async function fetchHolidays(year) {
         try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`); holidays = await r.json(); render(); } catch(e) { render(); }
     }
@@ -156,30 +184,34 @@
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); 
         document.getElementById('app-content').classList.remove('hidden'); 
+        document.getElementById('u-info').classList.remove('hidden'); 
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
-        if(u!=='admin' && u!=='depot') document.getElementById('driver-zone').classList.remove('hidden');
+        if(u!=='admin' && u!=='depot') {
+            document.getElementById('driver-tools-zone').classList.remove('hidden');
+            document.getElementById('driver-hist-zone').classList.remove('hidden');
+            updateDriverHist();
+        }
         fetchHolidays(curY);
-        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); });
-        if(u!=='admin' && u!=='depot') checkDriverHistory();
+        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
 
-    function checkDriverHistory() {
-        const list = document.getElementById('hist-list'); list.innerHTML = "Chargement...";
+    function updateDriverHist() {
+        const list = document.getElementById('hist-list');
         db.ref('pointages_v18').limitToLast(10).once('value', s => {
-            const allData = s.val() || {};
-            let h = "";
+            const reports = s.val() || {}; let h = "";
             for(let i=0; i<7; i++) {
                 let d = new Date(); d.setDate(d.getDate() - i);
                 let iso = d.toISOString().split('T')[0];
-                let dayData = allData[iso] || {};
-                let hasP = false, hasV = false;
-                Object.values(dayData).forEach(v => {
-                    if(v.user === curU) { if(v.type === "POINTAGE") hasP = true; if(v.type === "VOYAGE") hasV = true; }
-                });
-                h += `<div class="hist-item">
-                    <span>${d.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'2-digit'})}</span>
-                    <span class="${hasP?'status-ok':'status-none'}">${hasP?'🕒 OK':'🕒 --'}</span>
-                    <span class="${hasV?'status-ok':'status-none'}">${hasV?'🚛 OK':'🚛 --'}</span>
+                let p = false, v = false;
+                if(reports[iso]) {
+                    Object.values(reports[iso]).forEach(r => {
+                        if(r.user === curU) { if(r.type==="POINTAGE") p=true; if(r.type==="VOYAGE") v=true; }
+                    });
+                }
+                h += `<div class="hist-line">
+                    <span>${d.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit'})}</span>
+                    <span style="color:${p?'var(--success)':'#ccc'}">${p?'🕒 OK':'🕒 --'}</span>
+                    <span style="color:${v?'var(--success)':'#ccc'}">${v?'🚛 OK':'🚛 --'}</span>
                 </div>`;
             }
             list.innerHTML = h;
@@ -200,15 +232,19 @@
 
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
-            let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
+            document.getElementById('v-driver').classList.add('hidden');
+            let h = ""; const users = [{id:'interne',s:4,d:true},{id:'externe',s:4,d:true},{id:'cedric',s:4,d:true},{id:'divers',s:4,d:false},{id:'instal',s:4,d:true},{id:'jadiel',s:2,d:true},{id:'nicola',s:2,d:true}];
             users.forEach(u => {
+                if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dI=0; dI<5; dI++) {
                     h += `<td style="${hIdx.includes(dI)?'background:#fffbeb':''}">`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {text:""};
+                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {text:"", chantier:"", col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''}" onclick="alert('${dta.text || 'Vide'}')">${dta.chantier?`<b>[${dta.chantier}]</b><br>`:''}${dta.text || '...'}</div>`;
+                        let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
+                        let txt = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -216,38 +252,58 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            const v = document.getElementById('v-driver-planning'); v.classList.remove('hidden'); v.innerHTML = "";
+            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let dI=0; dI<5; dI++) {
-                let dD = getDateFromWeek(curW, curY, dI), cards = "";
-                for(let s=1; s<=4; s++) {
+                let dD = getDateFromWeek(curW, curY, dI);
+                let iso = dD.getFullYear() + '-' + String(dD.getMonth() + 1).padStart(2, '0') + '-' + String(dD.getDate()).padStart(2, '0');
+                let hB = holidays[iso] ? `<span class="holiday-badge" style="margin-left:10px;">${holidays[iso]}</span>` : "";
+                let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
+                for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
-                    if(dta && dta.text) cards += `<div style="padding:15px; background:white; margin-top:10px; border-radius:12px; border-left:5px solid #3b82f6;"><b>${dta.chantier?.toUpperCase() || ''}</b><br>${dta.text}</div>`;
+                    if(dta && (dta.text || dta.chantier)) {
+                        let fl = ""; if(dta.files) dta.files.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:10px; text-align:center; font-weight:bold;">📎 VOIR DOCUMENT</a>`);
+                        let m = dta.matos ? `<div style="margin-top:10px; padding:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; color:#166534; font-size:12px;"><b>📦 LOGISTIQUE :</b><br>${dta.matos}</div>` : "";
+                        cards += `<div style="padding:15px; border-radius:15px; background:white; margin-bottom:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'};">
+                            <span style="font-size:10px; color:#64748b; font-weight:900;">MISSION M${s}</span><br>
+                            <b style="font-size:16px; color:var(--blue);">${dta.chantier?.toUpperCase() || ''}</b><p style="margin:5px 0;">${dta.text || ''}</p>${m}${fl}</div>`;
+                    }
                 }
-                v.innerHTML += `<div style="margin-bottom:20px;"><b>${days[dI]} ${dD.toLocaleDateString('fr-FR')}</b>${cards || '<p>Rien</p>'}</div>`;
+                v.innerHTML += `<div style="margin-bottom:20px;"><b style="color:var(--blue); font-size:18px;">${days[dI]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hB}</b><div style="margin-top:10px;">${cards || '<p style="color:#94a3b8;">Aucune mission</p>'}</div></div>`;
             }
         }
     }
 
     function openReport(type) { 
-        activeReportType = type; const today = new Date().toISOString().split('T')[0];
-        document.getElementById('p-date-select').value = today;
-        document.getElementById('rj-date-select').value = today;
-        document.getElementById('rep-title').innerText = type==='pointage'?'🕒 POINTAGE':'🚛 RAPPORT VOYAGE';
-        document.getElementById('form-pointage').classList.toggle('hidden', type!=='pointage');
-        document.getElementById('form-journalier').classList.toggle('hidden', type!=='journalier');
-        document.getElementById('report-overlay').style.display = 'flex';
+        activeReportType = type; 
+        document.getElementById('rep-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('rep-title').innerText = type==='pointage'?'🕒 POINTAGE':'🚛 RAPPORT VOYAGE'; 
+        document.getElementById('form-pointage').classList.toggle('hidden', type!=='pointage'); 
+        document.getElementById('form-journalier').classList.toggle('hidden', type!=='journalier'); 
+        document.getElementById('report-overlay').style.display = 'flex'; 
     }
     function closeReport() { document.getElementById('report-overlay').style.display = 'none'; }
     function saveReport() {
-        const dateS = activeReportType==='pointage' ? document.getElementById('p-date-select').value : document.getElementById('rj-date-select').value;
-        if(!dateS) return alert("Date ?");
-        let data = { user: curU, type: activeReportType==='pointage'?"POINTAGE":"VOYAGE", date: dateS };
-        if(activeReportType==='pointage') { data.debut = document.getElementById('p-start').value; data.fin = document.getElementById('p-end').value; }
-        else { data.dep = document.getElementById('rj-dep').value; data.txt = document.getElementById('rj-text').value; }
-        db.ref(`pointages_v18/${dateS}/${curU}_${Date.now()}`).set(data).then(() => { alert("OK !"); closeReport(); checkDriverHistory(); });
+        const d = document.getElementById('rep-date').value; if(!d) return alert("Date ?");
+        let rep = { user: curU, type: activeReportType==='pointage'?"POINTAGE":"VOYAGE", date: d, ts: Date.now() };
+        if(activeReportType==='pointage') { rep.debut = document.getElementById('p-start').value; rep.fin = document.getElementById('p-end').value; }
+        else { rep.dep = document.getElementById('rj-dep').value; rep.txt = document.getElementById('rj-text').value; }
+        db.ref(`pointages_v18/${d}/${curU}_${Date.now()}`).set(rep).then(() => { alert("OK !"); closeReport(); updateDriverHist(); });
     }
+
+    function openEd(k) { 
+        curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'}; if(curU !== 'admin' && curU !== 'depot') return; 
+        if(curU !== 'admin') { document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden'); document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p>${d.text}</p>`; document.getElementById('editor-overlay').style.display = 'flex'; return; } 
+        currentFiles = d.files || []; selectedCol = d.col || 'default'; document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden'); document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot; document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); renderFiles(); document.getElementById('editor-overlay').style.display = 'flex'; 
+    }
+    function saveTask() { let v = document.getElementById('e-input').value, m = document.getElementById('e-matos').value, ch = document.getElementById('e-chantier').value, c = document.getElementById('e-depot').checked; db.ref('planning_v18/'+curK).set({text:v, matos:m, chantier:ch, files:currentFiles, toDepot:c, col:selectedCol}).then(() => closeEditor()); }
+    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
+    function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; margin-bottom:5px;">📄 ${f.name} <button onclick="currentFiles.splice(${i},1);renderFiles()">X</button></div>`); }
+    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFiles(); } }); }
+    function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-    function changeWeek(v) { curW += v; render(); }
+    function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
+
     if(curU) login(curU);
 </script>
 </body>
