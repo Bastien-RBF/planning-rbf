@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V93</title>
+    <title>RBF Planning V94</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -19,7 +19,7 @@
         .header-logo img { height: 40px; }
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         #search-input { flex: 1; min-width: 180px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
-        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; z-index: 50; position: relative; }
+        .btn-hist { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; position: relative; z-index: 50; }
         .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
         .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
         .table-container { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -49,7 +49,7 @@
         .btn-tool { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; }
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 5px; color: var(--blue); text-transform: uppercase; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -75,7 +75,7 @@
 <div id="app-content" class="hidden">
     <div id="driver-tools-zone" class="driver-tools hidden">
         <button class="btn-tool" style="background:var(--blue);" onclick="openReport('pointage')">🕒 <span>POINTAGE</span></button>
-        <button class="btn-tool" style="background:var(--success);" onclick="openReport('journalier')">📝 <span>RAPPORT</span></button>
+        <button class="btn-tool" style="background:var(--success);" onclick="openReport('journalier')">🚛 <span>RAPPORT VOYAGE</span></button>
     </div>
 
     <div id="admin-search-zone" class="search-container hidden">
@@ -103,19 +103,19 @@
         
         <div id="form-pointage" class="hidden">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <div class="form-group"><label>Début de journée :</label><input type="time" id="p-start"></div>
-                <div class="form-group"><label>Fin de journée :</label><input type="time" id="p-end"></div>
+                <div class="form-group"><label>Heure Début :</label><input type="time" id="p-start"></div>
+                <div class="form-group"><label>Heure Fin :</label><input type="time" id="p-end"></div>
             </div>
-            <div class="form-group"><label>Temps de pause total (min) :</label><input type="number" id="p-pause" placeholder="Ex: 45"></div>
-            <div class="form-group"><label>Temps de route total (min) :</label><input type="number" id="p-trajet" placeholder="Temps passé au volant"></div>
+            <div class="form-group"><label>Total Pauses (en minutes) :</label><input type="number" id="p-pause" placeholder="Ex: 60"></div>
         </div>
 
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>Lieux / Chantiers visités :</label><input type="text" id="rj-chantier" placeholder="Ex: Chantier X, Dépôt, Carrière Y"></div>
-            <div class="form-group"><label>Détails des travaux / pauses :</label><textarea id="rj-text" style="height:150px;" placeholder="Expliquez vos interventions et vos éventuelles pauses imprévues..."></textarea></div>
+            <div class="form-group"><label>Lieu de Départ :</label><input type="text" id="rj-dep" placeholder="Ex: Dépôt ou Chantier X"></div>
+            <div class="form-group"><label>Lieu d'Arrivée :</label><input type="text" id="rj-arr" placeholder="Ex: Carrière ou Chantier Y"></div>
+            <div class="form-group"><label>Détail du voyage / Chargement :</label><textarea id="rj-text" style="height:100px;" placeholder="Ex: 15T de gravier, évacuation terre..."></textarea></div>
         </div>
 
-        <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; margin-top:10px;">ENVOYER AU BUREAU</button>
+        <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; margin-top:10px;">ENREGISTRER</button>
         <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">ANNULER</button>
     </div>
 </div>
@@ -203,7 +203,7 @@
 
     function openReport(type) {
         activeReportType = type;
-        document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE' : '📝 RAPPORT JOURNALIER';
+        document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE JOURNÉE' : '🚛 RAPPORT DE VOYAGE';
         document.getElementById('form-pointage').classList.toggle('hidden', type !== 'pointage');
         document.getElementById('form-journalier').classList.toggle('hidden', type !== 'journalier');
         document.getElementById('report-overlay').style.display = 'flex';
@@ -218,17 +218,20 @@
             reportData.debut = document.getElementById('p-start').value;
             reportData.fin = document.getElementById('p-end').value;
             reportData.pause = document.getElementById('p-pause').value;
-            reportData.trajet = document.getElementById('p-trajet').value;
-            if(!reportData.debut || !reportData.fin) return alert("Veuillez remplir les heures.");
+            if(!reportData.debut || !reportData.fin) return alert("Heures manquantes.");
         } else {
-            reportData.type = "RAPPORT";
-            reportData.lieux = document.getElementById('rj-chantier').value;
-            reportData.travaux = document.getElementById('rj-text').value;
-            if(!reportData.lieux || !reportData.travaux) return alert("Veuillez remplir les champs.");
+            reportData.type = "VOYAGE";
+            reportData.depart = document.getElementById('rj-dep').value;
+            reportData.arrivee = document.getElementById('rj-arr').value;
+            reportData.details = document.getElementById('rj-text').value;
+            if(!reportData.depart || !reportData.arrivee) return alert("Lieux manquants.");
         }
         db.ref(`pointages_v18/${today}/${curU}_${Date.now()}`).set(reportData).then(() => {
-            alert("Envoyé au bureau !");
+            alert("Enregistré !");
             closeReport();
+            if(activeReportType === 'journalier') { 
+                document.getElementById('rj-dep').value = ""; document.getElementById('rj-arr').value = ""; document.getElementById('rj-text').value = "";
+            }
         });
     }
 
@@ -295,15 +298,16 @@
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
             for(let dIdx=0; dIdx<5; dIdx++) {
-                let dDate = getDateFromWeek(curW, curY, dIdx); let c = "";
-                for(let s=1; s<=4; s++) {
+                let dDate = getDateFromWeek(curW, curY, dIdx); let iso = dDate.getFullYear() + "-" + String(dDate.getMonth()+1).padStart(2,'0') + "-" + String(dDate.getDate()).padStart(2,'0');
+                let hBadge = holidays[iso] ? `<span class="holiday-badge" style="margin-left:10px;">${holidays[iso]}</span>` : "";
+                let c = ""; for(let s=1; s<=4; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
                         let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR FICHIER</a>`);
                         c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hBadge}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
             }
         }
     }
