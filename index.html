@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V105 - JOURNAL DE BORD</title>
+    <title>RBF Planning V106 - STABLE</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -103,6 +103,7 @@
             <tbody id="b-admin"></tbody>
         </table>
     </div>
+
     <div id="v-driver" style="padding:15px;" class="hidden"></div>
 </div>
 
@@ -138,8 +139,8 @@
             <div class="form-group"><label>Pause (min) :</label><input type="number" id="p-pause" value="45"></div>
         </div>
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>Résumé de la journée (Lieux, travaux, imprévus...) :</label>
-            <textarea id="rj-text" style="height:120px;" placeholder="Ex: Matin dépôt, puis livraison chantier X, après-midi prépa pour demain..."></textarea></div>
+            <div class="form-group"><label>Résumé de la journée :</label>
+            <textarea id="rj-text" style="height:120px;" placeholder="Détaillez votre journée ici..."></textarea></div>
         </div>
         <button onclick="saveReport()" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">ENREGISTRER</button>
         <button id="btn-del-rep" onclick="deleteReport()" class="hidden" style="width:100%; margin-top:10px; border:none; color:var(--danger); background:none; font-weight:bold;">SUPPRIMER L'ENTRÉE</button>
@@ -194,7 +195,7 @@
         document.getElementById('app-content').classList.remove('hidden'); 
         document.getElementById('u-info').classList.remove('hidden'); 
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
-        if(u!=='admin' && u!=='depot') {
+        if(u!=='admin') {
             document.getElementById('driver-tools-zone').classList.remove('hidden');
             loadLastReports();
         }
@@ -206,9 +207,7 @@
         db.ref('pointages_v18').limitToLast(10).on('value', s => {
             const all = s.val() || {}; let h = ""; let reps = [];
             for(let date in all) {
-                for(let id in all[date]) {
-                    if(all[date][id].user === curU) reps.push({...all[date][id], id, date});
-                }
+                for(let id in all[date]) { if(all[date][id].user === curU) reps.push({...all[date][id], id, date}); }
             }
             reps.sort((a,b) => b.id.split('_')[1] - a.id.split('_')[1]).slice(0,5).forEach(r => {
                 let info = r.type==='POINTAGE' ? `🕒 Heures` : `📝 Journal`;
@@ -229,65 +228,9 @@
                 document.getElementById('p-start').value = r.debut;
                 document.getElementById('p-end').value = r.fin;
                 document.getElementById('p-pause').value = r.p_pause;
-            } else {
-                document.getElementById('rj-text').value = r.txt;
-            }
+            } else { document.getElementById('rj-text').value = r.txt; }
             document.getElementById('btn-del-rep').classList.remove('hidden');
             openReport(activeT, true);
-        });
-    }
-
-    function openRH(mode) {
-        rhMode = mode;
-        document.getElementById('rh-overlay').style.display = 'flex';
-        document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ DES HEURES" : "📝 JOURNAUX DE BORD";
-        document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7);
-        renderRH();
-    }
-
-    function renderRH() {
-        const month = document.getElementById('rh-month-select').value;
-        const container = document.getElementById('rh-content');
-        container.innerHTML = "Chargement...";
-        db.ref('pointages_v18').once('value', s => {
-            const all = s.val() || {}; let h = "";
-            let days = Object.keys(all).filter(d => d.startsWith(month)).sort((a,b)=>b.localeCompare(a));
-            if(days.length === 0) { container.innerHTML = "Aucune donnée pour ce mois."; return; }
-            
-            days.forEach(d => {
-                let typeFilter = rhMode === 'HEURES' ? 'POINTAGE' : 'VOYAGE';
-                let found = Object.values(all[d]).filter(r => r.type === typeFilter);
-                if(found.length > 0) {
-                    h += `<div style="background:#f1f5f9; padding:5px; margin-top:10px; font-weight:bold; font-size:12px; border-radius:5px;">📅 ${d}</div>`;
-                    if(rhMode === 'HEURES') {
-                        h += `<table class="rh-table"><thead><tr><th>GARS</th><th>DEBUT</th><th>FIN</th><th>PAUSE</th></tr></thead><tbody>`;
-                        found.forEach(r => { h += `<tr><td><b>${r.user.toUpperCase()}</b></td><td>${r.debut}</td><td>${r.fin}</td><td>${r.p_pause}m</td></tr>`; });
-                        h += `</tbody></table>`;
-                    } else {
-                        found.forEach(r => { h += `<div class="journal-card"><b>${r.user.toUpperCase()} :</b><br><span style="font-size:11px;">${r.txt}</span></div>`; });
-                    }
-                }
-            });
-            container.innerHTML = h || "Rien à afficher.";
-        });
-    }
-
-    // --- RESTE DU CODE (SANS CHANGEMENT) ---
-    const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
-    colorOpts.forEach(c => {
-        let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
-        d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; };
-        document.getElementById('cp').appendChild(d);
-    });
-
-    function showHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if(!q) return; document.getElementById('history-overlay').style.display='flex';
-        db.ref('planning_v18').once('value', s => {
-            const d = s.val() || {}; let h = ""; let matches = [];
-            for(let k in d) { if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { let p = k.split('_'); let dt = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); matches.push({ date: dt, user: p[2], text: d[k].text, wk: p[1] }); } }
-            matches.sort((a,b) => b.date - a.date).forEach(m => { h += `<div style="padding:10px; border-bottom:1px solid #eee;"><div style="font-size:10px; margin-bottom:4px;"><span style="background:var(--blue); color:white; padding:2px 6px; border-radius:4px;">${m.date.toLocaleDateString('fr-FR')}</span> <span style="background:var(--yellow); padding:2px 4px; border-radius:4px;">S${m.wk}</span></div><b>${m.user.toUpperCase()}</b> : ${m.text}</div>`; });
-            document.getElementById('history-results').innerHTML = h || "Aucun résultat";
         });
     }
 
@@ -296,14 +239,22 @@
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
         const days = ["LUN","MAR","MER","JEU","VEN"], hIdx = [];
+        const holidayList = {};
+
         for(let i=0; i<5; i++) {
             let d = getDateFromWeek(curW, curY, i); 
             let iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            if(holidays[iso]) { document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}<br><span class="holiday-badge">${holidays[iso]}</span>`; hIdx.push(i); }
+            if(holidays[iso]) { 
+                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}<br><span class="holiday-badge">${holidays[iso]}</span>`; 
+                hIdx.push(i);
+                holidayList[i] = holidays[iso];
+            }
             else document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.getDate()}/${d.getMonth()+1}`;
         }
+
         if(curU==='admin' || curU==='depot') {
             document.getElementById('v-admin').classList.remove('hidden');
+            document.getElementById('v-driver').classList.add('hidden');
             let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
@@ -322,7 +273,8 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
+            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); 
+            document.getElementById('v-admin').classList.add('hidden'); v.innerHTML = "";
             for(let dI=0; dI<5; dI++) {
                 let dD = getDateFromWeek(curW, curY, dI); let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
                 for(let s=1; s<=maxS; s++) {
@@ -332,9 +284,32 @@
                         cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:15px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'};"><b>${dta.chantier?.toUpperCase() || ''}</b><p>${dta.text}</p>${dta.matos?`<div style='margin-top:10px; background:#f0fdf4; padding:8px; border-radius:8px; font-size:12px;'><b>📦 LOGISTIQUE :</b> ${dta.matos}</div>`:''}${fl}</div>`;
                     }
                 }
-                v.innerHTML += `<div><b style="color:var(--blue);">${days[dI]} ${dD.getDate()}/${dD.getMonth()+1}</b><div style="margin-top:10px;">${cards || '<p style="font-size:10px; color:#999">Rien</p>'}</div></div>`;
+                let hBadge = holidayList[dI] ? `<span class="holiday-badge">${holidayList[dI]}</span>` : "";
+                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue); font-size:16px;">${days[dI]} ${dD.getDate()}/${dD.getMonth()+1}</b> ${hBadge}<div style="margin-top:10px;">${cards || '<p style="font-size:10px; color:#999">Rien de prévu</p>'}</div></div>`;
             }
         }
+    }
+
+    function openRH(mode) { rhMode = mode; document.getElementById('rh-overlay').style.display = 'flex'; document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ DES HEURES" : "📝 JOURNAUX DE BORD"; document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7); renderRH(); }
+    function renderRH() {
+        const month = document.getElementById('rh-month-select').value; const container = document.getElementById('rh-content'); container.innerHTML = "Chargement...";
+        db.ref('pointages_v18').once('value', s => {
+            const all = s.val() || {}; let h = ""; let days = Object.keys(all).filter(d => d.startsWith(month)).sort((a,b)=>b.localeCompare(a));
+            if(days.length === 0) { container.innerHTML = "Aucune donnée."; return; }
+            days.forEach(d => {
+                let typeFilter = rhMode === 'HEURES' ? 'POINTAGE' : 'VOYAGE';
+                let found = Object.values(all[d]).filter(r => r.type === typeFilter);
+                if(found.length > 0) {
+                    h += `<div style="background:#f1f5f9; padding:5px; margin-top:10px; font-weight:bold; font-size:12px; border-radius:5px;">📅 ${d}</div>`;
+                    if(rhMode === 'HEURES') {
+                        h += `<table class="rh-table"><thead><tr><th>GARS</th><th>DEBUT</th><th>FIN</th><th>PAUSE</th></tr></thead><tbody>`;
+                        found.forEach(r => { h += `<tr><td><b>${r.user.toUpperCase()}</b></td><td>${r.debut}</td><td>${r.fin}</td><td>${r.p_pause}m</td></tr>`; });
+                        h += `</tbody></table>`;
+                    } else { found.forEach(r => { h += `<div class="journal-card"><b>${r.user.toUpperCase()} :</b><br><span style="font-size:11px;">${r.txt}</span></div>`; }); }
+                }
+            });
+            container.innerHTML = h || "Rien à afficher.";
+        });
     }
 
     function openEd(k) { curK = k; let d = window.data[k] || {files:[]}; if(curU!=='admin') return; currentFiles = d.files || []; selectedCol = d.col || 'default'; document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot; document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); renderFiles(); document.getElementById('editor-overlay').style.display='flex'; }
@@ -350,6 +325,11 @@
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
     function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); } }); }
     function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer;">X</span></div>`); }
+    function showHistory() { const q = document.getElementById('search-input').value.trim().toLowerCase(); if(!q) return; document.getElementById('history-overlay').style.display='flex'; db.ref('planning_v18').once('value', s => { const d = s.val() || {}; let h = ""; let matches = []; for(let k in d) { if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { let p = k.split('_'); let dt = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); matches.push({ date: dt, user: p[2], text: d[k].text, wk: p[1] }); } } matches.sort((a,b) => b.date - a.date).forEach(m => { h += `<div style="padding:10px; border-bottom:1px solid #eee;"><div style="font-size:10px; margin-bottom:4px;"><span style="background:var(--blue); color:white; padding:2px 6px; border-radius:4px;">${m.date.toLocaleDateString('fr-FR')}</span> <span style="background:var(--yellow); padding:2px 4px; border-radius:4px;">S${m.wk}</span></div><b>${m.user.toUpperCase()}</b> : ${m.text}</div>`; }); document.getElementById('history-results').innerHTML = h || "Aucun résultat"; }); }
+
+    const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
+    colorOpts.forEach(c => { let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c; d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; }; document.getElementById('cp').appendChild(d); });
+
     if(curU) login(curU);
 </script>
 </body>
