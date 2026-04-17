@@ -3,205 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V113</title>
+    <title>RBF Planning V114</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
-        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .header-logo img { height: 40px; }
-        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
-        #search-input { flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; }
-        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
-        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
-        .table-container { padding: 10px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
-        th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; margin: 0; color: #334155; }
+        header { background: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); }
+        .logo img { height: 45px; }
+        .btn-quit { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        /* LOGIN */
+        #login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px; }
+        .login-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; }
+        .btn-auth { padding: 18px; border: none; border-radius: 15px; font-weight: 800; cursor: pointer; color: white; font-size: 13px; transition: 0.2s; }
+
+        /* PLANNING */
+        .search-bar { background: white; padding: 15px 20px; margin: 10px; border-radius: 15px; border: 1px solid #e2e8f0; display: flex; gap: 10px; }
+        .search-bar input { flex: 1; border: none; outline: none; font-size: 16px; }
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px 0; }
+        .wk-btn { background: var(--blue); color: white; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 20px; }
+        
+        .table-container { padding: 0 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 15px; overflow: hidden; min-width: 1000px; }
+        th { background: var(--blue); color: white; padding: 15px; font-size: 12px; text-transform: uppercase; border-right: 1px solid #2e4475; }
+        td { border: 0.5px solid #edf2f7; padding: 8px; vertical-align: top; }
+        .user-cell { background: white; font-weight: 900; color: var(--blue); text-align: center; width: 110px; position: sticky; left: 0; z-index: 5; border-right: 3px solid var(--yellow) !important; }
         .is-ferie { background: #fee2e2 !important; color: #dc2626 !important; }
-        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
-        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 100px; font-size: 10px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
-        .slot { font-size: 10px; padding: 6px; margin-bottom: 4px; border-radius: 6px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 35px; color: var(--blue); }
-        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
-        .is-to-depot { border-left: 5px solid var(--success) !important; }
-        .label-slot { font-size: 8px; color: #64748b; text-transform: uppercase; margin-bottom: 2px; font-weight: bold; }
-        #editor-overlay { position: fixed; inset:0; background:rgba(15,23,42,0.9); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(5px); }
-        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 450px; }
-        .hidden { display: none !important; }
-        .login-card { background: white; padding: 30px; border-radius: 24px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 350px; }
+        
+        .slot { min-height: 45px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 8px; margin-bottom: 6px; cursor: pointer; font-size: 11px; color: var(--blue); }
+        .slot.filled { background: #eef2ff !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
+        .slot.to-depot { border-left: 5px solid var(--success) !important; }
+        .slot-label { font-size: 9px; color: #94a3b8; font-weight: bold; margin-bottom: 2px; }
+
+        /* MODAL */
+        #editor-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .editor-box { background: white; width: 90%; max-width: 500px; border-radius: 25px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .editor-box h3 { margin: 0 0 20px 0; color: var(--blue); }
+        .editor-box input, .editor-box textarea { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-family: inherit; }
+        .mat-spec { border: 2px solid var(--success) !important; }
+        .btn-save { background: var(--blue); color: white; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="header-logo"><img src="logo.png"></div>
-    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
-</header>
-
-<div id="login-screen" style="min-height:80vh; display:flex; align-items:center; justify-content:center;">
+<div id="login-screen">
     <div class="login-card">
-        <img src="logo.png" style="width:140px; margin-bottom:15px;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button onclick="askCode('admin')" style="grid-column:span 2; background:var(--blue); color:white; padding:15px; border-radius:12px; border:none; font-weight:bold;">💼 ADMIN</button>
-            <button onclick="askCode('depot')" style="grid-column:span 2; background:var(--success); color:white; padding:15px; border-radius:12px; border:none; font-weight:bold;">📦 DÉPÔT</button>
-            <button onclick="askCode('damien')" style="background:#3b82f6; color:white; border:none; padding:12px; border-radius:10px;">DAMIEN</button>
-            <button onclick="askCode('cedric')" style="background:#f59e0b; color:white; border:none; padding:12px; border-radius:10px;">CÉDRIC</button>
+        <img src="logo.png" style="width: 180px;">
+        <div class="login-grid">
+            <button class="btn-auth" style="background:var(--blue); grid-column: span 2;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+            <button class="btn-auth" style="background:var(--success); grid-column: span 2;" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+            <button class="btn-auth" style="background:#3b82f6;" onclick="askCode('interne')">🚚 INTERNE</button>
+            <button class="btn-auth" style="background:var(--yellow); color:var(--blue);" onclick="askCode('cedric')">🚚 CÉDRIC</button>
+            <button class="btn-auth" style="background:var(--blue);" onclick="askCode('jadiel')">👷 JADIEL</button>
+            <button class="btn-auth" style="background:var(--blue);" onclick="askCode('nicola')">👷 NICOLA</button>
         </div>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
-    <div id="admin-tools" class="search-container hidden">
+    <header>
+        <div class="logo"><img src="logo.png"></div>
+        <button class="btn-quit" onclick="logout()">QUITTER</button>
+    </header>
+
+    <div class="search-bar" id="search-zone">
         <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
+        <button style="background:var(--blue); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold;">HISTO</button>
+        <button style="background:var(--success); color:white; border:none; padding:10px 15px; border-radius:10px; font-weight:bold;">📊 HEURES</button>
     </div>
-    
+
     <div class="week-nav">
         <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
-        <div id="wk-disp" style="font-weight:800; color:var(--blue); font-size:16px; text-align:center;"></div>
+        <h2 id="wk-disp" style="color:var(--blue); margin:0; font-size:18px;"></h2>
         <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
 
-    <div id="v-admin" class="table-container hidden">
+    <div class="table-container">
         <table>
-            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
-            <tbody id="b-admin"></tbody>
+            <thead>
+                <tr>
+                    <th class="user-cell">NOM</th>
+                    <th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th>
+                </tr>
+            </thead>
+            <tbody id="main-body"></tbody>
         </table>
     </div>
-    <div id="v-driver" class="hidden"></div>
 </div>
 
 <div id="editor-overlay">
     <div class="editor-box">
-        <h3 id="ed-title" style="margin-top:0; color:var(--blue); text-align:center;">Mission</h3>
-        <div id="ed-view" class="hidden" style="background:#f8fafc; padding:15px; border-radius:12px; margin-bottom:10px;"></div>
-        <div id="ed-edit">
-            <label style="font-size:10px; font-weight:bold;">CHANTIER :</label>
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;">
-            <label style="font-size:10px; font-weight:bold;">DETAILS :</label>
-            <textarea id="e-input" style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box;"></textarea>
-            <label style="display:flex; align-items:center; gap:10px; margin:10px 0;"><input type="checkbox" id="e-depot"> <b>AFFICHER AU DÉPÔT</b></label>
-            <button onclick="saveTask()" style="width:100%; padding:14px; background:var(--blue); color:white; border:none; border-radius:10px; font-weight:bold;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="width:100%; background:none; color:var(--danger); border:none; margin-top:10px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
+        <h3>Mission</h3>
+        <input type="text" id="e-chantier" placeholder="Nom du chantier">
+        <textarea id="e-mission" placeholder="Détails de la mission" style="height: 80px;"></textarea>
+        <textarea id="e-materiel" class="mat-spec" placeholder="Matériel spécifique" style="height: 60px;"></textarea>
+        
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+            <input type="checkbox" id="e-depot" style="width:20px; height:20px; margin:0;">
+            <label style="font-weight:bold; color:var(--blue); font-size:14px;">SIGNALER AU DÉPÔT</label>
         </div>
-        <button onclick="document.getElementById('editor-overlay').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none; color:gray; font-weight:bold;">FERMER</button>
+
+        <button class="btn-save" onclick="saveTask()">ENREGISTRER</button>
+        <div style="text-align:center; margin-top:15px;">
+            <button onclick="deleteTask()" style="color:var(--danger); border:none; background:none; font-weight:bold; cursor:pointer;">Supprimer</button><br><br>
+            <button onclick="closeEd()" style="color:gray; border:none; background:none; cursor:pointer;">Fermer</button>
+        </div>
     </div>
 </div>
 
 <script>
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-
-    // CALCULATEURS DE DATES AUTOMATIQUES
-    function getMonday(d) {
-        d = new Date(d);
-        var day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6:1);
-        return new Date(d.setDate(diff));
-    }
-
-    function getFeries(year) {
-        const G = year % 19, C = Math.floor(year / 100), H = (C - Math.floor(C/4) - Math.floor((8*C+13)/25) + 19*G + 15) % 30;
-        const I = H - Math.floor(H/28)*(1 - Math.floor(H/28)*Math.floor(29/(H+1))*Math.floor((21-G)/11)), J = (year + Math.floor(year/4) + I + 2 - C + Math.floor(C/4)) % 7;
-        const L = I - J, m = 3 + Math.floor((L + 40) / 44), d = L + 28 - 31 * Math.floor(m / 4);
-        const paques = new Date(year, m - 1, d), lundiP = new Date(paques); lundiP.setDate(paques.getDate() + 1);
-        const asc = new Date(paques); asc.setDate(paques.getDate() + 39);
-        const pent = new Date(paques); pent.setDate(paques.getDate() + 50);
-        const f = [`01/01`, `01/05`, `08/05`, `14/07`, `15/08`, `01/11`, `11/11`, `25/12`].map(s => s + "/" + year);
-        [lundiP, asc, pent].forEach(dt => f.push(dt.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'}) + "/" + year));
-        return f;
-    }
-
-    let currentMonday = getMonday(new Date());
-    let curU = localStorage.getItem('rbf_u'), curK = null;
+    
+    // Dates fixes pour 2026 (pour être sûr que ça ne bouge pas)
+    const FERIES = ["06/04", "01/05", "08/05", "14/05", "25/05", "14/07", "11/11"];
+    let curW = 16, curU = localStorage.getItem('rbf_user'), curK = null;
 
     function askCode(u) {
-        let p = prompt("Code " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
-        if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); }
+        let p = prompt("Code " + u.toUpperCase());
+        let codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
+        if (p === codes[u]) { localStorage.setItem('rbf_user', u); login(u); }
     }
 
     function login(u) {
-        curU = u; document.getElementById('login-screen').classList.add('hidden');
+        curU = u;
+        document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
-        document.getElementById('u-info').classList.remove('hidden');
-        if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden');
+        if(u !== 'admin') document.getElementById('search-zone').classList.add('hidden');
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); });
     }
 
-    function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
+    function logout() { localStorage.removeItem('rbf_user'); location.reload(); }
 
     function render() {
-        const year = currentMonday.getFullYear();
-        const feries = getFeries(year);
-        document.getElementById('wk-disp').innerHTML = "SEMAINE " + getWeekNumber(currentMonday) + " - " + year;
+        document.getElementById('wk-disp').innerText = "SEMAINE " + curW + " - 2026";
+        const days = ["LUN","MAR","MER","JEU","VEN"];
+        const start = new Date(2026, 0, 5);
+        start.setDate(start.getDate() + (curW - 1) * 7);
 
         for(let i=0; i<5; i++) {
-            let d = new Date(currentMonday); d.setDate(d.getDate() + i);
-            let dStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'numeric'});
+            let d = new Date(start); d.setDate(d.getDate() + i);
+            let dStr = d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'});
             let th = document.getElementById('h'+i);
-            th.innerHTML = ["LUN","MAR","MER","JEU","VEN"][i] + "<br>" + dStr.substring(0,5);
-            th.classList.toggle('is-ferie', feries.includes(dStr.substring(0,5) + "/" + year));
+            th.innerHTML = days[i] + "<br><span style='font-size:10px; opacity:0.8'>" + dStr + "</span>";
+            th.classList.toggle('is-ferie', FERIES.includes(dStr));
         }
 
-        if (curU === 'admin' || curU === 'depot') {
-            document.getElementById('v-admin').classList.remove('hidden');
-            let h = "";
-            const users = [
-                {id:'damien', s:4, labels:['M1','M2','M3','M4']},
-                {id:'cedric', s:4, labels:['M1','M2','M3','M4']},
-                {id:'jadiel', s:2, labels:['MISSION','BESOINS MATÉRIEL']},
-                {id:'nicola', s:2, labels:['MISSION','BESOINS MATÉRIEL']}
-            ];
+        let html = "";
+        const staff = [
+            {id:'interne', n:'INTERNE', s:4},
+            {id:'cedric', n:'CEDRIC', s:4},
+            {id:'jadiel', n:'JADIEL', s:4},
+            {id:'nicola', n:'NICOLA', s:4}
+        ];
 
-            users.forEach(u => {
-                h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                for(let d=0; d<5; d++) {
-                    h += `<td>`;
-                    for(let s=0; s<u.s; s++) {
-                        let k = `${year}_${getWeekNumber(currentMonday)}_${u.id}_${d}_s${s+1}`;
-                        let dta = window.data[k] || {};
-                        if (curU === 'depot' && !dta.toDepot) continue;
-                        h += `<div class="label-slot">${u.labels[s]}</div>`;
-                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''}" onclick="openEd('${k}')"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}</div>`;
-                    }
-                    h += `</td>`;
+        staff.forEach(p => {
+            html += `<tr><td class="user-cell">${p.n}</td>`;
+            for(let d=0; d<5; d++) {
+                html += `<td>`;
+                for(let s=1; s<=p.s; s++) {
+                    let k = `${curW}_${p.id}_${d}_s${s}`, dta = window.data[k] || {};
+                    let label = (p.id === 'jadiel' || p.id === 'nicola') ? (s===1?'MISSION':(s===2?'MATÉRIEL':`SLOT ${s}`)) : `M${s}`;
+                    html += `<div class="slot-label">${label}</div>`;
+                    html += `<div class="slot ${dta.chantier?'filled':''} ${dta.toDepot?'to-depot':''}" onclick="openEd('${k}')">
+                        <b>${dta.chantier || ''}</b><br>${dta.mission || ''}
+                    </div>`;
                 }
-                h += `</tr>`;
-            });
-            document.getElementById('b-admin').innerHTML = h;
-        }
+                html += `</td>`;
+            }
+            html += `</tr>`;
+        });
+        document.getElementById('main-body').innerHTML = html;
     }
 
     function openEd(k) {
+        if(curU !== 'admin' && curU !== 'depot') return;
         curK = k; let d = window.data[k] || {};
-        if(curU !== 'admin') {
-            document.getElementById('ed-edit').classList.add('hidden');
-            document.getElementById('ed-view').classList.remove('hidden');
-            document.getElementById('ed-view').innerHTML = `<b>CHANTIER:</b> ${d.chantier||'-'}<br><br><b>DETAILS:</b><br>${d.text||'...'}`;
-        } else {
-            document.getElementById('ed-view').classList.add('hidden');
-            document.getElementById('ed-edit').classList.remove('hidden');
-            document.getElementById('e-chantier').value = d.chantier || "";
-            document.getElementById('e-input').value = d.text || "";
-            document.getElementById('e-depot').checked = !!d.toDepot;
-        }
+        document.getElementById('e-chantier').value = d.chantier || "";
+        document.getElementById('e-mission').value = d.mission || "";
+        document.getElementById('e-materiel').value = d.materiel || "";
+        document.getElementById('e-depot').checked = !!d.toDepot;
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
     function saveTask() {
         db.ref('planning_v18/'+curK).set({
-            text: document.getElementById('e-input').value,
             chantier: document.getElementById('e-chantier').value,
+            mission: document.getElementById('e-mission').value,
+            materiel: document.getElementById('e-materiel').value,
             toDepot: document.getElementById('e-depot').checked
-        }).then(() => document.getElementById('editor-overlay').style.display='none');
+        }).then(closeEd);
     }
 
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => document.getElementById('editor-overlay').style.display='none'); }
-    function changeWeek(v) { currentMonday.setDate(currentMonday.getDate() + (v * 7)); render(); }
-    function getWeekNumber(d) {
-        d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-        var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-        return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
-    }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(closeEd); }
+    function closeEd() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function changeWeek(v) { curW += v; render(); }
     function applySearch() {
         let q = document.getElementById('search-input').value.toLowerCase();
         document.querySelectorAll('.slot').forEach(s => s.style.opacity = (q && !s.innerText.toLowerCase().includes(q)) ? "0.1" : "1");
@@ -209,5 +207,6 @@
 
     if(curU) login(curU);
 </script>
+
 </body>
 </html>
