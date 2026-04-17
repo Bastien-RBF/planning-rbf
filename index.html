@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V101 - HISTORY FIX</title>
+    <title>RBF Planning V101 - HISTORY DATE FIX</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -48,10 +48,9 @@
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hist-card { background: white; margin: 15px; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0; }
         .hist-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #e2e8f0; font-size: 12px; }
-        /* Style spécial Historique */
         .history-item { border-bottom: 1px solid #eee; padding: 12px 0; }
         .history-item:last-child { border-bottom: none; }
-        .history-tag { font-size: 9px; font-weight: 900; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
+        .history-tag { font-size: 9px; font-weight: 900; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; margin-right: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -108,8 +107,8 @@
 <div id="history-overlay">
     <div class="editor-box">
         <h3 style="text-align:center; color:var(--blue); margin-top:0;">📜 Historique Chantier</h3>
-        <p id="hist-chantier-name" style="text-align:center; font-weight:bold; color:var(--success); font-size:14px;"></p>
-        <div id="history-results" style="margin:20px 0; max-height:400px; overflow-y:auto;">
+        <p id="hist-chantier-name" style="text-align:center; font-weight:bold; color:var(--success); font-size:14px; margin-bottom:5px;"></p>
+        <div id="history-results" style="margin:20px 0; max-height:450px; overflow-y:auto; border-top: 1px solid #eee;">
             </div>
         <button onclick="document.getElementById('history-overlay').style.display='none'" style="width:100%; padding:15px; background:var(--blue); color:white; border:none; border-radius:12px; font-weight:bold;">FERMER</button>
     </div>
@@ -164,7 +163,6 @@
     const db = firebase.database();
     let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default';
 
-    // Dates & Semaines
     function getWeek(d) {
         const date = new Date(d.getTime()); date.setHours(0,0,0,0);
         date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
@@ -180,7 +178,6 @@
         return ISOweekStart;
     }
 
-    // Couleurs
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colors.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c;
@@ -188,7 +185,6 @@
         document.getElementById('cp').appendChild(d);
     });
 
-    // Login & Auth
     function askCode(u) { 
         let p = prompt("Code " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } 
@@ -208,18 +204,17 @@
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
     }
 
-    // FONCTION HISTORIQUE (LA NOUVEAUTÉ)
+    // FONCTION HISTORIQUE MISE À JOUR (AVEC DATE)
     function showHistory() {
         const query = document.getElementById('search-input').value.trim().toLowerCase();
-        if (!query) return alert("Tapez le nom d'un chantier dans la recherche pour voir son historique.");
+        if (!query) return alert("Tapez le nom d'un chantier dans la recherche.");
         
         const resultsBox = document.getElementById('history-results');
         const nameDisplay = document.getElementById('hist-chantier-name');
-        resultsBox.innerHTML = "🔍 Recherche en cours...";
+        resultsBox.innerHTML = "🔍 Recherche...";
         nameDisplay.innerText = query.toUpperCase();
         document.getElementById('history-overlay').style.display = 'flex';
 
-        // On parcourt TOUTE la base planning_v18
         db.ref('planning_v18').once('value', s => {
             const allData = s.val() || {};
             let html = "";
@@ -228,11 +223,19 @@
             for (let key in allData) {
                 let mission = allData[key];
                 if (mission.chantier && mission.chantier.toLowerCase().includes(query)) {
-                    // Analyse de la clé (Ex: 2026_15_cedric_2_s1)
-                    let parts = key.split('_');
+                    let parts = key.split('_'); // [2026, 15, cedric, 2, s1]
+                    let y = parseInt(parts[0]);
+                    let w = parseInt(parts[1]);
+                    let dIdx = parseInt(parts[3]);
+                    
+                    // Calcul de la date exacte
+                    let dateExacte = getDateFromWeek(w, y, dIdx);
+                    let dateStr = dateExacte.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
                     items.push({
-                        year: parts[0],
-                        week: parts[1],
+                        year: y,
+                        week: w,
+                        dateLabel: dateStr,
                         driver: parts[2],
                         text: mission.text || "Pas de détails"
                     });
@@ -240,18 +243,18 @@
             }
 
             if (items.length === 0) {
-                html = "<p style='text-align:center; color:#94a3b8;'>Aucun antécédent trouvé pour ce chantier.</p>";
+                html = "<p style='text-align:center; padding:20px; color:#94a3b8;'>Aucun historique trouvé.</p>";
             } else {
-                // Trier du plus récent au plus ancien
                 items.sort((a, b) => b.year - a.year || b.week - a.week);
                 items.forEach(it => {
                     html += `
                     <div class="history-item">
-                        <div style="margin-bottom:5px;">
-                            <span class="history-tag">📅 S${it.week} - ${it.year}</span>
-                            <span class="history-tag" style="background:var(--yellow)">🚛 ${it.driver.toUpperCase()}</span>
+                        <div style="margin-bottom:8px;">
+                            <span class="history-tag" style="background:var(--blue); color:white;">📅 ${it.dateLabel}</span>
+                            <span class="history-tag" style="background:var(--yellow); color:var(--blue);">S${it.week}</span>
+                            <span class="history-tag" style="background:#e2e8f0;">🚛 ${it.driver.toUpperCase()}</span>
                         </div>
-                        <div style="font-size:13px; color:#475569;">${it.text}</div>
+                        <div style="font-size:13px; color:#334155; line-height:1.4; padding-left:5px;">${it.text}</div>
                     </div>`;
                 });
             }
@@ -259,7 +262,6 @@
         });
     }
 
-    // Le reste de votre logique (Render, Save, Pointages, Holidays)
     async function fetchHolidays(year) {
         try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`); holidays = await r.json(); render(); } catch(e) { render(); }
     }
