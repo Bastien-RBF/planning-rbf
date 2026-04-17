@@ -3,141 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V108</title>
+    <title>RBF Planning V110</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        :root { --blue: #1b2e58; --yellow: #f9c311; --green: #10b981; --bg: #f4f7f9; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; }
+        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-logo img { height: 40px; }
         
-        /* LOGIN STYLE (IMAGE 2) */
-        .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-        .btn-login { 
-            width: 100%; max-width: 400px; padding: 18px; margin: 8px 0; border-radius: 12px; 
-            border: none; color: white; font-weight: bold; font-size: 16px; cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;
-        }
-        .btn-login:active { transform: scale(0.98); }
-        .grid-login { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
+        /* TOOLS */
+        .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #search-input { flex: 1; min-width: 180px; padding: 12px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; }
+        .btn-tool { background: var(--blue); color: white; border: none; padding: 12px 15px; border-radius: 10px; font-weight: bold; font-size: 11px; cursor: pointer; }
 
-        /* HEADER & SEARCH (IMAGE 4) */
-        header { background: white; padding: 10px 20px; border-bottom: 4px solid var(--yellow); text-align: center; }
-        .search-bar { 
-            display: flex; align-items: center; gap: 10px; background: white; 
-            padding: 10px 20px; border-bottom: 1px solid #e2e8f0;
-        }
-        .search-input { flex: 1; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-        .btn-tool { padding: 10px 15px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        /* NAV */
+        .week-nav { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: white; border-bottom: 1px solid #e2e8f0; }
+        .wk-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; background: white; font-weight: bold; font-size: 18px; }
+        
+        /* TABLE */
+        .table-container { padding: 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; min-width: 900px; }
+        th { background: var(--blue); color: white; padding: 12px 8px; font-size: 11px; border-bottom: 2px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
+        .is-ferie { background: #fee2e2 !important; color: #dc2626 !important; }
 
-        /* PLANNING TABLE (IMAGE 1 & 4) */
-        .table-wrap { padding: 20px; overflow-x: auto; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 10px; min-width: 1100px; border: 1px solid #e2e8f0; }
-        th { background: var(--blue); color: white; padding: 12px; font-size: 11px; text-transform: uppercase; border-right: 1px solid #334155; }
-        td { border: 0.5px solid #edf2f7; padding: 8px; vertical-align: top; }
-        .user-col { background: #fff; font-weight: 800; color: var(--blue); text-align: center; position: sticky; left: 0; border-right: 4px solid var(--yellow) !important; width: 120px; z-index: 5; font-size: 13px; }
-        .is-ferie { background: #fff1f2 !important; color: #e11d48 !important; }
+        /* SLOTS */
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; }
+        .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
+        .is-to-depot { border-left: 6px solid var(--success) !important; }
 
-        /* MISSION SLOTS */
-        .slot { 
-            font-size: 12px; padding: 12px; margin-bottom: 8px; border-radius: 10px; 
-            background: #fff; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 50px; transition: 0.2s;
-        }
-        .slot.filled { background: #eef2ff; border: 1px solid #312e81; color: var(--blue); font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .slot.is-depot { border-left: 5px solid var(--green); }
-
-        /* MODALE MISSION (IMAGE 3) */
-        .overlay { position: fixed; inset: 0; background: rgba(30, 41, 59, 0.7); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .box { background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .box h2 { color: var(--blue); margin: 0 0 20px 0; font-size: 22px; }
-        input, textarea { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
-        .btn-save { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--blue); color: white; font-weight: bold; font-size: 16px; cursor: pointer; }
+        /* MODALES */
+        #editor-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.9); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(5px); }
+        .editor-box { background: white; padding: 25px; border-radius: 20px; width: 92%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+        input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; }
+        .btn-main { background: var(--blue); color: white; width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
         
         .hidden { display: none !important; }
+        .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f1f5f9; }
+        .grid-auth { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 350px; }
     </style>
 </head>
 <body>
 
+<header>
+    <div class="header-logo"><img src="logo.png"></div>
+    <div id="u-info" class="hidden"><button onclick="logout()" style="background:var(--danger); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">QUITTER</button></div>
+</header>
+
 <div id="login-screen" class="login-screen">
-    <img src="logo.png" style="width:220px; margin-bottom:40px;">
-    <button class="btn-login" style="background:var(--blue)" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
-    <button class="btn-login" style="background:var(--green)" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
-    <div class="grid-login">
-        <button class="btn-login" style="background:var(--blue)" onclick="askCode('interne')">🚛 INTERNE</button>
-        <button class="btn-login" style="background:var(--blue)" onclick="askCode('cedric')">🚛 CÉDRIC</button>
-        <button class="btn-login" style="background:var(--blue)" onclick="askCode('jadiel')">👷 JADIEL</button>
-        <button class="btn-login" style="background:var(--blue)" onclick="askCode('nicola')">👷 NICOLA</button>
+    <div class="grid-auth">
+        <button class="btn-tool" style="grid-column: span 2; padding: 18px;" onclick="askCode('admin')">💼 BUREAU / ADMIN</button>
+        <button class="btn-tool" style="grid-column: span 2; padding: 18px; background:var(--success)" onclick="askCode('depot')">📦 DÉPÔT / PRÉPA</button>
+        <button class="btn-tool" onclick="askCode('damien')">🚛 DAMIEN</button>
+        <button class="btn-tool" onclick="askCode('cedric')">🚛 CÉDRIC</button>
+        <button class="btn-tool" onclick="askCode('jadiel')">👷 JADIEL</button>
+        <button class="btn-tool" onclick="askCode('nicola')">👷 NICOLA</button>
     </div>
 </div>
 
 <div id="app-content" class="hidden">
-    <header><img src="logo.png" height="50"></header>
-    
-    <div class="search-bar" id="admin-tools">
-        <input type="text" id="search-q" class="search-input" placeholder="🔍 Rechercher chantier..." oninput="doSearch()">
-        <button class="btn-tool" style="background:#1e293b" onclick="openHisto()">HISTO</button>
-        <button class="btn-tool" style="background:var(--green)" onclick="openRecap()">📊 HEURES</button>
+    <div id="admin-zone" class="search-container hidden">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier..." oninput="applySearch()">
+        <button class="btn-tool" onclick="showHisto()">HISTORIQUE</button>
+        <button class="btn-tool" style="background:var(--success)" onclick="showRecap()">📊 HEURES</button>
     </div>
 
-    <button id="btn-p" class="btn-login hidden" style="background:var(--green); margin: 15px auto; display:block;" onclick="openP()">⏰ SAISIR MES HEURES / RAPPORTS</button>
+    <button id="btn-p" class="btn-main hidden" style="background:var(--success); width:90%; margin: 15px auto; display:block;" onclick="openP()">⏰ SAISIR MES HEURES / RAPPORTS</button>
 
-    <div style="display:flex; justify-content:center; align-items:center; gap:25px; padding:20px;">
-        <button class="btn-tool" style="background:var(--blue); border-radius:50%; width:40px; hieght:40px;" onclick="changeW(-1)">◀</button>
-        <b id="wk-txt" style="color:var(--blue); font-size:20px; text-transform: uppercase;"></b>
-        <button class="btn-tool" style="background:var(--blue); border-radius:50%; width:40px; hieght:40px;" onclick="changeW(1)">▶</button>
+    <div class="week-nav">
+        <button class="wk-btn" onclick="changeWeek(-1)">◀</button>
+        <div id="wk-disp" style="font-weight:800; color:var(--blue);"></div>
+        <button class="wk-btn" onclick="changeWeek(1)">▶</button>
     </div>
 
-    <div id="v-admin" class="table-wrap hidden">
+    <div id="v-admin" class="table-container hidden">
         <table>
-            <thead>
-                <tr><th class="user-col">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr>
-            </thead>
+            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-    <div id="v-driver" class="hidden" style="padding:15px;"></div>
+    <div id="v-driver" class="hidden"></div>
 </div>
 
-<div id="md-mission" class="overlay">
-    <div class="box">
-        <h2>Mission</h2>
-        <div id="form-container">
-            <input type="text" id="f-ch" placeholder="Nom du chantier">
-            <textarea id="f-tx" placeholder="Détails de la mission" rows="4"></textarea>
-            <div id="f-mat-box" class="hidden">
-                <textarea id="f-mat" placeholder="Matériel spécifique" rows="2" style="border: 2px solid var(--green)"></textarea>
-            </div>
-            <div id="f-files" style="margin-bottom:15px;"></div>
-            <input type="file" id="f-up" class="hidden" onchange="uploadFile(this)">
-            <button onclick="document.getElementById('f-up').click()" style="width:100%; border:2px dashed #cbd5e1; padding:12px; border-radius:12px; margin-bottom:15px; background: #f8fafc; font-weight: bold;">📎 JOINDRE PHOTO / PDF</button>
-            <label style="display:flex; align-items:center; justify-content: space-between; margin-bottom:20px; font-weight:bold; color:var(--blue)">
-                <input type="checkbox" id="f-dp" style="width:20px; height:20px;"> SIGNALER AU DÉPÔT
+<div id="editor-overlay">
+    <div class="editor-box">
+        <h3 id="ed-title" style="margin-top:0; color:var(--blue);">Mission</h3>
+        <div id="ed-form">
+            <label style="font-size:11px; font-weight:bold;">CHANTIER :</label>
+            <input type="text" id="e-chantier">
+            <label style="font-size:11px; font-weight:bold;">MISSION :</label>
+            <textarea id="e-text" rows="4"></textarea>
+            <label id="l-depot" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                <input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b>
             </label>
-            <button class="btn-save" onclick="saveM()">ENREGISTRER</button>
-            <div style="display:flex; justify-content: space-around; margin-top:20px;">
-                <span onclick="delM()" style="color:var(--danger); cursor:pointer; font-weight:bold;">Supprimer</span>
-                <span onclick="closeAll()" style="color:#64748b; cursor:pointer; font-weight:bold;">Fermer</span>
+            <div id="admin-btns">
+                <button class="btn-main" onclick="saveTask()">ENREGISTRER</button>
+                <button onclick="deleteTask()" style="width:100%; background:none; color:var(--danger); border:none; margin-top:10px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
             </div>
         </div>
-        <div id="depot-view" class="hidden">
-            <p id="v-ch" style="font-weight:bold; font-size:18px;"></p>
-            <p id="v-tx" style="white-space: pre-wrap;"></p>
-            <div id="v-fi"></div>
-            <button class="btn-save" style="margin-top:20px;" onclick="closeAll()">FERMER</button>
-        </div>
+        <div id="view-only" class="hidden"></div>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; background:none; border:none; color:gray; font-weight:bold; cursor:pointer;">FERMER</button>
     </div>
 </div>
 
-<div id="md-p" class="overlay">
-    <div class="box">
-        <h2>Pointage des Heures</h2>
-        <label>Date de la journée :</label><input type="date" id="p-date" onchange="loadP()">
-        <label>Heure Début :</label><input type="time" id="p-s">
-        <div id="p-pauses"></div>
-        <button onclick="addPause()" style="font-size:12px; margin-bottom:10px;">+ Ajouter une pause</button>
-        <label>Heure Fin :</label><input type="time" id="p-e">
-        <label>Rapport d'activité :</label><textarea id="p-ra" rows="3"></textarea>
-        <button class="btn-save" style="background:var(--green)" onclick="saveP()">VALIDER LE POINTAGE</button>
-        <p onclick="closeAll()" style="text-align:center; cursor:pointer; color:gray; margin-top:15px;">Annuler</p>
+<div id="md-p" class="hidden" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:20000; display:flex; align-items:center; justify-content:center;">
+    <div class="editor-box">
+        <h3 style="color:var(--blue); margin-top:0;">Pointage des Heures</h3>
+        <input type="date" id="p-date" onchange="loadP()">
+        <label>Début :</label><input type="time" id="p-s">
+        <label>Fin :</label><input type="time" id="p-e">
+        <textarea id="p-ra" placeholder="Rapport d'activité..." rows="3"></textarea>
+        <button class="btn-main" style="background:var(--success)" onclick="saveP()">VALIDER</button>
+        <button onclick="document.getElementById('md-p').classList.add('hidden')" style="width:100%; background:none; border:none; color:gray; margin-top:10px;">Annuler</button>
     </div>
 </div>
 
@@ -145,50 +124,48 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     const FERIES = ["2026-04-06", "2026-05-01", "2026-05-08", "2026-05-14", "2026-05-25", "2026-06-01", "2026-07-14"];
-
-    let curU = localStorage.getItem('rbf_u'), curW, curY = 2026, curK, currentFiles = [];
-
-    function getWeek(d) { d = new Date(d); d.setHours(0,0,0,0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7); return 1 + Math.round(((d - new Date(d.getFullYear(), 0, 4)) / 864e5 - 3 + (new Date(d.getFullYear(), 0, 4).getDay() + 6) % 7) / 7); }
+    
+    let curW, curU = localStorage.getItem('rbf_u'), curK = null;
+    function getWeek(d) { const s = new Date(2026, 0, 5); return Math.max(1, Math.floor((d - s) / (1000 * 60 * 60 * 24 * 7)) + 1); }
     curW = getWeek(new Date());
 
     function askCode(u) {
-        let codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
-        let p = prompt("Code d'accès " + u.toUpperCase());
+        let p = prompt("Code " + u.toUpperCase());
+        let codes = {admin:'2026', depot:'5555', damien:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'};
         if(p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); }
     }
 
     function login(u) {
-        curU = u; localStorage.setItem('rbf_u', u);
-        document.getElementById('login-screen').classList.add('hidden');
+        curU = u; document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
-        if(u==='admin') document.getElementById('admin-tools').classList.remove('hidden');
-        if(['interne','cedric','jadiel','nicola','depot'].includes(u)) document.getElementById('btn-p').classList.remove('hidden');
+        document.getElementById('u-info').classList.remove('hidden');
+        if(u==='admin') document.getElementById('admin-zone').classList.remove('hidden');
+        if(['damien','cedric','jadiel','nicola','depot'].includes(u)) document.getElementById('btn-p').classList.remove('hidden');
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); });
     }
 
     function render() {
-        document.getElementById('wk-txt').innerText = "SEMAINE " + curW;
-        let days = ["LUN", "MAR", "MER", "JEU", "VEN"];
-        for(let i=0; i<5; i++){
-            let d = getD(curW, curY, i); let iso = d.toISOString().split('T')[0];
+        document.getElementById('wk-disp').textContent = "SEMAINE " + curW;
+        for(let i=0; i<5; i++) {
+            let d = new Date(2026, 0, 5); d.setDate(d.getDate() + (curW - 1) * 7 + i);
+            let iso = d.toISOString().split('T')[0];
             let el = document.getElementById('h'+i);
-            el.innerHTML = days[i] + "<br>" + d.getDate() + "/" + (d.getMonth()+1);
+            el.innerHTML = ["LUN","MAR","MER","JEU","VEN"][i] + "<br>" + d.getDate() + "/" + (d.getMonth()+1);
             el.classList.toggle('is-ferie', FERIES.includes(iso));
         }
 
         if(curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
-            document.getElementById('v-driver').classList.add('hidden');
             let h = "";
-            let users = [{id:'interne', n:4},{id:'externe', n:4},{id:'cedric', n:4},{id:'divers', n:4},{id:'instal', n:4},{id:'jadiel', n:2},{id:'nicola', n:2}];
+            const users = [{id:'damien',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'elec',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
-                h += `<tr><td class="user-col">${u.id.toUpperCase()}</td>`;
-                for(let d=0; d<5; d++){
+                h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
+                for(let dIdx=0; dIdx<5; dIdx++) {
                     h += `<td>`;
-                    for(let s=1; s<=u.n; s++){
-                        let k = `${curY}_${curW}_${u.id}_${d}_s${s}`, val = window.data[k];
-                        if(curU==='depot' && (!val || !val.dp)) continue;
-                        h += `<div class="slot ${val?'filled':''} ${val?.dp?'is-depot':''}" onclick="openM('${k}')"><b>${val?.ch||''}</b><br>${val?.tx||''}</div>`;
+                    for(let s=1; s<=u.s; s++) {
+                        let k = `${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {};
+                        if(curU === 'depot' && !dta.toDepot) continue;
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''}" onclick="openEd('${k}')"><b>${dta.chantier?.toUpperCase()||''}</b><br>${dta.text||''}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -196,101 +173,76 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            // Vue Chauffeur Simple
-            document.getElementById('v-driver').classList.remove('hidden');
-            document.getElementById('v-admin').classList.add('hidden');
-            let h = "";
-            for(let d=0; d<5; d++){
-                let dD = getD(curW, curY, d);
-                h += `<div style="background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:15px; font-weight:bold;">${dD.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}).toUpperCase()}</div>`;
-                for(let s=1; s<=4; s++){
-                    let val = window.data[`${curY}_${curW}_${curU}_${d}_s${s}`];
-                    if(val) h += `<div style="background:white; padding:20px; margin:10px 0; border-radius:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05); border-left:6px solid var(--yellow)"><b>${val.ch}</b><br>${val.tx}${val.mat?`<br><small style="color:var(--green)">📦 ${val.mat}</small>`:''}</div>`;
+            // Vue Chauffeur simple
+            let v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
+            for(let d=0; d<5; d++) {
+                let missions = "";
+                for(let s=1; s<=4; s++) {
+                    let dta = window.data[`${curW}_${curU}_${d}_s${s}`];
+                    if(dta && dta.text) missions += `<div style="padding:10px; background:white; margin-top:5px; border-radius:8px; border-left:5px solid var(--yellow)"><b>${dta.chantier?.toUpperCase()}</b><br>${dta.text}</div>`;
                 }
+                v.innerHTML += `<div style="padding:15px;"><b>JOUR ${d+1}</b>${missions || '<p>Pas de mission</p>'}</div>`;
             }
-            document.getElementById('v-driver').innerHTML = h || "<p style='text-align:center; color:gray; margin-top:30px;'>Aucune mission cette semaine.</p>";
         }
     }
 
-    function openM(k) {
-        curK = k; let v = window.data[k] || {}; currentFiles = v.fi || [];
+    function openEd(k) {
+        curK = k; let dta = window.data[k] || {};
         if(curU === 'depot') {
-            document.getElementById('form-container').classList.add('hidden');
-            document.getElementById('depot-view').classList.remove('hidden');
-            document.getElementById('v-ch').innerText = v.ch || "Sans titre";
-            document.getElementById('v-tx').innerText = v.tx || "";
+            document.getElementById('ed-form').classList.add('hidden');
+            document.getElementById('view-only').classList.remove('hidden');
+            document.getElementById('view-only').innerHTML = `<b>${dta.chantier||''}</b><br>${dta.text||''}`;
         } else {
-            document.getElementById('form-container').classList.remove('hidden');
-            document.getElementById('depot-view').classList.add('hidden');
-            document.getElementById('f-ch').value = v.ch || "";
-            document.getElementById('f-tx').value = v.tx || "";
-            document.getElementById('f-mat').value = v.mat || "";
-            document.getElementById('f-dp').checked = !!v.dp;
-            document.getElementById('f-mat-box').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-            renderFi();
+            document.getElementById('ed-form').classList.remove('hidden');
+            document.getElementById('view-only').classList.add('hidden');
+            document.getElementById('e-chantier').value = dta.chantier || "";
+            document.getElementById('e-text').value = dta.text || "";
+            document.getElementById('e-depot').checked = !!dta.toDepot;
         }
-        document.getElementById('md-mission').style.display = 'flex';
+        document.getElementById('editor-overlay').style.display = 'flex';
     }
 
-    function saveM() {
+    function saveTask() {
         db.ref('planning_v18/'+curK).set({
-            ch: document.getElementById('f-ch').value, tx: document.getElementById('f-tx').value,
-            mat: document.getElementById('f-mat').value, dp: document.getElementById('f-dp').checked, fi: currentFiles
-        }).then(() => closeAll());
+            chantier: document.getElementById('e-chantier').value,
+            text: document.getElementById('e-text').value,
+            toDepot: document.getElementById('e-depot').checked
+        }).then(closeEditor);
     }
 
-    function delM() { if(confirm("Supprimer la mission ?")) db.ref('planning_v18/'+curK).remove().then(() => closeAll()); }
-
-    function openP() { document.getElementById('p-date').value = new Date().toISOString().split('T')[0]; loadP(); document.getElementById('md-p').style.display='flex'; }
+    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(closeEditor); }
+    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function changeWeek(v) { curW += v; render(); }
+    function applySearch() { let q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.style.opacity = (q && !s.innerText.toLowerCase().includes(q)) ? "0.2" : "1"); }
+    
+    function openP() { document.getElementById('p-date').value = new Date().toISOString().split('T')[0]; loadP(); document.getElementById('md-p').classList.remove('hidden'); }
     function loadP() {
-        let dt = document.getElementById('p-date').value; document.getElementById('p-pauses').innerHTML = "";
+        let dt = document.getElementById('p-date').value;
         db.ref(`pointages_v3/${dt}/${curU}`).once('value', s => {
             let v = s.val() || {}; document.getElementById('p-s').value = v.s||""; document.getElementById('p-e').value = v.e||""; document.getElementById('p-ra').value = v.ra||"";
-            if(v.pz) v.pz.forEach(p => addPause(p.s, p.e));
         });
     }
     function saveP() {
-        let pz = []; document.querySelectorAll('.pz-row').forEach(r => pz.push({s: r.querySelector('.ps').value, e: r.querySelector('.pe').value}));
-        db.ref(`pointages_v3/${document.getElementById('p-date').value}/${curU}`).set({ s: document.getElementById('p-s').value, e: document.getElementById('p-e').value, ra: document.getElementById('p-ra').value, pz: pz }).then(() => { alert("Enregistré !"); closeAll(); });
+        db.ref(`pointages_v3/${document.getElementById('p-date').value}/${curU}`).set({
+            s: document.getElementById('p-s').value, e: document.getElementById('p-e').value, ra: document.getElementById('p-ra').value
+        }).then(() => { alert("Validé !"); document.getElementById('md-p').classList.add('hidden'); });
     }
 
-    function openRecap() {
-        db.ref('pointages_v3').limitToLast(10).once('value', s => {
-            let d = s.val() || {}, h = "";
-            Object.keys(d).reverse().forEach(dt => {
-                h += `<div style="background:#f1f5f9; padding:8px; font-weight:bold; margin-top:10px;">📅 ${dt}</div>`;
-                Object.keys(d[dt]).forEach(u => {
-                    let v = d[dt][u]; h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${u.toUpperCase()}</b> : ${v.s} - ${v.e} <br><small>${v.ra||''}</small></div>`;
-                });
-            });
-            showInfo("Récapitulatif Heures", h);
+    function showHisto() {
+        let q = document.getElementById('search-input').value; if(!q) return alert("Tapez un nom de chantier");
+        let res = ""; Object.keys(window.data).forEach(k => { if(window.data[k].chantier?.toLowerCase().includes(q.toLowerCase())) res += k + " : " + window.data[k].text + "\n"; });
+        alert(res || "Rien trouvé");
+    }
+
+    function showRecap() {
+        db.ref('pointages_v3').limitToLast(5).once('value', s => {
+            let d = s.val(), h = "";
+            for(let date in d) { h += date + "\n"; for(let u in d[date]) h += " - " + u + " : " + d[date][u].s + "\n"; }
+            alert(h || "Pas de pointages");
         });
     }
 
-    function openHisto() {
-        let q = document.getElementById('search-q').value.toLowerCase(); if(!q) return alert("Indiquez un nom de chantier");
-        let h = ""; Object.keys(window.data).forEach(k => { let v = window.data[k]; if(v.ch && v.ch.toLowerCase().includes(q)) h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${k.split('_')[2]}</b>: ${v.ch} - ${v.tx}</div>`; });
-        showInfo("Historique : " + q, h || "Aucun résultat");
-    }
-
-    function showInfo(t, c) { alert(t + "\n" + c); } // Simplifié pour le code lourd
-    function getD(w, y, i) { let s = new Date(y, 0, 1 + (w - 1) * 7); s.setDate(s.getDate() + (1 - s.getDay()) + i); return s; }
-    function changeW(v) { curW += v; render(); }
-    function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.style.display='none'); }
-    function addPause(s="",e="") {
-        let d = document.createElement('div'); d.className='pz-row'; d.style.display="flex"; d.style.gap="10px"; d.style.marginBottom="10px";
-        d.innerHTML = `<input type="time" class="ps" value="${s}"> <input type="time" class="pe" value="${e}"> <button onclick="this.parentElement.remove()">X</button>`;
-        document.getElementById('p-pauses').appendChild(d);
-    }
-    function renderFi() { let d = document.getElementById('f-files'); d.innerHTML = ""; currentFiles.forEach((f, i) => d.innerHTML += `<div style="font-size:12px; margin-bottom:5px;">📄 ${f.name} <span onclick="currentFiles.splice(${i},1);renderFi()" style="color:red; cursor:pointer;">[X]</span></div>`); }
-    function uploadFile(i) {
-        if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset');
-        fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(res=>{
-            currentFiles.push({name: i.files[0].name, url: res.secure_url}); renderFi();
-        });
-    }
-    function doSearch() { let q = document.getElementById('search-q').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q && !s.innerText.toLowerCase().includes(q))); }
-
+    function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     if(curU) login(curU);
 </script>
 </body>
