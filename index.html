@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RBF Planning V94</title>
+    <title>RBF Planning V95 - OPTIMISÉ</title>
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #334155; -webkit-tap-highlight-color: transparent; text-rendering: optimizeLegibility; }
         header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .header-logo img { height: 40px; }
         .search-container { background: white; padding: 10px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -29,8 +29,9 @@
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 95px; font-size: 11px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; }
         .is-holiday-col { background: #fffbeb !important; }
         .holiday-badge { display: inline-block; background: var(--yellow); color: var(--blue); font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-top: 5px; font-weight: 900; text-transform: uppercase; }
-        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: opacity 0.2s; }
-        .slot.filtered-out { opacity: 0.15; pointer-events: none; }
+        .slot { font-size: 10.5px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px dashed #cbd5e1; cursor: pointer; min-height: 40px; color: var(--blue); white-space: pre-wrap; transition: transform 0.1s; }
+        .slot:active { transform: scale(0.98); }
+        .slot.filtered-out { display: none; }
         .filled { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important; border: 1px solid #3b82f6 !important; font-weight: 600; }
         .is-to-depot { border-left: 6px solid var(--success) !important; }
         .has-link { border-bottom: 4px solid #8b5cf6 !important; }
@@ -44,7 +45,6 @@
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.1); }
         .hidden { display: none !important; }
-        .mat-label { background: #dcfce7; color: #166534; font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; margin-bottom: 4px; display: inline-block; }
         .driver-tools { display: flex; gap: 10px; margin: 10px; justify-content: center; }
         .btn-tool { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; }
         .form-group { margin-bottom: 12px; text-align: left; }
@@ -100,7 +100,6 @@
 <div id="report-overlay">
     <div class="editor-box">
         <h3 id="rep-title" style="text-align:center; color:var(--blue); margin-top:0;"></h3>
-        
         <div id="form-pointage" class="hidden">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div class="form-group"><label>Heure Début :</label><input type="time" id="p-start"></div>
@@ -108,15 +107,13 @@
             </div>
             <div class="form-group"><label>Total Pauses (en minutes) :</label><input type="number" id="p-pause" placeholder="Ex: 60"></div>
         </div>
-
         <div id="form-journalier" class="hidden">
-            <div class="form-group"><label>Lieu de Départ :</label><input type="text" id="rj-dep" placeholder="Ex: Dépôt ou Chantier X"></div>
-            <div class="form-group"><label>Lieu d'Arrivée :</label><input type="text" id="rj-arr" placeholder="Ex: Carrière ou Chantier Y"></div>
-            <div class="form-group"><label>Détail du voyage / Chargement :</label><textarea id="rj-text" style="height:100px;" placeholder="Ex: 15T de gravier, évacuation terre..."></textarea></div>
+            <div class="form-group"><label>Lieu de Départ :</label><input type="text" id="rj-dep" placeholder="Ex: Dépôt"></div>
+            <div class="form-group"><label>Lieu d'Arrivée :</label><input type="text" id="rj-arr" placeholder="Ex: Chantier X"></div>
+            <div class="form-group"><label>Détail du voyage :</label><textarea id="rj-text" style="height:100px;" placeholder="Détails..."></textarea></div>
         </div>
-
         <button onclick="saveReport()" style="background:var(--blue); color:white; width:100%; padding:15px; border-radius:12px; border:none; font-weight:bold; margin-top:10px;">ENREGISTRER</button>
-        <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">ANNULER</button>
+        <button onclick="closeReport()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold;">ANNULER</button>
     </div>
 </div>
 
@@ -125,35 +122,39 @@
         <h3 id="ed-title" style="margin:0 0 15px 0; color:var(--blue); text-align:center;">Détails Mission</h3>
         <div id="ed-view-only" class="hidden"></div>
         <div id="ed-controls">
-            <label style="font-size:11px; font-weight:bold; color:var(--blue);">NOM DU CHANTIER :</label>
-            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px; box-sizing:border-box;">
-            <label style="font-size:11px; font-weight:bold; color:var(--blue);">MISSION :</label>
-            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd; box-sizing: border-box; outline: none; margin-bottom:10px;"></textarea>
+            <label style="font-size:11px; font-weight:bold;">NOM DU CHANTIER :</label>
+            <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:15px;">
+            <label style="font-size:11px; font-weight:bold;">MISSION :</label>
+            <textarea id="e-input" style="width:100%; height:80px; padding:12px; border-radius:12px; border:1px solid #ddd;"></textarea>
             <div id="zone-matos" class="hidden">
-                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 BESOIN MATÉRIEL (JADIEL/NICOLA) :</label>
-                <textarea id="e-matos" style="width:100%; height:60px; padding:12px; border-radius:12px; border:1px solid var(--success); box-sizing: border-box; outline: none; margin-bottom:10px;" placeholder="Ex: Mini-pelle, 10 sacs de chaux..."></textarea>
+                <label style="font-size:11px; font-weight:bold; color:var(--success);">📦 LOGISTIQUE :</label>
+                <textarea id="e-matos" style="width:100%; height:60px; border:1px solid var(--success); padding:12px; border-radius:12px;"></textarea>
             </div>
             <div class="color-picker" id="cp"></div>
-            <div id="file-list-admin" style="margin-bottom: 12px;"></div>
+            <div id="file-list-admin"></div>
             <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
             <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:12px; border-radius:10px; border:1px dashed #cbd5e1; margin-bottom:12px; font-weight:bold; font-size:11px;">📎 AJOUTER UN DOCUMENT</button>
-            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size:14px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
+            <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px;"><input type="checkbox" id="e-depot" style="width:20px; height:20px;"> <b>SIGNALER AU DÉPÔT</b></label>
             <button onclick="saveTask()" style="background:var(--blue); color:white; width:100%; padding:14px; border-radius:12px; border:none; font-weight:bold;">ENREGISTRER</button>
-            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold; cursor:pointer;">SUPPRIMER</button>
+            <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:12px; font-weight:bold;">SUPPRIMER</button>
         </div>
-        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold; cursor:pointer;">FERMER</button>
+        <button onclick="closeEditor()" style="width:100%; margin-top:15px; border:none; background:none; color:#94a3b8; font-weight: bold;">FERMER</button>
     </div>
 </div>
 
 <script>
-    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq", T_CHAUFFEUR = "template_5xn3o8u", T_DEPOT = "template_8gqnnh7";
+    const SERVICE_ID = "service_1j5bpwf", PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
     const CLOUD_NAME = "dixdmejal", UPLOAD_PRESET = "rbf-preset";
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
-    (function(){ emailjs.init(PUBLIC_KEY); })();
+
+    let holidays = JSON.parse(localStorage.getItem('rbf_holidays') || '{}');
+    let curDate = new Date();
+    let curW = getWeek(curDate), curY = curDate.getFullYear();
+    let curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default', activeReportType = '';
 
     function getWeek(d) {
-        const date = new Date(d.getTime()); date.setHours(0, 0, 0, 0);
+        const date = new Date(d.getTime()); date.setHours(0,0,0,0);
         date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
         const week1 = new Date(date.getFullYear(), 0, 4);
         return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
@@ -167,14 +168,15 @@
         return ISOweekStart;
     }
 
-    let holidays = {};
     async function fetchHolidays(year) {
-        try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`); holidays = await r.json(); render(); } catch(e) {}
+        if(holidays[year]) return render();
+        try { 
+            const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${year}.json`); 
+            const data = await r.json(); holidays[year] = data; 
+            localStorage.setItem('rbf_holidays', JSON.stringify(holidays));
+            render(); 
+        } catch(e) { render(); }
     }
-
-    let curDate = new Date();
-    let curW = getWeek(curDate), curY = curDate.getFullYear();
-    let curU = localStorage.getItem('rbf_u'), curK = null, currentFiles = [], selectedCol = 'default', activeReportType = '';
 
     const colors = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colors.forEach(c => {
@@ -203,7 +205,7 @@
 
     function openReport(type) {
         activeReportType = type;
-        document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE JOURNÉE' : '🚛 RAPPORT DE VOYAGE';
+        document.getElementById('rep-title').innerText = type === 'pointage' ? '🕒 POINTAGE' : '🚛 RAPPORT VOYAGE';
         document.getElementById('form-pointage').classList.toggle('hidden', type !== 'pointage');
         document.getElementById('form-journalier').classList.toggle('hidden', type !== 'journalier');
         document.getElementById('report-overlay').style.display = 'flex';
@@ -218,20 +220,17 @@
             reportData.debut = document.getElementById('p-start').value;
             reportData.fin = document.getElementById('p-end').value;
             reportData.pause = document.getElementById('p-pause').value;
-            if(!reportData.debut || !reportData.fin) return alert("Heures manquantes.");
+            if(!reportData.debut) return alert("Heure début ?");
         } else {
             reportData.type = "VOYAGE";
-            reportData.depart = document.getElementById('rj-dep').value;
-            reportData.arrivee = document.getElementById('rj-arr').value;
-            reportData.details = document.getElementById('rj-text').value;
-            if(!reportData.depart || !reportData.arrivee) return alert("Lieux manquants.");
+            reportData.dep = document.getElementById('rj-dep').value;
+            reportData.arr = document.getElementById('rj-arr').value;
+            reportData.txt = document.getElementById('rj-text').value;
+            if(!reportData.dep) return alert("Lieu départ ?");
         }
         db.ref(`pointages_v18/${today}/${curU}_${Date.now()}`).set(reportData).then(() => {
             alert("Enregistré !");
             closeReport();
-            if(activeReportType === 'journalier') { 
-                document.getElementById('rj-dep').value = ""; document.getElementById('rj-arr').value = ""; document.getElementById('rj-text').value = "";
-            }
         });
     }
 
@@ -242,19 +241,15 @@
         Object.keys(window.data).forEach(k => {
             let item = window.data[k]; 
             if (item.chantier && item.chantier.toLowerCase().includes(q)) {
-                let p = k.split('_'); if(p.length < 4) return;
-                let dateCal = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
-                res.push({an: p[0], sem: p[1], qui: p[2].toUpperCase(), txt: item.text, mat: item.matos, ch: item.chantier, date: dateCal.toLocaleDateString('fr-FR'), ts: dateCal.getTime()});
+                let p = k.split('_'); 
+                let d = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3]));
+                res.push({qui: p[2].toUpperCase(), txt: item.text, ch: item.chantier, date: d.toLocaleDateString('fr-FR'), ts: d.getTime()});
             }
         });
         if (!res.length) return alert("Aucun résultat.");
         res.sort((a,b) => b.ts - a.ts);
-        let h = `<div style="text-align:left; max-height:450px; overflow-y:auto; padding:5px;">`;
-        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:12px; background:#fff;">
-            <div style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:var(--blue); margin-bottom:5px;"><span>S${r.sem} - ${r.an}</span><span>${r.date}</span></div>
-            <b style="color:var(--success);">${r.qui}</b><br>
-            <div style="margin-top:5px; color:#334155;"><b>${r.ch.toUpperCase()} :</b> ${r.txt}${r.mat ? '<br><i style="color:green;">Logistique : '+r.mat+'</i>' : ''}</div>
-        </div>`);
+        let h = `<div style="text-align:left; max-height:400px; overflow-y:auto;">`;
+        res.forEach(r => h += `<div style="border-bottom:1px solid #eee; padding:10px;"><b>${r.date} - ${r.qui}</b><br>${r.ch.toUpperCase()}: ${r.txt}</div>`);
         h += `</div>`;
         document.getElementById('ed-title').textContent = "HISTORIQUE : " + q.toUpperCase();
         document.getElementById('ed-view-only').innerHTML = h;
@@ -265,67 +260,67 @@
 
     function render() {
         document.getElementById('wk-disp').textContent = `SEMAINE ${curW} - ${curY}`;
-        const days = ["LUN","MAR","MER","JEU","VEN"]; let holidayIdx = [];
+        const days = ["LUN","MAR","MER","JEU","VEN"]; let hIdx = [];
+        const yearHolidays = holidays[curY] || {};
         for(let i=0; i<5; i++) {
-            let d = getDateFromWeek(curW, curY, i); let iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
-            if (holidays[iso]) {
-                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}<br><span class="holiday-badge">${holidays[iso]}</span>`;
-                holidayIdx.push(i);
+            let d = getDateFromWeek(curW, curY, i); let iso = d.toISOString().split('T')[0];
+            if (yearHolidays[iso]) {
+                document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}<br><span class="holiday-badge">${yearHolidays[iso]}</span>`;
+                hIdx.push(i);
             } else { document.getElementById('h'+i).innerHTML = `${days[i]}<br>${d.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}`; }
         }
+
         if (curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             let h = ""; const users = [ {id:'interne',s:4,d:true}, {id:'externe',s:4,d:true}, {id:'cedric',s:4,d:true}, {id:'divers',s:4,d:false}, {id:'instal',s:4,d:true}, {id:'jadiel',s:2,d:true}, {id:'nicola',s:2,d:true} ];
             users.forEach(u => {
                 if (curU === 'depot' && !u.d) return;
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                for(let dIdx=0; dIdx<5; dIdx++) {
-                    let isHoliday = holidayIdx.includes(dIdx) ? 'is-holiday-col' : '';
-                    h += `<td class="${isHoliday}">`;
+                for(let dI=0; dI<5; dI++) {
+                    h += `<td class="${hIdx.includes(dI)?'is-holiday-col':''}">`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curY}_${curW}_${u.id}_${dIdx}_s${s}`, dta = window.data[k] || {text:"", matos:"", chantier:"", files:[], col:'default'};
+                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {text:"", chantier:"", col:'default'};
                         if (curU === 'depot' && !dta.toDepot) continue;
-                        let bg = (dta.text && dta.col && dta.col !== 'default') ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
-                        let content = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
-                        if(dta.matos) content += `<br><span style="font-size:8px; color:#16a34a;">📦 ${dta.matos}</span>`;
-                        h += `<div class="slot ${dta.text||dta.matos?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${bg}" onclick="openEd('${k}')">${content}</div>`;
+                        let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'}; border:1px solid rgba(0,0,0,0.1);` : '';
+                        let txt = dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...');
+                        h += `<div class="slot ${dta.text?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
                 }
                 h += `</tr>`;
             });
-            document.getElementById('b-admin').innerHTML = h; applySearch();
+            document.getElementById('b-admin').innerHTML = h;
         } else {
             const v = document.getElementById('v-driver'); v.classList.remove('hidden'); v.innerHTML = "";
-            for(let dIdx=0; dIdx<5; dIdx++) {
-                let dDate = getDateFromWeek(curW, curY, dIdx); let iso = dDate.getFullYear() + "-" + String(dDate.getMonth()+1).padStart(2,'0') + "-" + String(dDate.getDate()).padStart(2,'0');
-                let hBadge = holidays[iso] ? `<span class="holiday-badge" style="margin-left:10px;">${holidays[iso]}</span>` : "";
+            for(let dI=0; dI<5; dI++) {
+                let dD = getDateFromWeek(curW, curY, dI); let iso = dD.toISOString().split('T')[0];
+                let hB = yearHolidays[iso] ? `<span class="holiday-badge" style="margin-left:10px;">${yearHolidays[iso]}</span>` : "";
                 let c = ""; for(let s=1; s<=4; s++) {
-                    let dta = window.data[`${curY}_${curW}_${curU}_${dIdx}_s${s}`];
+                    let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
                     if(dta && (dta.text || dta.chantier)) {
-                        let b = ""; if(dta.files) dta.files.forEach(f => b += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center; font-weight:bold; font-size:13px;">VOIR FICHIER</a>`);
-                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><b>${dta.chantier?.toUpperCase() || 'MISSION'}</b><br>${dta.text || ''}${b}</div>`;
+                        let fl = ""; if(dta.files) dta.files.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; text-decoration:none; margin-top:8px; text-align:center;">FICHIER</a>`);
+                        c += `<div style="padding:12px; border-left:6px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; margin-bottom:10px; background:white; border-radius:8px;"><b>${dta.chantier?.toUpperCase() || ''}</b><br>${dta.text || ''}${fl}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dIdx]} ${dDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hBadge}</b><br>${c || '<p style="color:#94a3b8;">Aucune mission</p>'}</div>`;
+                v.innerHTML += `<div style="margin:15px; padding:10px;"><b>${days[dI]} ${dD.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})}${hB}</b><br>${c || '<p style="color:#94a3b8;">Rien de prévu</p>'}</div>`;
             }
         }
     }
 
     function openEd(k) {
-        curK = k; let d = window.data[k] || {text:"", matos:"", chantier:"", files:[], toDepot:false, col:'default'};
-        if(curU !== 'admin' && curU !== 'depot') {
-            document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
-            document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p style="background:#f8fafc; padding:12px; border-radius:8px;">${d.text}</p>`;
-            document.getElementById('editor-overlay').style.display = 'flex'; return;
+        curK = k; let d = window.data[k] || {text:"", chantier:"", files:[], toDepot:false, col:'default'};
+        if(curU !== 'admin' && curU !== 'depot') return;
+        if(curU !== 'admin') {
+             document.getElementById('ed-controls').classList.add('hidden'); document.getElementById('ed-view-only').classList.remove('hidden');
+             document.getElementById('ed-view-only').innerHTML = `<b>${d.chantier?.toUpperCase() || ''}</b><p>${d.text}</p>`;
+             document.getElementById('editor-overlay').style.display = 'flex'; return;
         }
-        if(curU !== 'admin') return;
         currentFiles = d.files || []; selectedCol = d.col || 'default';
         document.getElementById('ed-view-only').classList.add('hidden'); document.getElementById('ed-controls').classList.remove('hidden');
         document.getElementById('e-chantier').value = d.chantier || ""; document.getElementById('e-input').value = d.text || ""; 
         document.getElementById('e-matos').value = d.matos || ""; document.getElementById('e-depot').checked = !!d.toDepot;
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-        renderFileListAdmin();
+        renderFiles();
         document.getElementById('editor-overlay').style.display = 'flex';
     }
 
@@ -337,8 +332,8 @@
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('filtered-out', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFileListAdmin(); } }); }
-    function renderFileListAdmin() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="background:#f1f5f9; padding:8px; border-radius:8px; display:flex; justify-content:space-between; margin-bottom:5px; font-size:10px;"><span>📄 ${f.name}</span><button onclick="currentFiles.splice(${i},1);renderFileListAdmin()">X</button></div>`); }
+    function uploadFile(input) { if (!input.files[0]) return; const fd = new FormData(); fd.append('file', input.files[0]); fd.append('upload_preset', UPLOAD_PRESET); fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name: input.files[0].name, url: d.secure_url}); renderFiles(); } }); }
+    function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; margin-bottom:5px;">📄 ${f.name} <button onclick="currentFiles.splice(${i},1);renderFiles()">X</button></div>`); }
 
     if(curU) login(curU);
 </script>
