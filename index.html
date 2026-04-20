@@ -293,7 +293,7 @@
             for(let date in all) { if(date.startsWith(month)) { for(let id in all[date]) { let r = all[date][id]; if(r.type === typeFilter) { if(!usersData[r.user]) usersData[r.user] = []; usersData[r.user].push({...r, date}); } } } }
             
             let html = "";
-            const users = ['interne','externe','cedric','jadiel','nicola'];
+            const users = ['interne','cedric','jadiel','nicola'];
             users.forEach(user => {
                 let reps = usersData[user] || [];
                 let sortedReps = reps.sort((a,b) => a.date.localeCompare(b.date));
@@ -301,7 +301,6 @@
                 html += `<div class="rh-user-section"><div class="rh-user-header"><span>${user.toUpperCase()}</span>${rhMode==='HEURES'?'<span class="rh-total-badge" id="t-'+user+'"></span>':''}</div>`;
                 if(rhMode === 'HEURES') {
                     html += `<div style="overflow-x:auto;"><table class="rh-table">`;
-                    // On pourrait aussi scanner le planning pour injecter les "CONGÉ" ici, mais on va déjà afficher les pointages réels.
                     sortedReps.forEach(r => { let dur = calculateDuration(r.debut, r.fin, r.p_pause); totalMinutes += dur; html += `<tr><td>${r.date.split('-')[2]}/${r.date.split('-')[1]}</td><td>${r.debut}-${r.fin}</td><td style="color:#94a3b8">P:${r.p_pause}m</td><td style="text-align:right; font-weight:bold;">${formatMinutes(dur)}</td></tr>`; });
                     html += `</table></div>`;
                 } else {
