@@ -174,7 +174,14 @@
                         if(curU === 'depot' && !dta.toDepot) { h += `<div class="slot">...</div>`; } else {
                             let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                             let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
-                            let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
+                            
+                            // LOGIQUE SPÉCIFIQUE DÉPÔT : Affiche LOGISTIQUE au lieu de MISSION
+                            let coreText = dta.text || "...";
+                            if(curU === 'depot' && dta.chantier) {
+                                coreText = `<span style="color:var(--success); font-weight:bold;">📦 ${dta.matos || 'Pas de logistique'}</span>`;
+                            }
+                            
+                            let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${coreText}` : (dta.text || '...'));
                             h += `<div class="slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                         }
                     }
@@ -206,9 +213,7 @@
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_'); const driverId = parts[2]; const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
         const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
-        // Notification Chauffeur
         if (DRIVER_EMAILS[driverId]) { emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg }); }
-        // Notification Dépôt : Logique Spécifique Nicola/Jadiel
         if (task.toDepot) { 
             let depotMsg = msg;
             if (driverId === 'nicola' || driverId === 'jadiel') {
