@@ -42,6 +42,13 @@
         #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(6px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
 
+        .rh-user-section { margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: white; border: 1px solid #e2e8f0; }
+        .rh-user-header { background: var(--blue); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; }
+        .rh-total-badge { background: var(--yellow); color: var(--blue); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+        .rh-table { width: 100%; font-size: 12px; border-collapse: collapse; min-width: 300px; }
+        .rh-table td { padding: 8px 15px; border-bottom: 1px solid #f1f5f9; }
+        .journal-bubble { background: #f8fafc; border-left: 4px solid var(--success); padding: 10px; margin: 10px; border-radius: 4px; font-size: 13px; }
+
         .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; font-size: 13px; }
         .hidden { display: none !important; }
         .btn-nav-admin { background: var(--blue); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 10px; }
@@ -81,7 +88,7 @@
             <button onclick="openReport('pointage')" style="flex:1; background:var(--blue); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; font-size:12px;">🕒 POINTAGE</button>
             <button onclick="openReport('journalier')" style="flex:1; background:var(--success); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; font-size:12px;">📝 JOURNAL</button>
         </div>
-        <div id="conge-msg" class="hidden" style="padding:15px; text-align:center; background:#fffbeb; color:#92400e; border-radius:12px; font-weight:bold;">🌴 EN CONGÉ</div>
+        <div id="conge-msg" class="hidden" style="padding:15px; text-align:center; background:#fffbeb; color:#92400e; border-radius:12px; font-weight:bold;">🌴 VOUS ÊTES EN CONGÉ</div>
         <div id="last-reps-list" style="margin-top:10px; font-size:11px; color:#64748b;"></div>
     </div>
 
@@ -107,64 +114,80 @@
     <div id="v-driver" style="padding:15px;" class="hidden"></div>
 </div>
 
+<div id="rh-overlay">
+    <div class="editor-box" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:var(--blue); color:white; padding:15px; text-align:center;">
+            <div id="rh-modal-title" style="font-weight:bold; margin-bottom:10px;">RELEVÉ</div>
+            <input type="month" id="rh-month-select" onchange="renderRH()" style="padding:8px; border-radius:8px; border:none; font-weight:bold;">
+        </div>
+        <div id="rh-content" style="padding:15px; overflow-y:auto; overflow-x:auto; flex:1; background:#f8fafc;"></div>
+        <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="background:white; border-top:1px solid #eee; border-radius:0;">FERMER</button>
+    </div>
+</div>
+
+<div id="report-overlay">
+    <div class="editor-box">
+        <h3 id="rep-title-ui" style="text-align:center; color:var(--blue); margin-top:0;">Saisie</h3>
+        <input type="date" id="rep-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
+        <div id="form-pointage" class="hidden">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input type="time" id="p-start" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <input type="time" id="p-end" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+            <input type="number" id="p-pause" value="45" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Pause (min)">
+        </div>
+        <div id="form-journalier" class="hidden">
+            <textarea id="rj-text" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Votre journée..."></textarea>
+        </div>
+        <button onclick="saveReport()" class="btn-main" style="background:var(--blue); color:white; margin-top:10px;">ENREGISTRER</button>
+        <button id="btn-del-rep" onclick="deleteReport()" style="width:100%; border:none; color:var(--danger); background:none; padding:10px; font-weight:bold;" class="hidden">Supprimer</button>
+        <button onclick="document.getElementById('report-overlay').style.display='none'" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:5px;">Fermer</button>
+    </div>
+</div>
+
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 style="margin-top:0; color:var(--blue); text-align:center;">Édition Mission</h3>
         <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Chantier">
+        
         <div id="zone-truck" class="hidden">
-            <select id="e-truck" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; background:#f8fafc;">
+            <select id="e-truck" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; font-weight:bold; background: #f8fafc;">
                 <option value="">-- Véhicule --</option>
                 <option value="🚚 PORTEUR">🚚 PORTEUR SEUL</option>
                 <option value="🚛 PORTEUR + REMORQUE">🚛 PORTEUR + REMORQUE</option>
-                <option value="🏗️ SPÉCIAL">🏗️ SPÉCIAL / GRUE</option>
+                <option value="🏗️ AUTRE / GRUE">🏗️ AUTRE / SPÉCIAL</option>
             </select>
         </div>
+
         <textarea id="e-input" style="width:100%; height:60px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Mission"></textarea>
         <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:50px; border:1px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="Logistique"></textarea></div>
         <div class="color-picker" id="cp" style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:10px 0;"></div>
+        
+        <div id="file-list-admin" style="margin-bottom:10px;"></div>
+        <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-bottom:10px; font-size:11px; font-weight:bold;">📎 PIÈCE JOINTE</button>
+        
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
             <label style="display:flex; align-items:center; gap:8px; font-size:11px;"><input type="checkbox" id="e-depot"> <b>DÉPÔT</b></label>
             <label id="zone-conge-checkbox" class="hidden" style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400e;"><input type="checkbox" id="e-conge"> <b>🌴 CONGÉ</b></label>
         </div>
+
         <button onclick="saveTask()" class="btn-main" style="background:var(--blue); color:white;">SAUVEGARDER</button>
         <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; font-weight:bold;">Supprimer</button>
         <button onclick="closeEditor()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:5px;">Annuler</button>
     </div>
 </div>
 
-<div id="rh-overlay">
-    <div class="editor-box" style="padding:0; display:flex; flex-direction:column;">
-        <div style="background:var(--blue); color:white; padding:15px; text-align:center;">
-            <div id="rh-modal-title" style="font-weight:bold; margin-bottom:10px;">RELEVÉ</div>
-            <input type="month" id="rh-month-select" onchange="renderRH()" style="padding:8px; border-radius:8px; border:none;">
-        </div>
-        <div id="rh-content" style="padding:15px; overflow-y:auto; flex:1;"></div>
-        <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="border-radius:0;">FERMER</button>
-    </div>
-</div>
-
-<div id="report-overlay">
+<div id="history-overlay">
     <div class="editor-box">
-        <h3 id="rep-title-ui" style="text-align:center; color:var(--blue);">Saisie</h3>
-        <input type="date" id="rep-date" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #ddd;">
-        <div id="form-pointage" class="hidden">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <input type="time" id="p-start" style="padding:10px;">
-                <input type="time" id="p-end" style="padding:10px;">
-            </div>
-            <input type="number" id="p-pause" value="45" style="width:100%; padding:10px; margin-top:10px;" placeholder="Pause (min)">
-        </div>
-        <div id="form-journalier" class="hidden">
-            <textarea id="rj-text" style="width:100%; height:100px; padding:10px;" placeholder="Détail..."></textarea>
-        </div>
-        <button onclick="saveReport()" class="btn-main" style="background:var(--blue); color:white; margin-top:10px;">ENREGISTRER</button>
-        <button id="btn-del-rep" onclick="deleteReport()" class="hidden" style="width:100%; border:none; color:var(--danger); background:none; padding:10px;">Supprimer</button>
-        <button onclick="document.getElementById('report-overlay').style.display='none'" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:10px;">Fermer</button>
+        <h3 style="text-align:center; color:var(--blue); margin-top:0;">Historique</h3>
+        <div id="history-results" style="max-height:400px; overflow-y:auto; font-size:12px;"></div>
+        <button onclick="document.getElementById('history-overlay').style.display='none'" class="btn-main" style="background:#f1f5f9; margin-top:15px;">FERMER</button>
     </div>
 </div>
 
 <script>
-    // --- CONFIGURATION EMAILJS ---
+    // --- CONFIGURATION ---
     const EMAILJS_PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
     const EMAILJS_SERVICE_ID = "service_1j5bpwf";
     const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
@@ -182,34 +205,45 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
 
-    let curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), curK = null, selectedCol = 'default', curRepId = null, activeT = '';
+    let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default', curRepId = null, rhMode = 'HEURES', curK = null, activeT = '';
 
     // --- FONCTIONS BASE ---
     function getWeek(d) { let date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
     function getDateFromWeek(w, y, dIdx) { let simple = new Date(y, 0, 1 + (w - 1) * 7); let dow = simple.getDay(); let ISOweekStart = simple; if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); ISOweekStart.setDate(ISOweekStart.getDate() + dIdx); return ISOweekStart; }
     function fmtDate(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
 
-    // --- AUTH ---
+    // --- AUTHENTIFICATION ---
     function askCode(u) { let p = prompt("CODE " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'}; if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } }
     
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); 
         
-        // Admin ou Dépôt voient la barre de recherche et les rapports RH
+        // Admin ET Dépôt voient la gestion
         if(u==='admin' || u==='depot') document.getElementById('admin-search-zone').classList.remove('hidden');
         
-        // Tout le monde (sauf admin pur) voit les outils de pointage
+        // Tout le monde SAUF Admin pur voit les outils de saisie (Chauffeurs + Dépôt)
         if(u !== 'admin') {
             document.getElementById('driver-tools-zone').classList.remove('hidden');
             loadLastReports();
         }
         
-        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); }); 
+        fetchHolidays(curY);
+        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); checkTodayConge(); }); 
     }
 
-    // --- RENDER ---
+    async function fetchHolidays(y) { try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`); holidays = await r.json(); render(); } catch(e){ render(); } }
+
+    // --- AFFICHAGE ---
     function render() {
-        document.getElementById('wk-disp').innerHTML = `ANNÉE ${curY}<br>SEMAINE ${curW}`;
+        document.getElementById('wk-disp').innerHTML = `<span style="font-size:10px; opacity:0.6;">ANNÉE ${curY}</span><br>SEMAINE ${curW}`;
+        const days = ["LUN","MAR","MER","JEU","VEN"], holidayList = {};
+        for(let i=0; i<5; i++) {
+            let d = getDateFromWeek(curW, curY, i); 
+            let iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            if(holidays[iso]) { document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}<span class="holiday-badge">${holidays[iso]}</span>`; holidayList[i] = holidays[iso]; }
+            else document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}`;
+        }
+
         if(curU==='admin' || curU==='depot') {
             document.getElementById('v-admin').classList.remove('hidden'); document.getElementById('v-driver').classList.add('hidden');
             let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
@@ -221,7 +255,7 @@
                         let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
                         if(curU==='depot' && !dta.toDepot) continue;
                         let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
-                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>[${dta.chantier}]</b><br>${dta.text}` : (dta.text || '...'));
+                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
                         h += `<div class="slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
@@ -236,24 +270,23 @@
                 for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
                     if(dta && (dta.text || dta.isConge)) {
-                        cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid #3b82f6;"><b>${dta.chantier || ''}</b><p>${dta.text || (dta.isConge?'🌴 CONGÉ':'')}</p></div>`;
+                        let fl = ""; dta.files?.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:10px; border-radius:8px; margin-top:5px; text-decoration:none; text-align:center; font-size:10px;">📎 DOCUMENT</a>`);
+                        cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid #3b82f6;"><b>${dta.chantier || ''}</b><p>${dta.text || (dta.isConge?'🌴 CONGÉ':'')}</p>${fl}</div>`;
                     }
                 }
-                v.innerHTML += `<div><b>${fmtDate(dD)}</b><div style="margin-top:8px;">${cards || 'Repos'}</div></div>`;
+                v.innerHTML += `<div><b>${days[dI]} ${fmtDate(dD)}</b><div style="margin-top:8px;">${cards || 'Repos'}</div></div>`;
             }
         }
     }
 
-    // --- LOGIQUE NOTIFICATION (MISE À JOUR DOUBLE ENVOI) ---
+    // --- DOUBLE NOTIFICATION EMAIL ---
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
         const driverId = parts[2];
-        const dayIdx = parseInt(parts[3]);
-        const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), dayIdx));
-
+        const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
         const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
 
-        // 1. Envoi systématique au chauffeur (s'il existe dans la liste)
+        // 1. Envoi au CHAUFFEUR
         if (DRIVER_EMAILS[driverId]) {
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, {
                 chauffeur: driverId.toUpperCase(),
@@ -262,7 +295,7 @@
             });
         }
 
-        // 2. Envoi au dépôt EN PLUS si la case est cochée
+        // 2. Envoi au DÉPÔT (si la case est cochée)
         if (task.toDepot) {
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, {
                 chauffeur: driverId.toUpperCase(),
@@ -272,15 +305,33 @@
         }
     }
 
-    // --- ÉDITION ---
+    // --- ÉDITION & CLOUDINARY ---
     function openEd(k) { 
-        if(curU!=='admin') return; curK = k; let d = window.data[k] || {};
+        if(curU!=='admin') return; curK = k; let d = window.data[k] || {files:[]};
+        currentFiles = d.files || [];
         document.getElementById('e-chantier').value = d.chantier || "";
         document.getElementById('e-input').value = d.text || "";
         document.getElementById('e-depot').checked = !!d.toDepot;
         document.getElementById('e-conge').checked = !!d.isConge;
         document.getElementById('zone-truck').classList.toggle('hidden', !k.includes('interne') && !k.includes('cedric'));
+        renderFiles();
         document.getElementById('editor-overlay').style.display='flex';
+    }
+
+    function uploadFile(i) {
+        if(!i.files[0]) return;
+        const fd = new FormData();
+        fd.append('file', i.files[0]);
+        fd.append('upload_preset', 'rbf-preset');
+        fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd})
+        .then(r=>r.json()).then(d=>{
+            if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); }
+        });
+    }
+
+    function renderFiles() {
+        let d = document.getElementById('file-list-admin'); d.innerHTML = "";
+        currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#eee; margin-bottom:5px; display:flex; justify-content:space-between;"><span>${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red;">X</span></div>`);
     }
 
     function saveTask() {
@@ -290,7 +341,8 @@
             text: document.getElementById('e-input').value,
             toDepot: document.getElementById('e-depot').checked,
             isConge: document.getElementById('e-conge').checked,
-            col: selectedCol
+            col: selectedCol,
+            files: currentFiles
         };
         db.ref('planning_v18/'+curK).set(taskData).then(() => {
             sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
@@ -308,80 +360,82 @@
         }
     }
 
-    // --- POINTAGE & RAPPORTS (Pour tous sauf Admin) ---
-    function openReport(t, isEdit = false) { 
-        activeT=t; 
-        if(!isEdit) { 
-            curRepId = null; 
-            document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; 
-            document.getElementById('btn-del-rep').classList.add('hidden'); 
-            document.getElementById('rj-text').value=""; 
-        } 
-        document.getElementById('rep-title-ui').innerText = t==='pointage'?"🕒 Pointage":"📝 Journal"; 
-        document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage'); 
-        document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier'); 
-        document.getElementById('report-overlay').style.display='flex'; 
+    // --- RH & RAPPORTS ---
+    function openRH(mode) { 
+        rhMode = mode; document.getElementById('rh-overlay').style.display = 'flex'; 
+        document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ DES HEURES" : "📝 JOURNAUX";
+        document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7);
+        renderRH(); 
     }
 
+    function renderRH() {
+        const month = document.getElementById('rh-month-select').value;
+        const container = document.getElementById('rh-content');
+        db.ref('pointages_v18').once('value', s => {
+            const all = s.val() || {}; let usersData = {};
+            for(let date in all) { if(date.startsWith(month)) { for(let id in all[date]) { let r = all[date][id]; if(!usersData[r.user]) usersData[r.user] = []; usersData[r.user].push({...r, date}); } } }
+            let html = "";
+            for(let user in usersData) {
+                html += `<div class="rh-user-section"><div class="rh-user-header">${user.toUpperCase()}</div><table class="rh-table">`;
+                usersData[user].forEach(r => {
+                    if(rhMode==='HEURES' && r.type==='POINTAGE') {
+                        let dur = calculateDuration(r.debut, r.fin, r.p_pause);
+                        html += `<tr><td>${r.date}</td><td>${r.debut}-${r.fin}</td><td>${formatMinutes(dur)}</td></tr>`;
+                    } else if(rhMode==='JOURNAL' && r.type==='VOYAGE') {
+                        html += `<tr><td>${r.date}</td><td>${r.txt}</td></tr>`;
+                    }
+                });
+                html += `</table></div>`;
+            }
+            container.innerHTML = html || "Aucune donnée";
+        });
+    }
+
+    function calculateDuration(s, e, p) { if(!s || !e) return 0; let start = new Date("2000-01-01 " + s); let end = new Date("2000-01-01 " + e); return Math.max(0, ((end - start) / 60000) - parseInt(p || 0)); }
+    function formatMinutes(m) { return Math.floor(m/60) + "h" + String(m%60).padStart(2, '0'); }
+
+    function openReport(t) { activeT=t; document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage'); document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier'); document.getElementById('report-overlay').style.display='flex'; }
     function saveReport() { 
         const d = document.getElementById('rep-date').value; 
-        if(!d) return; 
-        let id = curRepId || `${curU}_${Date.now()}`; 
-        let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d }; 
-        if(activeT==='pointage'){ 
-            r.debut=document.getElementById('p-start').value; 
-            r.fin=document.getElementById('p-end').value; 
-            r.p_pause=document.getElementById('p-pause').value; 
-        } else { 
-            r.txt=document.getElementById('rj-text').value; 
-        } 
-        db.ref(`pointages_v18/${d}/${id}`).set(r).then(()=>{ alert("Enregistré !"); closeReport(); }); 
+        let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d };
+        if(activeT==='pointage') { r.debut=document.getElementById('p-start').value; r.fin=document.getElementById('p-end').value; r.p_pause=document.getElementById('p-pause').value; }
+        else { r.txt=document.getElementById('rj-text').value; }
+        db.ref(`pointages_v18/${d}/${curU}_${Date.now()}`).set(r).then(() => { alert("Enregistré !"); document.getElementById('report-overlay').style.display='none'; });
     }
-
-    function closeReport() { document.getElementById('report-overlay').style.display='none'; }
 
     function loadLastReports() {
         db.ref('pointages_v18').limitToLast(5).on('value', s => {
-            const all = s.val() || {}; let h = ""; let reps = [];
-            for(let date in all) { for(let id in all[date]) { if(all[date][id].user === curU) reps.push({...all[date][id], id, date}); } }
-            reps.sort((a,b) => b.id.split('_')[1] - a.id.split('_')[1]).slice(0,3).forEach(r => { 
-                h += `<div style="background:#f8fafc; padding:6px; border-radius:6px; margin-bottom:4px; font-size:10px;">📅 ${r.date} - ${r.type}</div>`; 
-            });
+            const all = s.val() || {}; let h = "";
+            for(let date in all) { for(let id in all[date]) { if(all[date][id].user === curU) h += `<div style="font-size:10px; margin-bottom:2px;">📅 ${date} - ${all[date][id].type}</div>`; } }
             document.getElementById('last-reps-list').innerHTML = h;
         });
     }
 
-    // --- RH VUE ---
-    function openRH(mode) { 
-        document.getElementById('rh-overlay').style.display = 'flex'; 
-        document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7);
-        renderRH(mode); 
+    function checkTodayConge() {
+        let dayIdx = new Date().getDay() - 1; if(dayIdx < 0 || dayIdx > 4) return;
+        let isConge = false;
+        for(let s=1; s<=4; s++) { if(window.data[`${curY}_${curW}_${curU}_${dayIdx}_s${s}`]?.isConge) isConge = true; }
+        document.getElementById('conge-msg').classList.toggle('hidden', !isConge);
     }
 
-    function renderRH(mode) {
-        const month = document.getElementById('rh-month-select').value;
-        db.ref('pointages_v18').once('value', s => {
-            const all = s.val() || {}; let h = "";
-            for(let date in all) {
-                if(date.startsWith(month)) {
-                    for(let id in all[date]) {
-                        let r = all[date][id];
-                        h += `<div style="padding:10px; border-bottom:1px solid #eee; font-size:12px;"><b>${r.user.toUpperCase()}</b> (${r.date}) : ${r.type} ${r.txt || (r.debut + '-' + r.fin)}</div>`;
-                    }
-                }
-            }
-            document.getElementById('rh-content').innerHTML = h || "Aucune donnée";
+    function showHistory() {
+        const q = document.getElementById('search-input').value.trim().toLowerCase(); if(!q) return;
+        document.getElementById('history-overlay').style.display='flex';
+        db.ref('planning_v18').once('value', s => {
+            const d = s.val() || {}; let h = "";
+            for(let k in d) { if(d[k].chantier?.toLowerCase().includes(q)) h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${k}</b>: ${d[k].text}</div>`; }
+            document.getElementById('history-results').innerHTML = h || "Aucun résultat";
         });
     }
 
     function closeEditor() { document.getElementById('editor-overlay').style.display='none'; }
-    function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} render(); }
+    function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); render(); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-    function showHistory() { alert("Fonction Historique activée"); }
 
-    const colors = ['default', '#fee2e2', '#fef3c7', '#d1fae5', '#e0f2fe', '#000000'];
-    colors.forEach(c => {
+    // Couleurs
+    const colorOpts = ['default', '#fee2e2', '#fef3c7', '#d1fae5', '#e0f2fe', '#000000'];
+    colorOpts.forEach(c => {
         let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'#eee':c;
         d.onclick = () => { selectedCol = c; document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); };
         document.getElementById('cp').appendChild(d);
