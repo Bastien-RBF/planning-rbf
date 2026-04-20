@@ -274,12 +274,50 @@
     function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-top:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer;">X</span></div>`); }
 
     function showHistory() { 
-        const q = document.getElementById('search-input').value.trim().toLowerCase(); if(!q) return; document.getElementById('history-overlay').style.display='flex'; 
-        db.ref('planning_v18').once('value', s => { const d = s.val() || {}; let h = ""; let matches = []; for(let k in d) { if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { let p = k.split('_'); matches.push({ date: getDateFromWeek(p[1],p[0],p[3]), user: p[2], text: d[k].text }); } } 
-            matches.sort((a,b)=>b.date-a.date).forEach(m => { h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${fmtDate(m.date)}</b> - ${m.user.toUpperCase()} : ${m.text}</div>`; }); 
-            document.getElementById('history-results').innerHTML = h || "Aucun résultat"; 
+    const q = document.getElementById('search-input').value.trim().toLowerCase(); 
+    if(!q) return; 
+    document.getElementById('history-overlay').style.display = 'flex'; 
+    
+    db.ref('planning_v18').once('value', s => { 
+        const d = s.val() || {}; 
+        let h = ""; 
+        let matches = []; 
+
+        for(let k in d) { 
+            // On vérifie si le nom du chantier contient la recherche
+            if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { 
+                let p = k.split('_'); 
+                let year = parseInt(p[0]);
+                let week = parseInt(p[1]);
+                let dayIdx = parseInt(p[3]);
+                
+                // Calcul précis de la date à partir de la semaine et de l'année
+                let dt = getDateFromWeek(week, year, dayIdx); 
+                
+                matches.push({ 
+                    date: dt, 
+                    user: p[2], 
+                    text: d[k].text || (d[k].isConge ? "CONGÉ" : ""),
+                    chantier: d[k].chantier
+                }); 
+            } 
+        } 
+
+        // Tri du plus récent au plus ancien
+        matches.sort((a, b) => b.date - a.date);
+
+        matches.forEach(m => { 
+            h += `
+            <div style="padding:12px; border-bottom:1px solid #eee; background: white; margin-bottom:5px; border-radius:8px;">
+                <div style="color:var(--blue); font-weight:bold; font-size:13px;">${fmtDate(m.date)} - ${m.user.toUpperCase()}</div>
+                <div style="color:var(--success); font-size:11px; font-weight:bold;">[${m.chantier.toUpperCase()}]</div>
+                <div style="font-size:12px; color:#475569; margin-top:4px;">${m.text}</div>
+            </div>`; 
         }); 
-    }
+
+        document.getElementById('history-results').innerHTML = h || `<div style="text-align:center; padding:20px; color:#94a3b8;">Aucun résultat pour "${q}"</div>`; 
+    }); 
+}
 
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
     function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); render(); }
