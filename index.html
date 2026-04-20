@@ -9,6 +9,9 @@
     <meta name="theme-color" content="#1b2e58">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
     <style>
         :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f3f4f6; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #1e293b; -webkit-tap-highlight-color: transparent; }
@@ -190,14 +193,32 @@
 </div>
 
 <script>
+    // --- CONFIGURATION EMAILJS ---
+    const EMAILJS_PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
+    const EMAILJS_SERVICE_ID = "service_1j5bpwf";
+    const TEMPLATE_CHAUFFEUR = "template_5xn3o8u"; //
+    const TEMPLATE_DEPOT = "template_8gqnnh7";     //
+
+    const DRIVER_EMAILS = {
+        'interne': 'chauffeur_interne@gmail.com',
+        'cedric': 'cedric@gmail.com',
+        'jadiel': 'jadiel@gmail.com',
+        'nicola': 'nicola@gmail.com',
+        'depot_contact': 'bastien38dominguez@gmail.com' //
+    };
+
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
     let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default', curRepId = null, rhMode = 'HEURES', curK = null;
 
+    // --- FONCTIONS BASE ---
     function getWeek(d) { let date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
     function getDateFromWeek(w, y, dIdx) { let simple = new Date(y, 0, 1 + (w - 1) * 7); let dow = simple.getDay(); let ISOweekStart = simple; if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); ISOweekStart.setDate(ISOweekStart.getDate() + dIdx); return ISOweekStart; }
     function fmtDate(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
 
+    // --- AUTH ---
     function askCode(u) { let p = prompt("CODE " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'}; if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } }
     
     function login(u) { 
@@ -210,6 +231,7 @@
 
     async function fetchHolidays(y) { try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`); holidays = await r.json(); render(); } catch(e){ render(); } }
 
+    // --- AFFICHAGE ---
     function render() {
         document.getElementById('wk-disp').innerHTML = `<span style="font-size:10px; opacity:0.6;">ANNÉE ${curY}</span><br>SEMAINE ${curW}`;
         const days = ["LUN","MAR","MER","JEU","VEN"], holidayList = {};
@@ -262,6 +284,85 @@
         }
     }
 
+    // --- LOGIQUE NOTIFICATION EMAIL ---
+    function sendEmailNotification(key, task, action) {
+        const parts = key.split('_');
+        const driverId = parts[2];
+        const dayIdx = parseInt(parts[3]);
+        const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), dayIdx));
+
+        // Détermine si on envoie au dépôt ou au chauffeur
+        let targetTemplate = task.toDepot ? TEMPLATE_DEPOT : TEMPLATE_CHAUFFEUR;
+        let targetEmail = task.toDepot ? DRIVER_EMAILS['depot_contact'] : DRIVER_EMAILS[driverId];
+
+        if (!targetEmail) return;
+
+        const params = {
+            chauffeur: driverId.toUpperCase(),
+            jour: dateMission,
+            message: `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`
+        };
+
+        emailjs.send(EMAILJS_SERVICE_ID, targetTemplate, params)
+            .then(() => console.log("Mail envoyé avec succès"))
+            .catch(err => console.error("Erreur d'envoi EmailJS", err));
+    }
+
+    // --- ÉDITION ---
+    function openEd(k) { 
+        curK = k; let d = window.data[k] || {files:[]}; 
+        if(curU!=='admin') return; 
+        currentFiles = d.files || []; 
+        selectedCol = d.col || 'default'; 
+        document.getElementById('e-chantier').value = d.chantier || ""; 
+        document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-matos').value = d.matos || ""; 
+        document.getElementById('e-truck').value = d.truck || ""; 
+        document.getElementById('e-depot').checked = !!d.toDepot; 
+        document.getElementById('e-conge').checked = !!d.isConge; 
+        
+        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
+        let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
+        document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
+
+        let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
+        document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHaveHoliday);
+
+        renderFiles(); 
+        document.getElementById('editor-overlay').style.display='flex'; 
+    }
+
+    function saveTask() { 
+        let isNew = !window.data[curK];
+        let isConge = document.getElementById('e-conge').checked;
+        let taskData = { 
+            text: isConge ? "" : document.getElementById('e-input').value, 
+            chantier: isConge ? "" : document.getElementById('e-chantier').value, 
+            matos: isConge ? "" : document.getElementById('e-matos').value, 
+            toDepot: isConge ? false : document.getElementById('e-depot').checked, 
+            isConge: isConge,
+            col: isConge ? '#fef3c7' : selectedCol, 
+            files: isConge ? [] : currentFiles 
+        };
+        if (!document.getElementById('zone-truck').classList.contains('hidden')) { taskData.truck = isConge ? "" : document.getElementById('e-truck').value; } else { taskData.truck = ""; }
+        
+        db.ref('planning_v18/'+curK).set(taskData).then(() => {
+            sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
+            closeEditor();
+        }); 
+    }
+
+    function deleteTask() { 
+        if(confirm("Supprimer ?")) {
+            let oldData = window.data[curK];
+            db.ref('planning_v18/'+curK).remove().then(() => {
+                sendEmailNotification(curK, oldData, "ANNULÉE");
+                closeEditor();
+            });
+        }
+    }
+
+    // --- AUTRES FONCTIONS (RH, RAPPORTS, ETC.) ---
     function checkTodayConge() {
         if(curU === 'admin' || curU === 'depot') return;
         let today = new Date();
@@ -339,46 +440,6 @@
         });
     }
 
-    function openEd(k) { 
-        curK = k; let d = window.data[k] || {files:[]}; 
-        if(curU!=='admin') return; 
-        currentFiles = d.files || []; 
-        selectedCol = d.col || 'default'; 
-        document.getElementById('e-chantier').value = d.chantier || ""; 
-        document.getElementById('e-input').value = d.text || ""; 
-        document.getElementById('e-matos').value = d.matos || ""; 
-        document.getElementById('e-truck').value = d.truck || ""; 
-        document.getElementById('e-depot').checked = !!d.toDepot; 
-        document.getElementById('e-conge').checked = !!d.isConge; 
-        
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
-        let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
-        document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
-
-        // MASQUER LE BOUTON CONGÉ POUR EXTERNE ET INSTAL
-        let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
-        document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHaveHoliday);
-
-        renderFiles(); 
-        document.getElementById('editor-overlay').style.display='flex'; 
-    }
-
-    function saveTask() { 
-        let isConge = document.getElementById('e-conge').checked;
-        let taskData = { 
-            text: isConge ? "" : document.getElementById('e-input').value, 
-            chantier: isConge ? "" : document.getElementById('e-chantier').value, 
-            matos: isConge ? "" : document.getElementById('e-matos').value, 
-            toDepot: isConge ? false : document.getElementById('e-depot').checked, 
-            isConge: isConge,
-            col: isConge ? '#fef3c7' : selectedCol, 
-            files: isConge ? [] : currentFiles 
-        };
-        if (!document.getElementById('zone-truck').classList.contains('hidden')) { taskData.truck = isConge ? "" : document.getElementById('e-truck').value; } else { taskData.truck = ""; }
-        db.ref('planning_v18/'+curK).set(taskData).then(() => closeEditor()); 
-    }
-
-    function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); } }); }
     function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer;">X</span></div>`); }
