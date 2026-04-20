@@ -51,7 +51,6 @@
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.05); }
 
-        /* Nouveau badge véhicule */
         .truck-tag { display: inline-block; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-bottom: 4px; border-left: 3px solid #64748b; }
         .truck-tag.trailer { background: #dcfce7; color: #166534; border-left-color: var(--success); }
     </style>
@@ -152,13 +151,15 @@
         <h3 style="margin-top:0; color:var(--blue); text-align:center; font-size:16px;">Édition Mission</h3>
         <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Chantier">
         
-        <label style="font-size:10px; font-weight:bold; color:var(--blue);">CONFIG. VÉHICULE :</label>
-        <select id="e-truck" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; font-weight:bold; background: #f8fafc;">
-            <option value="">-- Non spécifié --</option>
-            <option value="🚚 PORTEUR">🚚 PORTEUR SEUL</option>
-            <option value="🚛 PORTEUR + REMORQUE">🚛 PORTEUR + REMORQUE</option>
-            <option value="🏗️ AUTRE / GRUE">🏗️ AUTRE / SPÉCIAL</option>
-        </select>
+        <div id="zone-truck" class="hidden">
+            <label style="font-size:10px; font-weight:bold; color:var(--blue);">CONFIG. VÉHICULE :</label>
+            <select id="e-truck" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; font-weight:bold; background: #f8fafc;">
+                <option value="">-- Non spécifié --</option>
+                <option value="🚚 PORTEUR">🚚 PORTEUR SEUL</option>
+                <option value="🚛 PORTEUR + REMORQUE">🚛 PORTEUR + REMORQUE</option>
+                <option value="🏗️ AUTRE / GRUE">🏗️ AUTRE / SPÉCIAL</option>
+            </select>
+        </div>
 
         <textarea id="e-input" style="width:100%; height:60px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Mission"></textarea>
         <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:50px; border:1px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="Logistique"></textarea></div>
@@ -250,7 +251,6 @@
         }
     }
 
-    // Gestion RH
     function openRH(mode) { 
         rhMode = mode; document.getElementById('rh-overlay').style.display = 'flex'; 
         document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ DES HEURES" : "📝 JOURNAUX DE BORD";
@@ -318,23 +318,37 @@
         document.getElementById('e-chantier').value = d.chantier || ""; 
         document.getElementById('e-input').value = d.text || ""; 
         document.getElementById('e-matos').value = d.matos || ""; 
-        document.getElementById('e-truck').value = d.truck || ""; // Chargement véhicule
+        document.getElementById('e-truck').value = d.truck || ""; 
         document.getElementById('e-depot').checked = !!d.toDepot; 
+        
+        // FILTRES D'AFFICHAGE DYNAMIQUE
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
+        
+        // On affiche CONFIG VEHICULE uniquement pour Interne, Externe et Cedric
+        let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
+        document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
+
         renderFiles(); 
         document.getElementById('editor-overlay').style.display='flex'; 
     }
 
     function saveTask() { 
-        db.ref('planning_v18/'+curK).set({
+        let taskData = {
             text:document.getElementById('e-input').value, 
             chantier:document.getElementById('e-chantier').value, 
             matos:document.getElementById('e-matos').value, 
-            truck:document.getElementById('e-truck').value, // Sauvegarde véhicule
             toDepot:document.getElementById('e-depot').checked, 
             col:selectedCol, 
             files:currentFiles
-        }).then(() => closeEditor()); 
+        };
+        // On ne sauvegarde le véhicule que s'il est visible
+        if (!document.getElementById('zone-truck').classList.contains('hidden')) {
+            taskData.truck = document.getElementById('e-truck').value;
+        } else {
+            taskData.truck = ""; // Reset si masqué
+        }
+
+        db.ref('planning_v18/'+curK).set(taskData).then(() => closeEditor()); 
     }
 
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(() => closeEditor()); }
