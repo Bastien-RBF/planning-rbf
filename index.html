@@ -276,46 +276,65 @@
     function showHistory() { 
     const q = document.getElementById('search-input').value.trim().toLowerCase(); 
     if(!q) return; 
-    document.getElementById('history-overlay').style.display = 'flex'; 
+    document.getElementById('history-overlay').style.display='flex'; 
     
     db.ref('planning_v18').once('value', s => { 
         const d = s.val() || {}; 
         let h = ""; 
         let matches = []; 
-
+        
         for(let k in d) { 
-            // On vérifie si le nom du chantier contient la recherche
-            if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { 
+            // On vérifie si le chantier correspond
+            const chantierOk = d[k].chantier && d[k].chantier.toLowerCase().includes(q);
+            // On vérifie aussi dans le texte de mission au cas où
+            const missionOk = d[k].text && d[k].text.toLowerCase().includes(q);
+
+            if(chantierOk || missionOk) { 
                 let p = k.split('_'); 
-                let year = parseInt(p[0]);
-                let week = parseInt(p[1]);
-                let dayIdx = parseInt(p[3]);
                 
-                // Calcul précis de la date à partir de la semaine et de l'année
-                let dt = getDateFromWeek(week, year, dayIdx); 
-                
-                matches.push({ 
-                    date: dt, 
-                    user: p[2], 
-                    text: d[k].text || (d[k].isConge ? "CONGÉ" : ""),
-                    chantier: d[k].chantier
-                }); 
+                // Sécurité : On ne traite que si la clé est complète (Annee_Semaine_User_Jour_Slot)
+                if (p.length >= 4) {
+                    let year = parseInt(p[0]);
+                    let week = parseInt(p[1]);
+                    let dayIdx = parseInt(p[3]);
+                    
+                    // Si les chiffres sont valides, on calcule la date
+                    if (!isNaN(year) && !isNaN(week) && !isNaN(dayIdx)) {
+                        let dt = getDateFromWeek(week, year, dayIdx); 
+                        matches.push({ 
+                            date: dt, 
+                            week: week, 
+                            year: year, 
+                            user: p[2], 
+                            chantier: d[k].chantier || "SANS NOM",
+                            text: d[k].text || "(Pas de descriptif)" 
+                        }); 
+                    }
+                }
             } 
         } 
 
-        // Tri du plus récent au plus ancien
-        matches.sort((a, b) => b.date - a.date);
+        // Tri : Les plus récents en premier
+        matches.sort((a,b) => b.date - a.date);
 
-        matches.forEach(m => { 
-            h += `
-            <div style="padding:12px; border-bottom:1px solid #eee; background: white; margin-bottom:5px; border-radius:8px;">
-                <div style="color:var(--blue); font-weight:bold; font-size:13px;">${fmtDate(m.date)} - ${m.user.toUpperCase()}</div>
-                <div style="color:var(--success); font-size:11px; font-weight:bold;">[${m.chantier.toUpperCase()}]</div>
-                <div style="font-size:12px; color:#475569; margin-top:4px;">${m.text}</div>
-            </div>`; 
-        }); 
-
-        document.getElementById('history-results').innerHTML = h || `<div style="text-align:center; padding:20px; color:#94a3b8;">Aucun résultat pour "${q}"</div>`; 
+        if (matches.length === 0) {
+            h = `<div style="text-align:center; padding:20px; color:#94a3b8;">Aucun résultat trouvé pour "${q}"</div>`;
+        } else {
+            matches.forEach(m => { 
+                h += `
+                <div style="padding:12px; border-bottom:1px solid #eee; background: white; margin-bottom:8px; border-radius:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <span style="color:var(--blue); font-weight:800; font-size:13px;">${fmtDate(m.date)} <small style="font-weight:normal; opacity:0.5;">(Sem ${m.week})</small></span>
+                        <span style="background:var(--blue); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">${m.user.toUpperCase()}</span>
+                    </div>
+                    <div style="color:var(--success); font-weight:bold; font-size:12px; text-transform:uppercase;">🏗️ ${m.chantier}</div>
+                    <div style="font-size:12px; color:#475569; margin-top:4px; border-top:1px solid #f8fafc; padding-top:4px;">
+                        ${m.text}
+                    </div>
+                </div>`; 
+            }); 
+        }
+        document.getElementById('history-results').innerHTML = h; 
     }); 
 }
 
