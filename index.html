@@ -172,7 +172,7 @@
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
             <label style="display:flex; align-items:center; gap:8px; font-size:11px;"><input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>DÉPÔT</b></label>
-            <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px; height:18px;"> <b>🌴 CONGÉ</b></label>
+            <label id="zone-conge-checkbox" class="hidden" style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px; height:18px;"> <b>🌴 CONGÉ</b></label>
         </div>
 
         <button onclick="saveTask()" class="btn-main" style="background:var(--blue); color:white;">SAUVEGARDER</button>
@@ -265,7 +265,7 @@
     function checkTodayConge() {
         if(curU === 'admin' || curU === 'depot') return;
         let today = new Date();
-        let dayIdx = today.getDay() - 1; // 0 = Lundi
+        let dayIdx = today.getDay() - 1; 
         if(dayIdx < 0 || dayIdx > 4) return;
         let isCongeToday = false;
         let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
@@ -354,6 +354,10 @@
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
         let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
         document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
+
+        // MASQUER LE BOUTON CONGÉ POUR EXTERNE ET INSTAL
+        let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
+        document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHaveHoliday);
 
         renderFiles(); 
         document.getElementById('editor-overlay').style.display='flex'; 
