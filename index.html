@@ -175,10 +175,14 @@
                             let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                             let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
                             
-                            // LOGIQUE SPÉCIFIQUE DÉPÔT : Affiche LOGISTIQUE au lieu de MISSION
+                            // LOGIQUE DÉPÔT : Nicola/Jadiel -> Logistique | Autres -> Mission
                             let coreText = dta.text || "...";
                             if(curU === 'depot' && dta.chantier) {
-                                coreText = `<span style="color:var(--success); font-weight:bold;">📦 ${dta.matos || 'Pas de logistique'}</span>`;
+                                if(u.id === 'nicola' || u.id === 'jadiel') {
+                                    coreText = `<span style="color:var(--success); font-weight:bold;">📦 ${dta.matos || 'Pas de logistique'}</span>`;
+                                } else {
+                                    coreText = dta.text || "...";
+                                }
                             }
                             
                             let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${coreText}` : (dta.text || '...'));
