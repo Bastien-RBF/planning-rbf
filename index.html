@@ -257,24 +257,20 @@
     }
     
     db.ref('planning_v18/'+curK).set(taskData).then(() => {
-        // --- LOGIQUE D'ENVOI FILTRÉE ---
+        // --- LOGIQUE D'ENVOI STRICTEMENT LIMITÉE À LA SEMAINE EN COURS ---
         const today = new Date();
         const currentWeek = getWeek(today);
         const currentYear = today.getFullYear();
         
-        // On n'envoie le mail que si c'est cette semaine ou la semaine prochaine
-        // Et on ignore les années passées
-        if (curY >= currentYear) {
-            if (curW === currentWeek || curW === currentWeek + 1) {
-                sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
-            } else {
-                console.log("Modification enregistrée sans mail (Hors période actuelle/prochaine)");
-            }
+        // On n'envoie le mail QUE si on est sur l'année en cours ET la semaine en cours
+        if (curY === currentYear && curW === currentWeek) {
+            sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
+        } else {
+            console.log("Modification enregistrée sans notification (Hors semaine en cours)");
         }
         
         closeEditor();
-    }); 
-}
+    });
 
     function deleteTask() { if(confirm("Supprimer ?")) { let oldData = window.data[curK]; db.ref('planning_v18/'+curK).remove().then(() => { sendEmailNotification(curK, oldData, "ANNULÉE"); closeEditor(); }); } }
     function openRH(mode) { rhMode = mode; document.getElementById('rh-overlay').style.display = 'flex'; document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ" : "📝 JOURNAUX"; document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7); renderRH(); }
