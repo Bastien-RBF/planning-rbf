@@ -41,7 +41,7 @@
         .rh-user-section { margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: white; border: 1px solid #e2e8f0; }
         .rh-user-header { background: var(--blue); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; }
         .rh-total-badge { background: var(--yellow); color: var(--blue); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-        .rh-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+        .rh-table { width: 100%; font-size: 12px; border-collapse: collapse; min-width: 300px; }
         .rh-table td { padding: 8px 15px; border-bottom: 1px solid #f1f5f9; }
         .journal-bubble { background: #f8fafc; border-left: 4px solid var(--success); padding: 10px; margin: 10px; border-radius: 4px; font-size: 13px; }
 
@@ -100,7 +100,7 @@
         <button class="wk-btn" onclick="changeWeek(1)">›</button>
     </div>
 
-    <div id="v-admin" class="table-container hidden">
+    <div id="v-admin" class="table-container">
         <table>
             <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
@@ -115,7 +115,7 @@
             <div id="rh-modal-title" style="font-weight:bold; margin-bottom:10px;">RELEVÉ</div>
             <input type="month" id="rh-month-select" onchange="renderRH()" style="padding:8px; border-radius:8px; border:none; font-weight:bold;">
         </div>
-        <div id="rh-content" style="padding:15px; overflow-y:auto; flex:1; background:#f8fafc;"></div>
+        <div id="rh-content" style="padding:15px; overflow-y:auto; overflow-x:auto; flex:1; background:#f8fafc;"></div>
         <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="background:white; border-top:1px solid #eee; border-radius:0;">FERMER</button>
     </div>
 </div>
@@ -271,9 +271,9 @@
                 let sortedReps = usersData[user].sort((a,b) => a.date.localeCompare(b.date)); let totalMinutes = 0;
                 html += `<div class="rh-user-section"><div class="rh-user-header"><span>${user.toUpperCase()}</span>${rhMode==='HEURES'?'<span class="rh-total-badge" id="t-'+user+'"></span>':''}</div>`;
                 if(rhMode === 'HEURES') {
-                    html += `<table class="rh-table">`;
+                    html += `<div style="overflow-x:auto;"><table class="rh-table">`;
                     sortedReps.forEach(r => { let dur = calculateDuration(r.debut, r.fin, r.p_pause); totalMinutes += dur; html += `<tr><td>${r.date.split('-')[2]}/${r.date.split('-')[1]}</td><td>${r.debut}-${r.fin}</td><td style="color:#94a3b8">P:${r.p_pause}m</td><td style="text-align:right; font-weight:bold;">${formatMinutes(dur)}</td></tr>`; });
-                    html += `</table>`;
+                    html += `</table></div>`;
                 } else {
                     sortedReps.forEach(r => { html += `<div class="journal-bubble"><div style="font-size:9px; color:#94a3b8; margin-bottom:3px;">LE ${r.date.split('-')[2]}/${r.date.split('-')[1]}</div>${r.txt}</div>`; });
                 }
@@ -321,10 +321,7 @@
         document.getElementById('e-truck').value = d.truck || ""; 
         document.getElementById('e-depot').checked = !!d.toDepot; 
         
-        // FILTRES D'AFFICHAGE DYNAMIQUE
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
-        
-        // On affiche CONFIG VEHICULE uniquement pour Interne, Externe et Cedric
         let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
         document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
 
@@ -333,21 +330,8 @@
     }
 
     function saveTask() { 
-        let taskData = {
-            text:document.getElementById('e-input').value, 
-            chantier:document.getElementById('e-chantier').value, 
-            matos:document.getElementById('e-matos').value, 
-            toDepot:document.getElementById('e-depot').checked, 
-            col:selectedCol, 
-            files:currentFiles
-        };
-        // On ne sauvegarde le véhicule que s'il est visible
-        if (!document.getElementById('zone-truck').classList.contains('hidden')) {
-            taskData.truck = document.getElementById('e-truck').value;
-        } else {
-            taskData.truck = ""; // Reset si masqué
-        }
-
+        let taskData = { text:document.getElementById('e-input').value, chantier:document.getElementById('e-chantier').value, matos:document.getElementById('e-matos').value, toDepot:document.getElementById('e-depot').checked, col:selectedCol, files:currentFiles };
+        if (!document.getElementById('zone-truck').classList.contains('hidden')) { taskData.truck = document.getElementById('e-truck').value; } else { taskData.truck = ""; }
         db.ref('planning_v18/'+curK).set(taskData).then(() => closeEditor()); 
     }
 
@@ -358,7 +342,29 @@
     function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); render(); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
-    function showHistory() { const q = document.getElementById('search-input').value.trim().toLowerCase(); if(!q) return; document.getElementById('history-overlay').style.display='flex'; db.ref('planning_v18').once('value', s => { const d = s.val() || {}; let h = ""; let matches = []; for(let k in d) { if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { let p = k.split('_'); let dt = getDateFromWeek(parseInt(p[1]), parseInt(p[0]), parseInt(p[3])); matches.push({ date: dt, user: p[2], text: d[k].text }); } } matches.sort((a,b) => b.date - a.date).forEach(m => { h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${fmtDate(m.date)}</b> - ${m.user.toUpperCase()} : ${m.text}</div>`; }); document.getElementById('history-results').innerHTML = h || "Aucun résultat"; }); }
+    
+    function showHistory() { 
+        const q = document.getElementById('search-input').value.trim().toLowerCase(); 
+        if(!q) return; 
+        document.getElementById('history-overlay').style.display='flex'; 
+        db.ref('planning_v18').once('value', s => { 
+            const d = s.val() || {}; let h = ""; let matches = []; 
+            for(let k in d) { 
+                if(d[k].chantier && d[k].chantier.toLowerCase().includes(q)) { 
+                    let p = k.split('_'); 
+                    let year = parseInt(p[0]);
+                    let week = parseInt(p[1]);
+                    let dayIdx = parseInt(p[3]);
+                    let dt = getDateFromWeek(week, year, dayIdx); 
+                    matches.push({ date: dt, week: week, year: year, user: p[2], text: d[k].text }); 
+                } 
+            } 
+            matches.sort((a,b) => b.date - a.date).forEach(m => { 
+                h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${fmtDate(m.date)} (S${m.week}-${m.year})</b> - ${m.user.toUpperCase()} : ${m.text}</div>`; 
+            }); 
+            document.getElementById('history-results').innerHTML = h || "Aucun résultat"; 
+        }); 
+    }
 
     const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colorOpts.forEach(c => { let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c; d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; }; document.getElementById('cp').appendChild(d); });
