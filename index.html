@@ -237,10 +237,44 @@
     }
 
     function saveTask() { 
-        let isNew = !window.data[curK], isConge = document.getElementById('e-conge').checked;
-        let taskData = { text: isConge ? "" : document.getElementById('e-input').value, chantier: isConge ? "" : document.getElementById('e-chantier').value, matos: isConge ? "" : document.getElementById('e-matos').value, toDepot: isConge ? false : document.getElementById('e-depot').checked, isConge: isConge, col: isConge ? '#fef3c7' : selectedCol, files: isConge ? [] : currentFiles, truck: (isConge || document.getElementById('zone-truck').classList.contains('hidden')) ? "" : document.getElementById('e-truck').value };
-        db.ref('planning_v18/'+curK).set(taskData).then(() => { sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE"); closeEditor(); }); 
+    let isNew = !window.data[curK];
+    let isConge = document.getElementById('e-conge').checked;
+    
+    let taskData = { 
+        text: isConge ? "" : document.getElementById('e-input').value, 
+        chantier: isConge ? "" : document.getElementById('e-chantier').value, 
+        matos: isConge ? "" : document.getElementById('e-matos').value, 
+        toDepot: isConge ? false : document.getElementById('e-depot').checked, 
+        isConge: isConge,
+        col: isConge ? '#fef3c7' : selectedCol, 
+        files: isConge ? [] : currentFiles 
+    };
+    
+    if (!document.getElementById('zone-truck').classList.contains('hidden')) { 
+        taskData.truck = isConge ? "" : document.getElementById('e-truck').value; 
+    } else { 
+        taskData.truck = ""; 
     }
+    
+    db.ref('planning_v18/'+curK).set(taskData).then(() => {
+        // --- LOGIQUE D'ENVOI FILTRÉE ---
+        const today = new Date();
+        const currentWeek = getWeek(today);
+        const currentYear = today.getFullYear();
+        
+        // On n'envoie le mail que si c'est cette semaine ou la semaine prochaine
+        // Et on ignore les années passées
+        if (curY >= currentYear) {
+            if (curW === currentWeek || curW === currentWeek + 1) {
+                sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
+            } else {
+                console.log("Modification enregistrée sans mail (Hors période actuelle/prochaine)");
+            }
+        }
+        
+        closeEditor();
+    }); 
+}
 
     function deleteTask() { if(confirm("Supprimer ?")) { let oldData = window.data[curK]; db.ref('planning_v18/'+curK).remove().then(() => { sendEmailNotification(curK, oldData, "ANNULÉE"); closeEditor(); }); } }
     function openRH(mode) { rhMode = mode; document.getElementById('rh-overlay').style.display = 'flex'; document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ" : "📝 JOURNAUX"; document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7); renderRH(); }
