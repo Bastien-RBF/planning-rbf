@@ -44,34 +44,31 @@
         #v-admin-mobile { display: none; padding: 10px; }
         
         @media (max-width: 768px) {
-            .table-container { display: none; } /* On cache le tableau sur mobile */
-            #v-admin-mobile { display: block; } /* On affiche la version mobile */
+            .table-container { display: none; } /* On cache le tableau sur téléphone */
+            #v-admin-mobile { display: block; } /* On affiche la version cartes */
             
-            .mobile-user-card { background: white; border-radius: 15px; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-            .mobile-user-header { background: var(--blue); color: white; padding: 10px 15px; font-weight: 800; font-size: 13px; display: flex; justify-content: space-between; }
-            .mobile-day-row { display: flex; border-bottom: 1px solid #f1f5f9; min-height: 50px; }
-            .mobile-day-name { width: 50px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #64748b; border-right: 1px solid #f1f5f9; text-align: center; line-height: 1.2; }
-            .mobile-day-content { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
-            .mobile-slot { font-size: 11px; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fafafa; }
-            .mobile-slot.filled { border-left: 4px solid #3b82f6; background: #fff; font-weight: 600; }
+            .mobile-user-card { background: white; border-radius: 15px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+            .mobile-user-header { background: var(--blue); color: white; padding: 12px 15px; font-weight: 800; font-size: 14px; text-transform: uppercase; }
+            .mobile-day-row { display: flex; border-bottom: 1px solid #f1f5f9; min-height: 60px; }
+            .mobile-day-name { width: 60px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #64748b; border-right: 1px solid #f1f5f9; text-align: center; line-height: 1.2; }
+            .mobile-day-content { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+            .mobile-slot { font-size: 12px; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #fafafa; min-height: 30px; }
+            .mobile-slot.filled { border-left: 5px solid #3b82f6; background: #fff; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
             .mobile-slot.is-conge { border-left-color: var(--yellow); background: #fffbeb; }
             .mobile-slot.is-to-depot { border-left-color: var(--success); }
             
-            /* Ajustements boutons admin sur mobile */
             .search-container { flex-wrap: wrap; }
             #search-input { min-width: 100%; order: 1; }
-            .btn-nav-admin { flex: 1; order: 2; margin-top: 5px; padding: 12px 5px; }
+            .btn-nav-admin { flex: 1; order: 2; margin-top: 5px; padding: 12px 5px; font-size: 11px; }
         }
 
-        /* Modals et divers */
         #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(6px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
-
         .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; font-size: 13px; }
         .hidden { display: none !important; }
+        .btn-nav-admin { background: var(--blue); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 10px; }
         .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         .color-opt.active { border-color: var(--blue); transform: scale(1.05); }
-
         .truck-tag { display: inline-block; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-bottom: 4px; border-left: 3px solid #64748b; }
     </style>
 </head>
@@ -127,6 +124,7 @@
             <tbody id="b-admin"></tbody>
         </table>
     </div>
+
     <div id="v-admin-mobile"></div>
 
     <div id="v-driver" style="padding:15px;" class="hidden"></div>
@@ -138,24 +136,16 @@
 <div id="history-overlay">...</div>
 
 <script>
-    /* ... (Gardez toute la partie Config EmailJS, Firebase et Fonctions de calcul au début) ... */
+    /* TOUTE LA CONFIG FIREBASE / EMAILJS RESTE IDENTIQUE */
     const EMAILJS_PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
     const EMAILJS_SERVICE_ID = "service_1j5bpwf";
     const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
     const TEMPLATE_DEPOT = "template_8gqnnh7";
-
-    const DRIVER_EMAILS = {
-        'interne': 'chauffeur_interne@gmail.com',
-        'cedric': 'cedric@gmail.com',
-        'jadiel': 'jadiel@gmail.com',
-        'nicola': 'nicola@gmail.com',
-        'depot': 'bastien38dominguez@gmail.com',
-        'depot_contact': 'bastien38dominguez@gmail.com'
-    };
-
+    const DRIVER_EMAILS = { 'interne': 'chauffeur_interne@gmail.com', 'cedric': 'cedric@gmail.com', 'jadiel': 'jadiel@gmail.com', 'nicola': 'nicola@gmail.com', 'depot': 'bastien38dominguez@gmail.com', 'depot_contact': 'bastien38dominguez@gmail.com' };
     emailjs.init(EMAILJS_PUBLIC_KEY);
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
+    
     let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default', curRepId = null, rhMode = 'HEURES', curK = null;
 
     function getWeek(d) { let date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
@@ -180,31 +170,26 @@
         for(let i=0; i<5; i++) {
             let d = getDateFromWeek(curW, curY, i); 
             let iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            if(holidays[iso]) holidayList[i] = holidays[iso];
+            let dateLabel = fmtDate(d);
+            if(holidays[iso]) { document.getElementById('h'+i).innerHTML = `${days[i]} ${dateLabel}<span class="holiday-badge">${holidays[iso]}</span>`; holidayList[i] = holidays[iso]; }
+            else document.getElementById('h'+i).innerHTML = `${days[i]} ${dateLabel}`;
         }
 
         if(curU==='admin' || curU==='depot') {
-            // RENDER PC
-            let hPC = ""; 
-            // RENDER MOBILE
-            let hMob = ""; 
-
+            // RENDER PC ET MOBILE
+            let hPC = ""; let hMob = "";
             const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             
             users.forEach(u => {
-                // Construction Tableau PC
                 hPC += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
-                
-                // Construction Carte Mobile
                 hMob += `<div class="mobile-user-card"><div class="mobile-user-header">${u.id.toUpperCase()}</div>`;
 
                 for(let dI=0; dI<5; dI++) {
                     hPC += `<td>`;
+                    let dDate = getDateFromWeek(curW, curY, dI);
+                    hMob += `<div class="mobile-day-row"><div class="mobile-day-name">${days[dI]}<br>${fmtDate(dDate)}</div><div class="mobile-day-content">`;
                     
-                    let dateLab = fmtDate(getDateFromWeek(curW, curY, dI));
-                    hMob += `<div class="mobile-day-row"><div class="mobile-day-name">${days[dI]}<br>${dateLab}</div><div class="mobile-day-content">`;
-                    
-                    let hasContentForDay = false;
+                    let hasContent = false;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
                         if(curU==='depot' && !dta.toDepot) continue;
@@ -216,13 +201,13 @@
                         let htmlSlot = `<div class="slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                         hPC += htmlSlot;
 
-                        // Mobile slot (on n'affiche que s'il y a du contenu ou si on est admin pour éditer)
+                        // On n'affiche sur mobile que si c'est rempli OU si on est admin (pour pouvoir cliquer et ajouter)
                         if(dta.text || dta.isConge || curU === 'admin') {
                             hMob += `<div class="mobile-slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
-                            hasContentForDay = true;
+                            hasContent = true;
                         }
                     }
-                    if(!hasContentForDay && curU !== 'admin') hMob += `<div style="font-size:10px; color:#ccc; font-style:italic;">Rien</div>`;
+                    if(!hasContent && curU !== 'admin') hMob += `<div style="font-size:10px; color:#ccc; font-style:italic;">Libre</div>`;
                     
                     hPC += `</td>`;
                     hMob += `</div></div>`;
@@ -233,27 +218,25 @@
             document.getElementById('b-admin').innerHTML = hPC;
             document.getElementById('v-admin-mobile').innerHTML = hMob;
         } else {
-            // Vue Chauffeur (Déjà optimisée dans votre version précédente)
-            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); document.getElementById('v-admin').classList.add('hidden'); document.getElementById('v-admin-mobile').style.display='none'; v.innerHTML = "";
+            // VUE CHAUFFEUR (DÉJÀ OPTIMISÉE)
+            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); document.getElementById('v-admin').classList.add('hidden'); v.innerHTML = "";
             for(let dI=0; dI<5; dI++) {
                 let dD = getDateFromWeek(curW, curY, dI); let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
                 for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
                     if(dta && (dta.text || dta.isConge)) {
-                        if(dta.isConge) { cards += `<div style="padding:15px; background:#fffbeb; margin-bottom:10px; border-radius:12px; border-left:5px solid var(--yellow); text-align:center;"><b>🌴 CONGÉ</b></div>`; } 
+                        if(dta.isConge) cards += `<div style="padding:15px; background:#fffbeb; margin-bottom:10px; border-radius:12px; border-left:5px solid var(--yellow); text-align:center;"><b>🌴 CONGÉ</b></div>`;
                         else {
                             let fl = ""; dta.files?.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:10px; text-decoration:none; text-align:center; font-size:11px;">📎 DOCUMENT</a>`);
-                            let truckHtml = dta.truck ? `<div class="truck-tag ${dta.truck.includes('REMORQUE')?'trailer':''}">${dta.truck}</div>` : '';
-                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${truckHtml}<br><b>${dta.chantier?.toUpperCase() || ''}</b><p style="margin:8px 0; font-size:13px;">${dta.text}</p>${dta.matos?`<div style='background:#f0fdf4; padding:8px; border-radius:8px; font-size:11px;'><b>📦 LOGISTIQUE :</b> ${dta.matos}</div>`:''}${fl}</div>`;
+                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${dta.truck?`<div class="truck-tag">${dta.truck}</div>`:''}<br><b>${dta.chantier?.toUpperCase() || ''}</b><p style="margin:8px 0; font-size:13px;">${dta.text}</p>${fl}</div>`;
                         }
                     }
                 }
-                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue); font-size:15px; border-left:4px solid var(--yellow); padding-left:8px;">${days[dI]} ${fmtDate(dD)}</b> ${holidayList[dI]?'<span class="holiday-badge" style="display:inline-block; margin-left:10px;">'+holidayList[dI]+'</span>':''}<div style="margin-top:8px;">${cards || '<p style="color:#94a3b8; font-size:11px; font-style:italic;">Aucune mission</p>'}</div></div>`;
+                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue); font-size:15px;">${days[dI]} ${fmtDate(dD)}</b><div style="margin-top:8px;">${cards || '<p style="color:#94a3b8; font-size:11px;">Aucune mission</p>'}</div></div>`;
             }
         }
     }
-
-    /* ... (Gardez tout le reste de vos fonctions JS à l'identique : openEd, saveTask, openReport, etc.) ... */
+    /* ... (TOUTES LES AUTRES FONCTIONS JS RESTENT TELLES QUELLES) ... */
 </script>
 </body>
 </html>
