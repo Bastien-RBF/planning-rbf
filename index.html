@@ -203,6 +203,7 @@
         'cedric': 'cedric@gmail.com',
         'jadiel': 'jadiel@gmail.com',
         'nicola': 'nicola@gmail.com',
+        'depot': 'bastien38dominguez@gmail.com', // Email pour le compte dépôt
         'depot_contact': 'bastien38dominguez@gmail.com'
     };
 
@@ -221,7 +222,8 @@
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); 
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
-        if(u!=='admin' && u!=='depot') { document.getElementById('driver-tools-zone').classList.remove('hidden'); loadLastReports(); }
+        // Activé pour chauffeurs ET dépôt
+        if(u!=='admin') { document.getElementById('driver-tools-zone').classList.remove('hidden'); loadLastReports(); }
         fetchHolidays(curY);
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); checkTodayConge(); }); 
     }
@@ -280,16 +282,22 @@
         }
     }
 
+    // Gestion de la double notification si case "Dépôt" cochée
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
         const driverId = parts[2];
-        const dayIdx = parseInt(parts[3]);
-        const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), dayIdx));
-        let targetTemplate = task.toDepot ? TEMPLATE_DEPOT : TEMPLATE_CHAUFFEUR;
-        let targetEmail = task.toDepot ? DRIVER_EMAILS['depot_contact'] : DRIVER_EMAILS[driverId];
-        if (!targetEmail) return;
-        const params = { chauffeur: driverId.toUpperCase(), jour: dateMission, message: `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}` };
-        emailjs.send(EMAILJS_SERVICE_ID, targetTemplate, params);
+        const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
+        const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
+
+        // Notification au chauffeur
+        if (DRIVER_EMAILS[driverId]) {
+            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
+        }
+        
+        // Double notification au dépôt si la case est cochée
+        if (task.toDepot) {
+            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
+        }
     }
 
     function openEd(k) { 
@@ -320,9 +328,7 @@
         
         db.ref('planning_v18/'+curK).set(taskData).then(() => {
             const today = new Date();
-            const currentWeek = getWeek(today);
-            const currentYear = today.getFullYear();
-            if (curY === currentYear && curW === currentWeek) {
+            if (curY === today.getFullYear() && curW === getWeek(today)) {
                 sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
             }
             closeEditor();
@@ -370,7 +376,7 @@
         db.ref('pointages_v18').once('value', s => {
             const all = s.val() || {}; let typeFilter = rhMode === 'HEURES' ? 'POINTAGE' : 'VOYAGE'; let usersData = {};
             for(let date in all) { if(date.startsWith(month)) { for(let id in all[date]) { let r = all[date][id]; if(r.type === typeFilter) { if(!usersData[r.user]) usersData[r.user] = []; usersData[r.user].push({...r, date}); } } } }
-            let html = ""; const users = ['interne','cedric','jadiel','nicola'];
+            let html = ""; const users = ['interne','cedric','jadiel','nicola','depot'];
             users.forEach(user => {
                 let reps = usersData[user] || [];
                 let sortedReps = reps.sort((a,b) => a.date.localeCompare(b.date));
@@ -437,7 +443,7 @@
                     if (p.length >= 4) {
                         let y = parseInt(p[0]), w = parseInt(p[1]), dI = parseInt(p[3]);
                         if (!isNaN(y) && !isNaN(w) && !isNaN(dI)) {
-                            matches.push({ date: getDateFromWeek(w, y, dI), week: w, year: y, user: p[2], chantier: d[k].chantier || "SANS NOM", text: d[k].text || "(Pas de descriptif)" });
+                            matches.push({ date: getDateFromWeek(w, y, dI), week: w, year: y, user: p[2], chantier: d[k].chantier || "SANS NOM", text: d[k].text || "(Pas de descriptif)", matos: d[k].matos || "" });
                         }
                     }
                 } 
@@ -452,6 +458,7 @@
                         </div>
                         <div style="color:var(--success); font-weight:bold; font-size:12px;">🏗️ ${m.chantier}</div>
                         <div style="font-size:12px; color:#475569; margin-top:4px; border-top:1px solid #f8fafc; padding-top:4px;">${m.text}</div>
+                        ${m.matos ? `<div style="font-size:11px; background:#f0fdf4; padding:5px; margin-top:5px; border-radius:4px;"><b>📦 Logistique:</b> ${m.matos}</div>` : ''}
                     </div>`; 
             }); 
             document.getElementById('history-results').innerHTML = h; 
