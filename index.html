@@ -13,279 +13,40 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <style>
-        :root {
-            --blue: #1b2e58;
-            --yellow: #f9c311;
-            --success: #10b981;
-            --danger: #ef4444;
-            --bg: #f3f4f6;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            color: #1e293b;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        header {
-            background: white;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--yellow);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .header-logo img {
-            height: 35px;
-        }
-
-        .week-nav-bar {
-            background: white;
-            margin: 10px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .wk-btn {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            color: var(--blue);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        #wk-disp {
-            text-align: center;
-            font-weight: 800;
-            color: var(--blue);
-            line-height: 1.2;
-            flex: 1;
-        }
-
-        .search-container {
-            background: white;
-            padding: 12px 15px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #search-input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #f1f5f9;
-            outline: none;
-            font-size: 14px;
-            background: #f8fafc;
-        }
-
-        .table-container {
-            padding: 5px 10px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            min-width: 800px;
-            border: 1px solid #e2e8f0;
-        }
-
-        th {
-            background: var(--blue);
-            color: white;
-            padding: 12px 5px;
-            font-size: 11px;
-            font-weight: 700;
-            border-bottom: 2px solid var(--yellow);
-        }
-
-        td {
-            border-bottom: 1px solid #f1f5f9;
-            border-right: 1px solid #f1f5f9;
-            padding: 6px;
-            vertical-align: top;
-        }
-
-        .user-cell {
-            background: #fdfdfd;
-            font-weight: 800;
-            color: var(--blue);
-            text-align: center;
-            width: 90px;
-            position: sticky;
-            left: 0;
-            z-index: 10;
-            border-right: 3px solid var(--yellow) !important;
-            font-size: 11px;
-        }
-
-        .slot {
-            font-size: 10px;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 8px;
-            background: #fcfcfc;
-            border: 1px solid #edf2f7;
-            cursor: pointer;
-            color: var(--blue);
-            min-height: 20px;
-        }
-
-        .filled {
-            background: #fff;
-            border: 1px solid #3b82f6;
-            font-weight: 600;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .is-to-depot {
-            border-left: 5px solid var(--success) !important;
-        }
-
-        .is-conge {
-            border-left: 5px solid var(--yellow) !important;
-            background: #fffbeb !important;
-        }
-
-        .holiday-badge {
-            display: block;
-            background: var(--yellow);
-            color: var(--blue);
-            font-size: 8px;
-            padding: 2px;
-            border-radius: 3px;
-            margin-top: 3px;
-            font-weight: 900;
-        }
-
-        .ferie-text {
-            color: var(--danger);
-            font-size: 9px;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .matos-badge {
-            background: #f0fdf4;
-            padding: 4px;
-            border-radius: 4px;
-            margin-top: 3px;
-            font-size: 9px;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-            display: block;
-        }
-
-        #editor-overlay, #report-overlay, #history-overlay, #rh-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15,23,42,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            backdrop-filter: blur(6px);
-        }
-
-        .editor-box {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            width: 92%;
-            max-width: 500px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .btn-main {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f3f4f6; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-logo img { height: 35px; }
+        .week-nav-bar { background: white; margin: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .wk-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--blue); width: 40px; height: 40px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        #wk-disp { text-align: center; font-weight: 800; color: var(--blue); line-height: 1.2; flex: 1; }
+        .search-container { background: white; padding: 12px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+        #search-input { flex: 1; padding: 10px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
+        .table-container { padding: 5px 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; min-width: 800px; border: 1px solid #e2e8f0; }
+        th { background: var(--blue); color: white; padding: 12px 5px; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 90px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; font-size: 11px; }
+        .slot { font-size: 10px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px solid #edf2f7; cursor: pointer; color: var(--blue); min-height: 20px; }
+        .filled { background: #fff; border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .is-to-depot { border-left: 5px solid var(--success) !important; }
+        .is-conge { border-left: 5px solid var(--yellow) !important; background: #fffbeb !important; }
+        .ferie-text { color: var(--danger); font-size: 9px; font-weight: bold; display: block; margin-bottom: 4px; }
+        .holiday-badge { display: block; background: var(--yellow); color: var(--blue); font-size: 8px; padding: 2px; border-radius: 3px; margin-top: 3px; font-weight: 900; }
+        .matos-badge { background: #f0fdf4; padding: 4px; border-radius: 4px; margin-top: 3px; font-size: 9px; color: #166534; border: 1px solid #bbf7d0; display: block; }
+        
+        #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.8); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(6px); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; font-size: 13px; }
         .hidden { display: none !important; }
-
-        .btn-nav-admin {
-            background: var(--blue);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 10px;
-        }
-
-        .truck-tag {
-            display: inline-block;
-            background: #e2e8f0;
-            color: #475569;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 9px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            border-left: 3px solid #64748b;
-        }
-
-        .color-opt {
-            height: 30px;
-            border-radius: 5px;
-            cursor: pointer;
-            border: 1px solid #ddd;
-        }
-
-        .rh-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin-top: 10px;
-            background: white;
-        }
-        .rh-table th {
-            background: #f1f5f9;
-            color: var(--blue);
-            text-align: left;
-            padding: 8px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .rh-table td {
-            padding: 8px;
-            border-bottom: 1px solid #f1f5f9;
-        }
+        .btn-nav-admin { background: var(--blue); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 10px; }
+        .truck-tag { display: inline-block; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-bottom: 4px; border-left: 3px solid #64748b; }
+        
+        /* RH Table */
+        .rh-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; background: white; }
+        .rh-table th { background: #f1f5f9; color: var(--blue); text-align: left; padding: 8px; border-bottom: 1px solid #e2e8f0; }
+        .rh-table td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+        .color-opt { height: 30px; border-radius: 5px; cursor: pointer; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -372,24 +133,15 @@
     <div class="editor-box">
         <h3 id="rep-title-ui" style="text-align:center; color:var(--blue); margin-top:0;">Saisie</h3>
         <div style="background:#f8fafc; padding:15px; border-radius:15px; margin-bottom:15px;">
-            <div style="margin-bottom:10px;">
-                <label style="font-size:10px; font-weight:bold;">DATE :</label>
-                <input type="date" id="rep-date" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-            </div>
+            <div style="margin-bottom:10px;"><label style="font-size:10px; font-weight:bold;">DATE :</label><input type="date" id="rep-date" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
             <div id="form-pointage" class="hidden">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <div><label style="font-size:10px; font-weight:bold;">DÉBUT :</label><input type="time" id="p-start" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
                     <div><label style="font-size:10px; font-weight:bold;">FIN :</label><input type="time" id="p-end" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
                 </div>
-                <div style="margin-top:10px;">
-                    <label style="font-size:10px; font-weight:bold;">PAUSE (MIN) :</label>
-                    <input type="number" id="p-pause" value="45" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                </div>
+                <div style="margin-top:10px;"><label style="font-size:10px; font-weight:bold;">PAUSE (MIN) :</label><input type="number" id="p-pause" value="45" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
             </div>
-            <div id="form-journalier" class="hidden">
-                <label style="font-size:10px; font-weight:bold;">RÉSUMÉ :</label>
-                <textarea id="rj-text" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea>
-            </div>
+            <div id="form-journalier" class="hidden"><label style="font-size:10px; font-weight:bold;">RÉSUMÉ :</label><textarea id="rj-text" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ddd;"></textarea></div>
         </div>
         <button onclick="saveReport()" class="btn-main" style="background:var(--blue); color:white;">ENREGISTRER</button>
         <button id="btn-del-rep" onclick="deleteReport()" style="width:100%; border:none; color:var(--danger); background:none; padding:10px; font-weight:bold;">Supprimer l'enregistrement</button>
@@ -410,9 +162,7 @@
             </select>
         </div>
         <textarea id="e-input" style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Mission"></textarea>
-        <div id="zone-matos" class="hidden">
-            <textarea id="e-matos" style="width:100%; height:60px; border:2px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="📦 MATÉRIEL"></textarea>
-        </div>
+        <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:60px; border:2px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="📦 MATÉRIEL"></textarea></div>
         <div id="cp" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; margin:10px 0;"></div>
         <div id="file-list-admin" style="margin-bottom:10px;"></div>
         <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
@@ -436,11 +186,14 @@
 </div>
 
 <script>
-    // CONFIGURATION
+    // --- CONFIGURATION ---
     const EMAILJS_PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
     const EMAILJS_SERVICE_ID = "service_1j5bpwf";
     const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
     const TEMPLATE_DEPOT = "template_8gqnnh7";
+    const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dttv986p6/image/upload";
+    const CLOUDINARY_PRESET = "ml_default";
+
     const DRIVER_EMAILS = { 
         'interne': 'chauffeur_interne@gmail.com', 
         'cedric': 'cedric@gmail.com', 
@@ -453,18 +206,17 @@
     firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
 
-    // VARIABLES GLOBALES
+    // --- VARIABLES ---
     let holidays = {};
     let curDate = new Date();
     let curW = getWeek(curDate);
     let curY = curDate.getFullYear();
     let curU = localStorage.getItem('rbf_u');
-    let currentFiles = [], selectedCol = 'default', curRepId = null, curK = null, activeT = 'pointage';
+    let currentFiles = [], selectedCol = 'default', curRepId = null, curK = null, activeT = 'pointage', rhMode = 'HEURES';
 
-    // FONCTIONS UTILITAIRES
+    // --- FONCTIONS BASE ---
     function getWeek(d) {
-        let date = new Date(d.getTime());
-        date.setHours(0,0,0,0);
+        let date = new Date(d.getTime()); date.setHours(0,0,0,0);
         date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
         let week1 = new Date(date.getFullYear(), 0, 4);
         return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
@@ -482,14 +234,11 @@
 
     function fmtDate(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
 
-    // AUTHENTIFICATION
+    // --- AUTH ---
     function askCode(u) {
         let p = prompt("CODE " + u.toUpperCase());
         const codes = { admin: '2026', depot: '5555', interne: '1111', cedric: '2222', jadiel: '3333', nicola: '4444' };
-        if (p === codes[u]) {
-            localStorage.setItem('rbf_u', u);
-            login(u);
-        } else alert("Code incorrect");
+        if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } else alert("Code incorrect");
     }
 
     function login(u) {
@@ -498,27 +247,16 @@
         document.getElementById('app-content').classList.remove('hidden');
         document.getElementById('u-info').classList.remove('hidden');
         if(u === 'admin') document.getElementById('admin-search-zone').classList.remove('hidden');
-        if(u !== 'admin' && u !== 'depot') {
-            document.getElementById('driver-tools-zone').classList.remove('hidden');
-            loadLastReports();
-        }
+        if(u !== 'admin' && u !== 'depot') { document.getElementById('driver-tools-zone').classList.remove('hidden'); loadLastReports(); }
         fetchHolidays(curY);
-        db.ref('planning_v18').on('value', s => { 
-            window.data = s.val() || {}; 
-            render(); 
-            checkTodayConge(); 
-        });
+        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); checkTodayConge(); });
     }
 
     async function fetchHolidays(y) {
-        try {
-            const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`);
-            holidays = await r.json();
-            render();
-        } catch(e) { render(); }
+        try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`); holidays = await r.json(); render(); } catch(e) { render(); }
     }
 
-    // AFFICHAGE PRINCIPAL
+    // --- RENDER ---
     function render() {
         document.getElementById('wk-disp').innerHTML = `<span style="font-size:10px; opacity:0.6;">ANNÉE ${curY}</span><br>SEMAINE ${curW}`;
         const days = ["LUN", "MAR", "MER", "JEU", "VEN"];
@@ -530,24 +268,20 @@
             if(holidays[iso]) {
                 document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}<span class="holiday-badge">${holidays[iso]}</span>`;
                 curHolidaysThisWeek[i] = holidays[iso];
-            } else {
-                document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}`;
-            }
+            } else document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}`;
         }
 
         if(curU === 'admin' || curU === 'depot') {
             document.getElementById('v-admin').classList.remove('hidden');
             document.getElementById('v-driver').classList.add('hidden');
             let h = "";
-            const users = [
-                {id: 'interne', s: 4}, {id: 'externe', s: 4}, {id: 'cedric', s: 4},
-                {id: 'divers', s: 4}, {id: 'instal', s: 4}, {id: 'jadiel', s: 2}, {id: 'nicola', s: 2}
-            ];
+            const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
 
             users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dI=0; dI<5; dI++) {
                     h += `<td>`;
+                    // MODIF : Affichage FÉRIÉ pour les 4 chauffeurs
                     if(['interne', 'cedric', 'jadiel', 'nicola'].includes(u.id) && curHolidaysThisWeek[dI]) {
                         h += `<span class="ferie-text">🇫🇷 FÉRIÉ</span>`;
                     }
@@ -556,13 +290,9 @@
                         let dta = window.data[k] || {};
                         if(curU === 'depot' && !dta.toDepot) continue;
                         let st = dta.col && dta.col !== 'default' ? `background:${dta.col};` : '';
-                        let txt = "";
-                        if (dta.isConge) txt = "🌴 CONGÉ";
-                        else if (dta.chantier || dta.text) {
-                            txt = `<b>${(dta.chantier || "").toUpperCase()}</b><br>${dta.text || ""}`;
-                            if (dta.matos) txt += `<span class="matos-badge">📦 ${dta.matos}</span>`;
-                        }
-                        h += `<div class="slot ${dta.text || dta.isConge ? 'filled' : ''} ${dta.toDepot ? 'is-to-depot' : ''} ${dta.isConge ? 'is-conge' : ''}" style="${st}" onclick="openEd('${k}')">${txt || '...'}</div>`;
+                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${dta.chantier.toUpperCase()}</b><br>${dta.text||''}` : '');
+                        if(dta.matos) txt += `<span class="matos-badge">📦 ${dta.matos}</span>`;
+                        h += `<div class="slot ${txt?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''}" style="${st}" onclick="openEd('${k}')">${txt||'...'}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -570,7 +300,6 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            // Vue Chauffeur
             const v = document.getElementById('v-driver');
             v.classList.remove('hidden');
             document.getElementById('v-admin').classList.add('hidden');
@@ -581,32 +310,28 @@
                 if(['interne', 'cedric', 'jadiel', 'nicola'].includes(curU) && curHolidaysThisWeek[dI]) {
                     cards += `<div style="padding:10px; background:#fee2e2; color:#b91c1c; border-radius:8px; margin-bottom:10px; font-weight:bold; text-align:center; font-size:11px;">🇫🇷 JOUR FÉRIÉ : ${curHolidaysThisWeek[dI].toUpperCase()}</div>`;
                 }
-                let maxS = (curU === 'jadiel' || curU === 'nicola') ? 2 : 4;
+                let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
                 for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
                     if(dta && (dta.text || dta.isConge)) {
                         if(dta.isConge) cards += `<div style="padding:15px; background:#fffbeb; margin-bottom:10px; border-radius:12px; border-left:5px solid var(--yellow); text-align:center;"><b>🌴 CONGÉ</b></div>`;
-                        else {
-                            let truckHtml = dta.truck ? `<div class="truck-tag">${dta.truck}</div>` : '';
-                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid #3b82f6; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${truckHtml}<br><b>${dta.chantier?.toUpperCase()}</b><p>${dta.text}</p>${dta.matos ? `<div class='matos-badge'>📦 ${dta.matos}</div>` : ''}</div>`;
-                        }
+                        else cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid #3b82f6; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${dta.truck?`<div class="truck-tag">${dta.truck}</div>`:''}<br><b>${dta.chantier?.toUpperCase()}</b><p>${dta.text}</p>${dta.matos?`<div class='matos-badge'>📦 ${dta.matos}</div>`:''}</div>`;
                     }
                 }
-                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue);">${days[dI]} ${fmtDate(dD)}</b><div style="margin-top:8px;">${cards || '<p style="font-size:11px; color:#94a3b8;">Aucune mission</p>'}</div></div>`;
+                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue);">${days[dI]} ${fmtDate(dD)}</b><div style="margin-top:8px;">${cards||'<p style="font-size:11px; color:#94a3b8;">Aucune mission</p>'}</div></div>`;
             }
         }
     }
 
-    // GESTION MISSIONS (ADMIN)
+    // --- ACTIONS MISSIONS ---
     function openEd(k) {
-        if(curU !== 'admin') return;
-        curK = k;
-        let d = window.data[k] || {};
+        if(curU !== 'admin') return; curK = k; let d = window.data[k] || {};
         document.getElementById('e-chantier').value = d.chantier || "";
         document.getElementById('e-input').value = d.text || "";
         document.getElementById('e-matos').value = d.matos || "";
         document.getElementById('e-depot').checked = !!d.toDepot;
         document.getElementById('e-conge').checked = !!d.isConge;
+        document.getElementById('e-truck').value = d.truck || "";
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
         document.getElementById('zone-truck').classList.toggle('hidden', !(k.includes('interne') || k.includes('cedric')));
         document.getElementById('zone-conge-checkbox').classList.toggle('hidden', k.includes('externe'));
@@ -621,33 +346,55 @@
             toDepot: document.getElementById('e-depot').checked, 
             isConge: document.getElementById('e-conge').checked, 
             col: selectedCol, 
-            truck: document.getElementById('e-truck').value 
+            truck: document.getElementById('e-truck').value,
+            files: currentFiles 
         };
-        db.ref('planning_v18/'+curK).set(dta).then(closeEditor);
+        db.ref('planning_v18/'+curK).set(dta).then(() => {
+            if(dta.toDepot) sendEmail('depot', dta);
+            let u = curK.split('_')[2];
+            if(DRIVER_EMAILS[u]) sendEmail(u, dta);
+            closeEditor();
+        });
     }
 
     function deleteTask() { if(confirm("Supprimer ?")) db.ref('planning_v18/'+curK).remove().then(closeEditor); }
-    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function closeEditor() { document.getElementById('editor-overlay').style.display='none'; currentFiles=[]; selectedCol='default'; }
 
-    // POINTAGES & RH
+    // --- GESTION FICHIERS CLOUDINARY ---
+    async function uploadFile(input) {
+        if(!input.files[0]) return;
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        formData.append('upload_preset', CLOUDINARY_PRESET);
+        try {
+            const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+            const data = await res.json();
+            currentFiles.push({ name: input.files[0].name, url: data.secure_url });
+            alert("Fichier ajouté !");
+        } catch(e) { alert("Erreur upload"); }
+    }
+
+    // --- POINTAGES & RH ---
     function openReport(t, isEdit = false) {
-        activeT = t;
+        activeT = t; 
         if(!isEdit) {
             curRepId = null;
             document.getElementById('rep-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('btn-del-rep').classList.add('hidden');
+            document.getElementById('p-start').value = "07:30";
+            document.getElementById('p-end').value = "17:00";
             document.getElementById('rj-text').value = "";
+            document.getElementById('btn-del-rep').classList.add('hidden');
         }
-        document.getElementById('form-pointage').classList.toggle('hidden', t !== 'pointage');
-        document.getElementById('form-journalier').classList.toggle('hidden', t !== 'journalier');
+        document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage');
+        document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier');
         document.getElementById('report-overlay').style.display = 'flex';
     }
 
     function saveReport() {
         const d = document.getElementById('rep-date').value;
         let id = curRepId || `${curU}_${Date.now()}`;
-        let r = { user: curU, type: activeT === 'pointage' ? "POINTAGE" : "VOYAGE", date: d };
-        if(activeT === 'pointage') {
+        let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d };
+        if(activeT==='pointage') {
             r.debut = document.getElementById('p-start').value;
             r.fin = document.getElementById('p-end').value;
             r.p_pause = document.getElementById('p-pause').value;
@@ -655,42 +402,95 @@
         db.ref(`pointages_v18/${d}/${id}`).set(r).then(() => { alert("Enregistré !"); closeReport(); });
     }
 
-    function closeReport() { document.getElementById('report-overlay').style.display = 'none'; }
+    function closeReport() { document.getElementById('report-overlay').style.display='none'; }
     function deleteReport() { if(confirm("Supprimer ?")) db.ref(`pointages_v18/${document.getElementById('rep-date').value}/${curRepId}`).remove().then(closeReport); }
 
     function openRH(mode) {
-        document.getElementById('rh-overlay').style.display = 'flex';
-        document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7);
-        renderRH(mode);
+        rhMode = mode;
+        document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "RELEVÉ DES HEURES" : "JOURNAL DE BORD";
+        document.getElementById('rh-month-select').value = new Date().toISOString().slice(0,7);
+        document.getElementById('rh-overlay').style.display='flex';
+        renderRH();
     }
 
-    function renderRH(mode) {
+    function renderRH() {
         const month = document.getElementById('rh-month-select').value;
         db.ref('pointages_v18').once('value', s => {
-            const all = s.val() || {};
-            let h = "";
-            // Logique simplifiée d'affichage des rapports ici...
-            document.getElementById('rh-content').innerHTML = "Données chargées pour " + month;
+            const data = s.val() || {};
+            let h = `<table class="rh-table"><thead><tr><th>DATE</th><th>CHAUFFEUR</th><th>${rhMode==='HEURES'?'DURÉE':'DÉTAIL'}</th></tr></thead><tbody>`;
+            Object.keys(data).sort().reverse().forEach(day => {
+                if(day.startsWith(month)) {
+                    Object.values(data[day]).forEach(r => {
+                        if(rhMode === 'HEURES' && r.type === "POINTAGE") {
+                            let diff = (new Date(`1970-01-01T${r.fin}`) - new Date(`1970-01-01T${r.debut}`)) / 60000 - parseInt(r.p_pause||0);
+                            let hrs = Math.floor(diff/60), mins = diff%60;
+                            h += `<tr><td>${day}</td><td>${r.user.toUpperCase()}</td><td>${hrs}h${mins.toString().padStart(2,'0')}</td></tr>`;
+                        } else if(rhMode === 'JOURNAL' && r.type === "VOYAGE") {
+                            h += `<tr><td>${day}</td><td>${r.user.toUpperCase()}</td><td>${r.txt}</td></tr>`;
+                        }
+                    });
+                }
+            });
+            document.getElementById('rh-content').innerHTML = h + "</tbody></table>";
         });
     }
 
-    // AUTRES
-    function changeWeek(v) { curW += v; if(curW > 52) { curW = 1; curY++; } else if(curW < 1) { curW = 52; curY--; } fetchHolidays(curY); }
-    function applySearch() { 
-        const q = document.getElementById('search-input').value.toLowerCase(); 
-        document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q && !s.innerText.toLowerCase().includes(q))); 
-    }
+    // --- DIVERS ---
+    function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); }
+    function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q && !s.innerText.toLowerCase().includes(q))); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
-    function checkTodayConge() { /* Logique de vérification congé du jour */ }
-    function loadLastReports() { /* Chargement historique chauffeur */ }
 
-    // INITIALISATION COULEURS
+    function sendEmail(u, dta) {
+        const params = {
+            to_email: DRIVER_EMAILS[u],
+            subject: dta.toDepot ? "NOUVELLE MISSION DÉPÔT" : "MODIFICATION PLANNING",
+            chantier: dta.chantier,
+            mission: dta.text,
+            chauffeur: u.toUpperCase()
+        };
+        emailjs.send(EMAILJS_SERVICE_ID, dta.toDepot ? TEMPLATE_DEPOT : TEMPLATE_CHAUFFEUR, params);
+    }
+
+    function loadLastReports() {
+        db.ref('pointages_v18').limitToLast(5).on('value', s => {
+            const data = s.val() || {};
+            let h = "<b>Dernières saisies :</b><br>";
+            Object.keys(data).forEach(day => {
+                Object.values(data[day]).forEach(r => {
+                    if(r.user === curU) h += `• ${day} (${r.type})<br>`;
+                });
+            });
+            document.getElementById('last-reps-list').innerHTML = h;
+        });
+    }
+
+    function checkTodayConge() {
+        let today = new Date().getDay() - 1; if(today<0||today>4) return;
+        let isC = false;
+        for(let s=1; s<=4; s++) { if(window.data[`${curY}_${curW}_${curU}_${today}_s${s}`]?.isConge) isC = true; }
+        document.getElementById('conge-msg').classList.toggle('hidden', !isC);
+        document.getElementById('driver-buttons-container').classList.toggle('hidden', isC);
+    }
+
+    function showHistory() {
+        document.getElementById('history-overlay').style.display = 'flex';
+        db.ref('planning_v18').once('value', s => {
+            const d = s.val() || {};
+            let h = "";
+            Object.keys(d).forEach(k => {
+                let v = d[k]; if(!v.chantier) return;
+                h += `<div style="padding:10px; border-bottom:1px solid #eee;"><b>${v.chantier}</b> (${k})<br><small>${v.text}</small></div>`;
+            });
+            document.getElementById('history-results').innerHTML = h || "Aucun historique";
+        });
+    }
+
+    // --- INIT COULEURS ---
     const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
     colorOpts.forEach(c => {
-        let d = document.createElement('div');
-        d.className = 'color-opt';
-        d.style.background = c === 'default' ? '#fff' : c;
-        d.onclick = () => selectedCol = c;
+        let d = document.createElement('div'); d.className = 'color-opt';
+        d.style.background = c==='default'?'#fff':c;
+        d.onclick = () => { selectedCol = c; alert("Couleur sélectionnée"); };
         document.getElementById('cp').appendChild(d);
     });
 
