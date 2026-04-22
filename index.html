@@ -167,7 +167,7 @@
         </div>
 
         <textarea id="e-input" style="width:100%; height:60px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Mission"></textarea>
-        <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:50px; border:1px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="Logistique"></textarea></div>
+        <div id="zone-matos"><textarea id="e-matos" style="width:100%; height:50px; border:1px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="Logistique"></textarea></div>
         <div class="color-picker" id="cp" style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:10px 0;"></div>
         <div id="file-list-admin" style="margin-bottom:10px;"></div>
         <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
@@ -248,10 +248,27 @@
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
+                        
+                        // FILTRE DEPOT : On ne cache que si on est en session depot ET que ce n'est pas coché depot ET que ce n'est pas Jadiel/Nicola
+                        if(curU==='depot' && !dta.toDepot && u.id!=='jadiel' && u.id!=='nicola') continue;
+
                         let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                         let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
-                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
-                        h += `<div class="slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
+                        
+                        let txt = "";
+                        if(dta.isConge) {
+                            txt = "🌴 CONGÉ";
+                        } else if(dta.chantier || dta.text || dta.matos) {
+                            txt = `<b>${truckTag}[${(dta.chantier || "SANS NOM").toUpperCase()}]</b><br>${dta.text || ""}`;
+                            // AFFICHAGE LOGISTIQUE DANS LE PLANNING (si présent)
+                            if(dta.matos) {
+                                txt += `<div style='background:#f0fdf4; border:1px solid #bbf7d0; padding:4px; border-radius:4px; font-size:9px; color:#166534; margin-top:4px;'>📦 ${dta.matos}</div>`;
+                            }
+                        } else {
+                            txt = "...";
+                        }
+
+                        h += `<div class="slot ${dta.text || dta.isConge || dta.matos?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -264,13 +281,13 @@
                 let dD = getDateFromWeek(curW, curY, dI); let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
                 for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
-                    if(dta && (dta.text || dta.isConge)) {
+                    if(dta && (dta.text || dta.isConge || dta.matos)) {
                         if(dta.isConge) {
                             cards += `<div style="padding:15px; background:#fffbeb; margin-bottom:10px; border-radius:12px; border-left:5px solid var(--yellow); text-align:center;"><b>🌴 CONGÉ</b></div>`;
                         } else {
                             let fl = ""; dta.files?.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:10px; text-decoration:none; text-align:center; font-size:11px;">📎 DOCUMENT</a>`);
                             let truckHtml = dta.truck ? `<div class="truck-tag ${dta.truck.includes('REMORQUE')?'trailer':''}">${dta.truck}</div>` : '';
-                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${truckHtml}<br><b>${dta.chantier?.toUpperCase() || ''}</b><p style="margin:8px 0; font-size:13px;">${dta.text}</p>${dta.matos?`<div style='background:#f0fdf4; padding:8px; border-radius:8px; font-size:11px;'><b>📦 LOGISTIQUE :</b> ${dta.matos}</div>`:''}${fl}</div>`;
+                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${truckHtml}<br><b>${dta.chantier?.toUpperCase() || ''}</b><p style="margin:8px 0; font-size:13px;">${dta.text || ""}</p>${dta.matos?`<div style='background:#f0fdf4; padding:8px; border-radius:8px; font-size:11px;'><b>📦 LOGISTIQUE :</b> ${dta.matos}</div>`:''}${fl}</div>`;
                         }
                     }
                 }
@@ -279,22 +296,13 @@
         }
     }
 
-    // Gestion de la double notification par email
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
         const driverId = parts[2];
         const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
-        const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
-
-        // Notification au chauffeur concerné
-        if (DRIVER_EMAILS[driverId]) {
-            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
-        }
-        
-        // Double notification au dépôt si la case "Dépôt" est cochée
-        if (task.toDepot) {
-            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
-        }
+        const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')} - Logistique: ${task.matos || 'Rien'}`;
+        if (DRIVER_EMAILS[driverId]) emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
+        if (task.toDepot) emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
     }
 
     function openEd(k) { 
@@ -308,7 +316,6 @@
         document.getElementById('e-truck').value = d.truck || ""; 
         document.getElementById('e-depot').checked = !!d.toDepot; 
         document.getElementById('e-conge').checked = !!d.isConge; 
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
         let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
         document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
         let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
@@ -322,12 +329,9 @@
         let isConge = document.getElementById('e-conge').checked;
         let taskData = { text: isConge ? "" : document.getElementById('e-input').value, chantier: isConge ? "" : document.getElementById('e-chantier').value, matos: isConge ? "" : document.getElementById('e-matos').value, toDepot: isConge ? false : document.getElementById('e-depot').checked, isConge: isConge, col: isConge ? '#fef3c7' : selectedCol, files: isConge ? [] : currentFiles };
         if (!document.getElementById('zone-truck').classList.contains('hidden')) { taskData.truck = isConge ? "" : document.getElementById('e-truck').value; } else { taskData.truck = ""; }
-        
         db.ref('planning_v18/'+curK).set(taskData).then(() => {
             const today = new Date();
-            if (curY === today.getFullYear() && curW === getWeek(today)) {
-                sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
-            }
+            if (curY === today.getFullYear() && curW === getWeek(today)) sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
             closeEditor();
         }); 
     }
@@ -337,9 +341,7 @@
             let oldData = window.data[curK];
             db.ref('planning_v18/'+curK).remove().then(() => {
                 const today = new Date();
-                if (curY === today.getFullYear() && curW === getWeek(today)) {
-                    sendEmailNotification(curK, oldData, "ANNULÉE");
-                }
+                if (curY === today.getFullYear() && curW === getWeek(today)) sendEmailNotification(curK, oldData, "ANNULÉE");
                 closeEditor();
             });
         }
