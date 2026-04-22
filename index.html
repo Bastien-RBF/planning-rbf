@@ -7,283 +7,63 @@
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
-    
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <style>
-        :root {
-            --blue: #1b2e58;
-            --yellow: #f9c311;
-            --success: #10b981;
-            --danger: #ef4444;
-            --bg: #f3f4f6;
-        }
+        :root { --blue: #1b2e58; --yellow: #f9c311; --success: #10b981; --danger: #ef4444; --bg: #f3f4f6; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        
+        header { background: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header-logo img { height: 35px; }
 
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            color: #1e293b;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .week-nav-bar { background: white; margin: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .wk-btn { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--blue); width: 40px; height: 40px; border-radius: 10px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.2s; }
+        .wk-btn:active { background: #e2e8f0; transform: scale(0.95); }
+        #wk-disp { text-align: center; font-weight: 800; color: var(--blue); line-height: 1.2; flex: 1; }
 
-        header {
-            background: white;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--yellow);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+        .search-container { background: white; padding: 12px 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+        #search-input { flex: 1; padding: 10px; border-radius: 10px; border: 2px solid #f1f5f9; outline: none; font-size: 14px; background: #f8fafc; }
 
-        .header-logo img {
-            height: 35px;
-        }
+        .table-container { padding: 5px 10px; overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; background: white; border-radius: 12px; overflow: hidden; min-width: 800px; border: 1px solid #e2e8f0; }
+        th { background: var(--blue); color: white; padding: 12px 5px; font-size: 11px; font-weight: 700; border-bottom: 2px solid var(--yellow); }
+        td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
+        .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 90px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; font-size: 11px; }
 
-        .week-nav-bar {
-            background: white;
-            margin: 10px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        .slot { font-size: 10px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px solid #edf2f7; cursor: pointer; color: var(--blue); }
+        .filled { background: #fff; border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .is-to-depot { border-left: 5px solid var(--success) !important; }
+        .is-conge { border-left: 5px solid var(--yellow) !important; background: #fffbeb !important; }
+        .holiday-badge { display: block; background: var(--yellow); color: var(--blue); font-size: 8px; padding: 2px; border-radius: 3px; margin-top: 3px; font-weight: 900; }
 
-        .wk-btn {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            color: var(--blue);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: 0.2s;
-        }
+        #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(6px); }
+        .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
 
-        .wk-btn:active {
-            background: #e2e8f0;
-            transform: scale(0.95);
-        }
+        .rh-user-section { margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: white; border: 1px solid #e2e8f0; }
+        .rh-user-header { background: var(--blue); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; }
+        .rh-total-badge { background: var(--yellow); color: var(--blue); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+        .rh-table { width: 100%; font-size: 12px; border-collapse: collapse; min-width: 300px; }
+        .rh-table td { padding: 8px 15px; border-bottom: 1px solid #f1f5f9; }
+        .journal-bubble { background: #f8fafc; border-left: 4px solid var(--success); padding: 10px; margin: 10px; border-radius: 4px; font-size: 13px; }
 
-        #wk-disp {
-            text-align: center;
-            font-weight: 800;
-            color: var(--blue);
-            line-height: 1.2;
-            flex: 1;
-        }
-
-        .search-container {
-            background: white;
-            padding: 12px 15px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #search-input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #f1f5f9;
-            outline: none;
-            font-size: 14px;
-            background: #f8fafc;
-        }
-
-        .table-container {
-            padding: 5px 10px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            min-width: 800px;
-            border: 1px solid #e2e8f0;
-        }
-
-        th {
-            background: var(--blue);
-            color: white;
-            padding: 12px 5px;
-            font-size: 11px;
-            font-weight: 700;
-            border-bottom: 2px solid var(--yellow);
-        }
-
-        td {
-            border-bottom: 1px solid #f1f5f9;
-            border-right: 1px solid #f1f5f9;
-            padding: 6px;
-            vertical-align: top;
-        }
-
-        .user-cell {
-            background: #fdfdfd;
-            font-weight: 800;
-            color: var(--blue);
-            text-align: center;
-            width: 90px;
-            position: sticky;
-            left: 0;
-            z-index: 10;
-            border-right: 3px solid var(--yellow) !important;
-            font-size: 11px;
-        }
-
-        .slot {
-            font-size: 10px;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 8px;
-            background: #fcfcfc;
-            border: 1px solid #edf2f7;
-            cursor: pointer;
-            color: var(--blue);
-        }
-
-        .filled {
-            background: #fff;
-            border: 1px solid #3b82f6;
-            font-weight: 600;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .is-to-depot {
-            border-left: 5px solid var(--success) !important;
-        }
-
-        .is-conge {
-            border-left: 5px solid var(--yellow) !important;
-            background: #fffbeb !important;
-        }
-
-        .holiday-badge {
-            display: block;
-            background: var(--yellow);
-            color: var(--blue);
-            font-size: 8px;
-            padding: 2px;
-            border-radius: 3px;
-            margin-top: 3px;
-            font-weight: 900;
-        }
-
-        .matos-badge {
-            background: #f0fdf4;
-            padding: 4px;
-            border-radius: 4px;
-            margin-top: 3px;
-            font-size: 9px;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-            display: block;
-        }
-
-        #editor-overlay, #report-overlay, #history-overlay, #rh-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15,23,42,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            backdrop-filter: blur(6px);
-        }
-
-        .editor-box {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            width: 92%;
-            max-width: 500px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .btn-main {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 13px;
-        }
-
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; font-size: 13px; }
         .hidden { display: none !important; }
+        .btn-nav-admin { background: var(--blue); color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 10px; }
+        .color-opt { height: 35px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
+        .color-opt.active { border-color: var(--blue); transform: scale(1.05); }
 
-        .btn-nav-admin {
-            background: var(--blue);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 10px;
-        }
-
-        .color-opt {
-            height: 35px;
-            border-radius: 8px;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-
-        .color-opt.active {
-            border-color: var(--blue);
-            transform: scale(1.05);
-        }
-
-        .truck-tag {
-            display: inline-block;
-            background: #e2e8f0;
-            color: #475569;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 9px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            border-left: 3px solid #64748b;
-        }
-
-        .truck-tag.trailer {
-            background: #dcfce7;
-            color: #166534;
-            border-left-color: var(--success);
-        }
+        .truck-tag { display: inline-block; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-bottom: 4px; border-left: 3px solid #64748b; }
+        .truck-tag.trailer { background: #dcfce7; color: #166534; border-left-color: var(--success); }
     </style>
 </head>
 <body>
 
 <header>
     <div class="header-logo"><img src="logo.png"></div>
-    <div id="u-info" class="hidden">
-        <button onclick="logout()" style="background:#fee2e2; border:none; color:var(--danger); padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px;">SORTIR</button>
-    </div>
+    <div id="u-info" class="hidden"><button onclick="logout()" style="background:#fee2e2; border:none; color:var(--danger); padding:6px 10px; border-radius:6px; font-weight:bold; font-size:10px;">SORTIR</button></div>
 </header>
 
 <div id="login-screen">
@@ -308,14 +88,12 @@
             <button onclick="openReport('pointage')" style="flex:1; background:var(--blue); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; font-size:12px;">🕒 POINTAGE</button>
             <button onclick="openReport('journalier')" style="flex:1; background:var(--success); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; font-size:12px;">📝 JOURNAL</button>
         </div>
-        <div id="conge-msg" class="hidden" style="padding:15px; text-align:center; background:#fffbeb; color:#92400e; border-radius:12px; font-weight:bold; font-size:13px; border:1px solid var(--yellow);">
-            🌴 VOUS ÊTES EN CONGÉ AUJOURD'HUI
-        </div>
+        <div id="conge-msg" class="hidden" style="padding:15px; text-align:center; background:#fffbeb; color:#92400e; border-radius:12px; font-weight:bold; font-size:13px; border:1px solid var(--yellow);">🌴 VOUS ÊTES EN CONGÉ AUJOURD'HUI</div>
         <div id="last-reps-list" style="margin-top:10px; font-size:11px; color:#64748b;"></div>
     </div>
 
     <div id="admin-search-zone" class="search-container hidden">
-        <input type="text" id="search-input" placeholder="🔍 Rechercher un chantier, une mission..." oninput="applySearch()">
+        <input type="text" id="search-input" placeholder="🔍 Rechercher..." oninput="applySearch()">
         <button class="btn-nav-admin" style="background:#64748b" onclick="showHistory()">HISTO</button>
         <button class="btn-nav-admin" onclick="openRH('HEURES')">🕒 RH</button>
         <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH('JOURNAL')">📝 RAPPORTS</button>
@@ -329,20 +107,10 @@
 
     <div id="v-admin" class="table-container">
         <table>
-            <thead>
-                <tr>
-                    <th class="user-cell">NOM</th>
-                    <th id="h0">LUN</th>
-                    <th id="h1">MAR</th>
-                    <th id="h2">MER</th>
-                    <th id="h3">JEU</th>
-                    <th id="h4">VEN</th>
-                </tr>
-            </thead>
+            <thead><tr><th class="user-cell">NOM</th><th id="h0">LUN</th><th id="h1">MAR</th><th id="h2">MER</th><th id="h3">JEU</th><th id="h4">VEN</th></tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
     </div>
-
     <div id="v-driver" style="padding:15px;" class="hidden"></div>
 </div>
 
@@ -365,39 +133,27 @@
                 <label style="font-size:10px; font-weight:bold;">DATE :</label>
                 <input type="date" id="rep-date" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
             </div>
-            
             <div id="form-pointage" class="hidden">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div>
-                        <label style="font-size:10px; font-weight:bold;">DÉBUT :</label>
-                        <input type="time" id="p-start" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                    </div>
-                    <div>
-                        <label style="font-size:10px; font-weight:bold;">FIN :</label>
-                        <input type="time" id="p-end" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                    </div>
+                    <div><label style="font-size:10px; font-weight:bold;">DÉBUT :</label><input type="time" id="p-start" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
+                    <div><label style="font-size:10px; font-weight:bold;">FIN :</label><input type="time" id="p-end" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
                 </div>
-                <div style="margin-top:10px;">
-                    <label style="font-size:10px; font-weight:bold;">PAUSE (MIN) :</label>
-                    <input type="number" id="p-pause" value="45" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-                </div>
+                <div style="margin-top:10px;"><label style="font-size:10px; font-weight:bold;">PAUSE (MIN) :</label><input type="number" id="p-pause" value="45" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></div>
             </div>
-
             <div id="form-journalier" class="hidden">
-                <label style="font-size:10px; font-weight:bold;">RÉSUMÉ DE LA JOURNÉE :</label>
+                <label style="font-size:10px; font-weight:bold;">RÉSUMÉ :</label>
                 <textarea id="rj-text" style="width:100%; height:100px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Votre journée en quelques mots..."></textarea>
             </div>
         </div>
         <button onclick="saveReport()" class="btn-main" style="background:var(--blue); color:white;">ENREGISTRER</button>
-        <button id="btn-del-rep" onclick="deleteReport()" style="width:100%; border:none; color:var(--danger); background:none; padding:10px; font-weight:bold; cursor:pointer;">Supprimer l'enregistrement</button>
-        <button onclick="closeReport()" style="width:100%; border:none; color:#94a3b8; background:none; cursor:pointer;">Fermer sans enregistrer</button>
+        <button id="btn-del-rep" onclick="deleteReport()" style="width:100%; border:none; color:var(--danger); background:none; padding:10px; font-weight:bold; cursor:pointer;">Supprimer</button>
+        <button onclick="closeReport()" style="width:100%; border:none; color:#94a3b8; background:none; cursor:pointer;">Fermer</button>
     </div>
 </div>
 
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 style="margin-top:0; color:var(--blue); text-align:center; font-size:16px;">Édition Mission</h3>
-        
         <input type="text" id="e-chantier" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px;" placeholder="Chantier">
         
         <div id="zone-truck" class="hidden">
@@ -410,36 +166,27 @@
             </select>
         </div>
 
-        <textarea id="e-input" style="width:100%; height:80px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Détails de la mission"></textarea>
-        
-        <div id="zone-matos" class="hidden">
-            <textarea id="e-matos" style="width:100%; height:60px; border:2px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="📦 LOGISTIQUE / MATÉRIEL"></textarea>
-        </div>
-
-        <div class="color-picker" id="cp" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; margin:10px 0;"></div>
-
+        <textarea id="e-input" style="width:100%; height:60px; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="Mission"></textarea>
+        <div id="zone-matos" class="hidden"><textarea id="e-matos" style="width:100%; height:50px; border:1px solid var(--success); padding:10px; border-radius:8px; margin-top:10px;" placeholder="Logistique"></textarea></div>
+        <div class="color-picker" id="cp" style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:10px 0;"></div>
         <div id="file-list-admin" style="margin-bottom:10px;"></div>
         <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-        <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-bottom:10px; font-size:11px; font-weight:bold; color:var(--blue);">📎 AJOUTER UNE PIÈCE JOINTE</button>
-
+        <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-bottom:10px; font-size:11px; font-weight:bold;">📎 PIÈCE JOINTE</button>
+        
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
-            <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer;">
-                <input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>📤 DÉPÔT</b>
-            </label>
-            <label id="zone-conge-checkbox" class="hidden" style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400e; cursor:pointer;">
-                <input type="checkbox" id="e-conge" style="width:18px; height:18px;"> <b>🌴 CONGÉ</b>
-            </label>
+            <label style="display:flex; align-items:center; gap:8px; font-size:11px;"><input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>DÉPÔT</b></label>
+            <label id="zone-conge-checkbox" class="hidden" style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px; height:18px;"> <b>🌴 CONGÉ</b></label>
         </div>
 
         <button onclick="saveTask()" class="btn-main" style="background:var(--blue); color:white;">SAUVEGARDER</button>
-        <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; font-weight:bold;">Supprimer la mission</button>
+        <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; font-weight:bold;">Supprimer</button>
         <button onclick="closeEditor()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:5px;">Annuler</button>
     </div>
 </div>
 
 <div id="history-overlay">
     <div class="editor-box">
-        <h3 style="text-align:center; color:var(--blue); margin-top:0;">Historique des missions</h3>
+        <h3 style="text-align:center; color:var(--blue); margin-top:0;">Historique</h3>
         <div id="history-results" style="max-height:400px; overflow-y:auto; font-size:12px;"></div>
         <button onclick="document.getElementById('history-overlay').style.display='none'" class="btn-main" style="background:#f1f5f9; margin-top:15px;">FERMER</button>
     </div>
@@ -450,177 +197,61 @@
     const EMAILJS_SERVICE_ID = "service_1j5bpwf";
     const TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
     const TEMPLATE_DEPOT = "template_8gqnnh7";
+
     const DRIVER_EMAILS = {
         'interne': 'chauffeur_interne@gmail.com',
         'cedric': 'cedric@gmail.com',
         'jadiel': 'jadiel@gmail.com',
         'nicola': 'nicola@gmail.com',
-        'depot': 'bastien38dominguez@gmail.com',
-        'depot_contact': 'bastien38dominguez@gmail.com'
+        'depot': 'bastien38dominguez@gmail.com'
     };
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
-    firebase.initializeApp({
-        databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/"
-    });
+    firebase.initializeApp({ databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
     const db = firebase.database();
+    let holidays = {}, curDate = new Date(), curW = getWeek(curDate), curY = curDate.getFullYear(), curU = localStorage.getItem('rbf_u'), currentFiles = [], selectedCol = 'default', curRepId = null, rhMode = 'HEURES', curK = null;
 
-    let holidays = {};
-    let curDate = new Date();
-    let curW = getWeek(curDate);
-    let curY = curDate.getFullYear();
-    let curU = localStorage.getItem('rbf_u');
-    let currentFiles = [];
-    let selectedCol = 'default';
-    let curRepId = null;
-    let rhMode = 'HEURES';
-    let curK = null;
+    function getWeek(d) { let date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); let week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7); }
+    function getDateFromWeek(w, y, dIdx) { let simple = new Date(y, 0, 1 + (w - 1) * 7); let dow = simple.getDay(); let ISOweekStart = simple; if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1); else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay()); ISOweekStart.setDate(ISOweekStart.getDate() + dIdx); return ISOweekStart; }
+    function fmtDate(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); }
 
-    function getWeek(d) {
-        let date = new Date(d.getTime());
-        date.setHours(0,0,0,0);
-        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-        let week1 = new Date(date.getFullYear(), 0, 4);
-        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-    }
-
-    function getDateFromWeek(w, y, dIdx) {
-        let simple = new Date(y, 0, 1 + (w - 1) * 7);
-        let dow = simple.getDay();
-        let ISOweekStart = simple;
-        if (dow <= 4) ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-        else ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-        ISOweekStart.setDate(ISOweekStart.getDate() + dIdx);
-        return ISOweekStart;
-    }
-
-    function fmtDate(d) {
-        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
-    }
-
-    function askCode(u) {
-        let p = prompt("CODE " + u.toUpperCase());
-        const codes = {
-            admin: '2026',
-            depot: '5555',
-            interne: '1111',
-            cedric: '2222',
-            jadiel: '3333',
-            nicola: '4444'
-        };
-        if (p === codes[u]) {
-            localStorage.setItem('rbf_u', u);
-            login(u);
-        } else {
-            alert("Code incorrect");
-        }
-    }
-
-    function login(u) {
-        curU = u;
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-content').classList.remove('hidden');
-        document.getElementById('u-info').classList.remove('hidden');
-        
-        if(u === 'admin') {
-            document.getElementById('admin-search-zone').classList.remove('hidden');
-        }
-        
-        if(u !== 'admin') {
-            document.getElementById('driver-tools-zone').classList.remove('hidden');
-            loadLastReports();
-        }
-
+    function askCode(u) { let p = prompt("CODE " + u.toUpperCase()), codes = {admin:'2026', depot:'5555', interne:'1111', cedric:'2222', jadiel:'3333', nicola:'4444'}; if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); } }
+    
+    function login(u) { 
+        curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); 
+        if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
+        if(u!=='admin') { document.getElementById('driver-tools-zone').classList.remove('hidden'); loadLastReports(); }
         fetchHolidays(curY);
-        db.ref('planning_v18').on('value', s => {
-            window.data = s.val() || {};
-            render();
-            checkTodayConge();
-        });
+        db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); checkTodayConge(); }); 
     }
 
-    async function fetchHolidays(y) {
-        try {
-            const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`);
-            holidays = await r.json();
-            render();
-        } catch(e) {
-            console.error("Erreur jours fériés", e);
-            render();
-        }
-    }
+    async function fetchHolidays(y) { try { const r = await fetch(`https://calendrier.api.gouv.fr/jours-feries/metropole/${y}.json`); holidays = await r.json(); render(); } catch(e){ render(); } }
 
     function render() {
         document.getElementById('wk-disp').innerHTML = `<span style="font-size:10px; opacity:0.6;">ANNÉE ${curY}</span><br>SEMAINE ${curW}`;
-        const days = ["LUN", "MAR", "MER", "JEU", "VEN"];
-        const holidayList = {};
-
+        const days = ["LUN","MAR","MER","JEU","VEN"], holidayList = {};
         for(let i=0; i<5; i++) {
-            let d = getDateFromWeek(curW, curY, i);
+            let d = getDateFromWeek(curW, curY, i); 
             let iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            
-            if(holidays[iso]) {
-                document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}<span class="holiday-badge">${holidays[iso]}</span>`;
-                holidayList[i] = holidays[iso];
-            } else {
-                document.getElementById('h'+i).innerHTML = `${days[i]} ${fmtDate(d)}`;
-            }
+            let dateLabel = fmtDate(d);
+            if(holidays[iso]) { document.getElementById('h'+i).innerHTML = `${days[i]} ${dateLabel}<span class="holiday-badge">${holidays[iso]}</span>`; holidayList[i] = holidays[iso]; }
+            else document.getElementById('h'+i).innerHTML = `${days[i]} ${dateLabel}`;
         }
 
-        if(curU === 'admin' || curU === 'depot') {
-            document.getElementById('v-admin').classList.remove('hidden');
-            document.getElementById('v-driver').classList.add('hidden');
-            let h = "";
-            const users = [
-                {id: 'interne', s: 4},
-                {id: 'externe', s: 4},
-                {id: 'cedric', s: 4},
-                {id: 'divers', s: 4},
-                {id: 'instal', s: 4},
-                {id: 'jadiel', s: 2},
-                {id: 'nicola', s: 2}
-            ];
-
+        if(curU==='admin' || curU==='depot') {
+            document.getElementById('v-admin').classList.remove('hidden'); document.getElementById('v-driver').classList.add('hidden');
+            let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dI=0; dI<5; dI++) {
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
-                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`;
-                        let dta = window.data[k] || {};
-
-                        if(curU === 'depot' && !dta.toDepot) continue;
-
-                        let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col === '#000000' ? '#fff' : 'var(--blue)'};` : '';
-                        let txt = "";
-
-                        if (dta.isConge) {
-                            txt = "🌴 CONGÉ";
-                        } else if (dta.chantier || dta.text) {
-                            let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
-                            
-                            if (curU === 'depot') {
-                                // RÈGLE DÉPÔT : Chantier visible pour tout le monde
-                                let header = `<b>${truckTag}[${(dta.chantier || "SANS NOM").toUpperCase()}]</b><br>`;
-                                
-                                if (u.id === 'jadiel' || u.id === 'nicola') {
-                                    // Jadiel & Nicola : Mission + Logistique affichées pour le dépôt
-                                    txt = header + (dta.text || "");
-                                    if (dta.matos) txt += `<span class="matos-badge">📦 ${dta.matos}</span>`;
-                                } else {
-                                    // Autres : Mission cachée, mais Logistique visible au dépôt
-                                    txt = header + `<i style="font-size:9px; color:#94a3b8;">MISSION PRIVÉE</i>`;
-                                    if (dta.matos) txt += `<span class="matos-badge">📦 ${dta.matos}</span>`;
-                                }
-                            } else {
-                                // Admin : Tout voir
-                                txt = `<b>${truckTag}[${(dta.chantier || "SANS NOM").toUpperCase()}]</b><br>${dta.text || ""}`;
-                                if (dta.matos) txt += `<span class="matos-badge">📦 ${dta.matos}</span>`;
-                            }
-                        }
-
-                        h += `<div class="slot ${dta.text || dta.isConge ? 'filled' : ''} ${dta.toDepot ? 'is-to-depot' : ''} ${dta.isConge ? 'is-conge' : ''}" style="${st}" onclick="openEd('${k}')">${txt || '...'}</div>`;
+                        let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
+                        let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
+                        let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
+                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
+                        h += `<div class="slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
                 }
@@ -628,122 +259,81 @@
             });
             document.getElementById('b-admin').innerHTML = h;
         } else {
-            const v = document.getElementById('v-driver');
-            v.classList.remove('hidden');
-            document.getElementById('v-admin').classList.add('hidden');
-            v.innerHTML = "";
-
+            const v = document.getElementById('v-driver'); v.classList.remove('hidden'); document.getElementById('v-admin').classList.add('hidden'); v.innerHTML = "";
             for(let dI=0; dI<5; dI++) {
-                let dD = getDateFromWeek(curW, curY, dI);
-                let cards = "";
-                let maxS = (curU === 'jadiel' || curU === 'nicola') ? 2 : 4;
-
+                let dD = getDateFromWeek(curW, curY, dI); let cards = ""; let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
                 for(let s=1; s<=maxS; s++) {
                     let dta = window.data[`${curY}_${curW}_${curU}_${dI}_s${s}`];
                     if(dta && (dta.text || dta.isConge)) {
                         if(dta.isConge) {
                             cards += `<div style="padding:15px; background:#fffbeb; margin-bottom:10px; border-radius:12px; border-left:5px solid var(--yellow); text-align:center;"><b>🌴 CONGÉ</b></div>`;
                         } else {
-                            let fl = "";
-                            dta.files?.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:10px; text-decoration:none; text-align:center; font-size:11px;">📎 VOIR DOCUMENT</a>`);
-                            
-                            let truckHtml = dta.truck ? `<div class="truck-tag ${dta.truck.includes('REMORQUE') ? 'trailer' : ''}">${dta.truck}</div>` : '';
-                            
-                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid ${dta.col !== 'default' ? dta.col : '#3b82f6'}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
-                                ${truckHtml}<br>
-                                <b>${dta.chantier?.toUpperCase() || ''}</b>
-                                <p style="margin:8px 0; font-size:13px;">${dta.text}</p>
-                                ${dta.matos ? `<div style='background:#f0fdf4; padding:8px; border-radius:8px; font-size:11px;'><b>📦 LOGISTIQUE :</b> ${dta.matos}</div>` : ''}
-                                ${fl}
-                            </div>`;
+                            let fl = ""; dta.files?.forEach(f => fl += `<a href="${f.url}" target="_blank" style="display:block; background:var(--blue); color:white; padding:12px; border-radius:10px; margin-top:10px; text-decoration:none; text-align:center; font-size:11px;">📎 DOCUMENT</a>`);
+                            let truckHtml = dta.truck ? `<div class="truck-tag ${dta.truck.includes('REMORQUE')?'trailer':''}">${dta.truck}</div>` : '';
+                            cards += `<div style="padding:15px; background:white; margin-bottom:10px; border-radius:12px; border-left:5px solid ${dta.col!=='default'?dta.col:'#3b82f6'}; box-shadow:0 2px 5px rgba(0,0,0,0.05);">${truckHtml}<br><b>${dta.chantier?.toUpperCase() || ''}</b><p style="margin:8px 0; font-size:13px;">${dta.text}</p>${dta.matos?`<div style='background:#f0fdf4; padding:8px; border-radius:8px; font-size:11px;'><b>📦 LOGISTIQUE :</b> ${dta.matos}</div>`:''}${fl}</div>`;
                         }
                     }
                 }
-                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue); font-size:15px; border-left:4px solid var(--yellow); padding-left:8px;">${days[dI]} ${fmtDate(dD)}</b><div style="margin-top:8px;">${cards || '<p style="color:#94a3b8; font-size:11px; font-style:italic;">Aucune mission</p>'}</div></div>`;
+                v.innerHTML += `<div style="margin-bottom:15px;"><b style="color:var(--blue); font-size:15px; border-left:4px solid var(--yellow); padding-left:8px;">${days[dI]} ${fmtDate(dD)}</b> ${holidayList[dI]?'<span class="holiday-badge" style="display:inline-block; margin-left:10px;">'+holidayList[dI]+'</span>':''}<div style="margin-top:8px;">${cards || '<p style="color:#94a3b8; font-size:11px; font-style:italic;">Aucune mission</p>'}</div></div>`;
             }
         }
     }
 
+    // Gestion de la double notification par email
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
         const driverId = parts[2];
         const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
-        const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge ? 'CONGÉ' : '')}`;
+        const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
 
+        // Notification au chauffeur concerné
         if (DRIVER_EMAILS[driverId]) {
-            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, {
-                chauffeur: driverId.toUpperCase(),
-                jour: dateMission,
-                message: msg
-            });
+            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
         }
-
+        
+        // Double notification au dépôt si la case "Dépôt" est cochée
         if (task.toDepot) {
-            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, {
-                chauffeur: driverId.toUpperCase(),
-                jour: dateMission,
-                message: msg
-            });
+            emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
         }
     }
 
-    function openEd(k) {
-        if(curU !== 'admin') return;
-        curK = k;
-        let d = window.data[k] || {files: []};
-        currentFiles = d.files || [];
-        selectedCol = d.col || 'default';
-
-        document.getElementById('e-chantier').value = d.chantier || "";
-        document.getElementById('e-input').value = d.text || "";
-        document.getElementById('e-matos').value = d.matos || "";
-        document.getElementById('e-truck').value = d.truck || "";
-        document.getElementById('e-depot').checked = !!d.toDepot;
-        document.getElementById('e-conge').checked = !!d.isConge;
-
-        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola'));
-        
+    function openEd(k) { 
+        curK = k; let d = window.data[k] || {files:[]}; 
+        if(curU!=='admin') return; 
+        currentFiles = d.files || []; 
+        selectedCol = d.col || 'default'; 
+        document.getElementById('e-chantier').value = d.chantier || ""; 
+        document.getElementById('e-input').value = d.text || ""; 
+        document.getElementById('e-matos').value = d.matos || ""; 
+        document.getElementById('e-truck').value = d.truck || ""; 
+        document.getElementById('e-depot').checked = !!d.toDepot; 
+        document.getElementById('e-conge').checked = !!d.isConge; 
+        document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
         let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
         document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
-
         let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
         document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHaveHoliday);
-
-        renderFiles();
-        document.getElementById('editor-overlay').style.display = 'flex';
+        renderFiles(); 
+        document.getElementById('editor-overlay').style.display='flex'; 
     }
 
-    function saveTask() {
+    function saveTask() { 
         let isNew = !window.data[curK];
         let isConge = document.getElementById('e-conge').checked;
-
-        let taskData = {
-            text: isConge ? "" : document.getElementById('e-input').value,
-            chantier: isConge ? "" : document.getElementById('e-chantier').value,
-            matos: isConge ? "" : document.getElementById('e-matos').value,
-            toDepot: isConge ? false : document.getElementById('e-depot').checked,
-            isConge: isConge,
-            col: isConge ? '#fef3c7' : selectedCol,
-            files: isConge ? [] : currentFiles
-        };
-
-        if (!document.getElementById('zone-truck').classList.contains('hidden')) {
-            taskData.truck = isConge ? "" : document.getElementById('e-truck').value;
-        } else {
-            taskData.truck = "";
-        }
-
+        let taskData = { text: isConge ? "" : document.getElementById('e-input').value, chantier: isConge ? "" : document.getElementById('e-chantier').value, matos: isConge ? "" : document.getElementById('e-matos').value, toDepot: isConge ? false : document.getElementById('e-depot').checked, isConge: isConge, col: isConge ? '#fef3c7' : selectedCol, files: isConge ? [] : currentFiles };
+        if (!document.getElementById('zone-truck').classList.contains('hidden')) { taskData.truck = isConge ? "" : document.getElementById('e-truck').value; } else { taskData.truck = ""; }
+        
         db.ref('planning_v18/'+curK).set(taskData).then(() => {
             const today = new Date();
             if (curY === today.getFullYear() && curW === getWeek(today)) {
                 sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
             }
             closeEditor();
-        });
+        }); 
     }
 
-    function deleteTask() {
-        if(confirm("Supprimer cette mission ?")) {
+    function deleteTask() { 
+        if(confirm("Supprimer ?")) {
             let oldData = window.data[curK];
             db.ref('planning_v18/'+curK).remove().then(() => {
                 const today = new Date();
@@ -757,12 +347,10 @@
 
     function checkTodayConge() {
         if(curU === 'admin' || curU === 'depot') return;
-        let today = new Date();
-        let dayIdx = today.getDay() - 1;
+        let today = new Date(); let dayIdx = today.getDay() - 1; 
         if(dayIdx < 0 || dayIdx > 4) return;
-        
         let isCongeToday = false;
-        let maxS = (curU === 'jadiel' || curU === 'nicola') ? 2 : 4;
+        let maxS = (curU==='jadiel'||curU==='nicola')?2:4;
         for(let s=1; s<=maxS; s++) {
             let dta = window.data[`${curY}_${curW}_${curU}_${dayIdx}_s${s}`];
             if(dta && dta.isConge) isCongeToday = true;
@@ -771,255 +359,96 @@
         document.getElementById('conge-msg').classList.toggle('hidden', !isCongeToday);
     }
 
-    function openRH(mode) {
-        rhMode = mode;
-        document.getElementById('rh-overlay').style.display = 'flex';
+    function openRH(mode) { 
+        rhMode = mode; document.getElementById('rh-overlay').style.display = 'flex'; 
         document.getElementById('rh-modal-title').innerText = mode === 'HEURES' ? "🕒 RELEVÉ DES HEURES" : "📝 JOURNAUX DE BORD";
         document.getElementById('rh-month-select').value = new Date().toISOString().slice(0, 7);
-        renderRH();
+        renderRH(); 
     }
 
     function renderRH() {
         const month = document.getElementById('rh-month-select').value;
         const container = document.getElementById('rh-content');
         container.innerHTML = "<div style='text-align:center; padding:20px;'>Chargement...</div>";
-
         db.ref('pointages_v18').once('value', s => {
-            const all = s.val() || {};
-            let typeFilter = rhMode === 'HEURES' ? 'POINTAGE' : 'VOYAGE';
-            let usersData = {};
-
-            for(let date in all) {
-                if(date.startsWith(month)) {
-                    for(let id in all[date]) {
-                        let r = all[date][id];
-                        if(r.type === typeFilter) {
-                            if(!usersData[r.user]) usersData[r.user] = [];
-                            usersData[r.user].push({...r, date});
-                        }
-                    }
-                }
-            }
-
-            let html = "";
-            const usersOrder = ['interne','cedric','jadiel','nicola','depot'];
-            usersOrder.forEach(user => {
+            const all = s.val() || {}; let typeFilter = rhMode === 'HEURES' ? 'POINTAGE' : 'VOYAGE'; let usersData = {};
+            for(let date in all) { if(date.startsWith(month)) { for(let id in all[date]) { let r = all[date][id]; if(r.type === typeFilter) { if(!usersData[r.user]) usersData[r.user] = []; usersData[r.user].push({...r, date}); } } } }
+            let html = ""; const users = ['interne','cedric','jadiel','nicola','depot'];
+            users.forEach(user => {
                 let reps = usersData[user] || [];
                 let sortedReps = reps.sort((a,b) => a.date.localeCompare(b.date));
                 let totalMinutes = 0;
-
-                html += `<div style="margin-bottom:20px;">
-                    <div style="background:var(--blue); color:white; padding:8px 12px; border-radius:8px; font-weight:900; display:flex; justify-content:space-between;">
-                        <span>${user.toUpperCase()}</span>
-                        ${rhMode === 'HEURES' ? `<span id="t-${user}">0h00</span>` : ''}
-                    </div>`;
-
+                html += `<div class="rh-user-section"><div class="rh-user-header"><span>${user.toUpperCase()}</span>${rhMode==='HEURES'?'<span class="rh-total-badge" id="t-'+user+'"></span>':''}</div>`;
                 if(rhMode === 'HEURES') {
-                    html += `<table style="width:100%; font-size:11px; margin-top:5px; border-collapse:collapse;">`;
-                    sortedReps.forEach(r => {
-                        let dur = calculateDuration(r.debut, r.fin, r.p_pause);
-                        totalMinutes += dur;
-                        html += `<tr style="border-bottom:1px solid #eee;">
-                            <td style="padding:6px;">${r.date.split('-')[2]}/${r.date.split('-')[1]}</td>
-                            <td>${r.debut}-${r.fin}</td>
-                            <td style="color:#94a3b8">P:${r.p_pause}m</td>
-                            <td style="text-align:right; font-weight:bold;">${formatMinutes(dur)}</td>
-                        </tr>`;
-                    });
-                    html += `</table>`;
+                    html += `<div style="overflow-x:auto;"><table class="rh-table">`;
+                    sortedReps.forEach(r => { let dur = calculateDuration(r.debut, r.fin, r.p_pause); totalMinutes += dur; html += `<tr><td>${r.date.split('-')[2]}/${r.date.split('-')[1]}</td><td>${r.debut}-${r.fin}</td><td style="color:#94a3b8">P:${r.p_pause}m</td><td style="text-align:right; font-weight:bold;">${formatMinutes(dur)}</td></tr>`; });
+                    html += `</table></div>`;
                 } else {
-                    sortedReps.forEach(r => {
-                        html += `<div style="background:white; padding:10px; border-radius:8px; margin-top:5px; font-size:11px; border-left:4px solid var(--success);">
-                            <div style="font-size:9px; color:#94a3b8; margin-bottom:3px;">LE ${r.date.split('-')[2]}/${r.date.split('-')[1]}</div>
-                            ${r.txt}
-                        </div>`;
-                    });
+                    sortedReps.forEach(r => { html += `<div class="journal-bubble"><div style="font-size:9px; color:#94a3b8; margin-bottom:3px;">LE ${r.date.split('-')[2]}/${r.date.split('-')[1]}</div>${r.txt}</div>`; });
                 }
                 html += `</div>`;
-                
-                setTimeout(() => {
-                    let badge = document.getElementById('t-'+user);
-                    if(badge) badge.innerText = formatMinutes(totalMinutes);
-                }, 0);
+                setTimeout(() => { let b = document.getElementById('t-'+user); if(b) b.innerText = formatMinutes(totalMinutes); }, 0);
             });
-            container.innerHTML = html || "<div style='text-align:center; padding:20px;'>Aucune donnée pour ce mois.</div>";
+            container.innerHTML = html || "<div style='text-align:center; padding:20px;'>Aucune donnée.</div>";
         });
     }
 
-    function calculateDuration(s, e, p) {
-        if(!s || !e) return 0;
-        let start = new Date("2000-01-01 " + s);
-        let end = new Date("2000-01-01 " + e);
-        let diff = (end - start) / 60000;
-        return Math.max(0, diff - parseInt(p || 0));
-    }
+    function calculateDuration(s, e, p) { if(!s || !e) return 0; let start = new Date("2000-01-01 " + s); let end = new Date("2000-01-01 " + e); let diff = (end - start) / 60000; return Math.max(0, diff - parseInt(p || 0)); }
+    function formatMinutes(m) { return Math.floor(m/60) + "h" + String(m%60).padStart(2, '0'); }
 
-    function formatMinutes(m) {
-        return Math.floor(m/60) + "h" + String(m%60).padStart(2, '0');
-    }
-
-    function openReport(t, isEdit = false) {
-        activeT = t;
-        if(!isEdit) {
-            curRepId = null;
-            document.getElementById('rep-date').value = new Date().toISOString().split('T')[0];
-            document.getElementById('btn-del-rep').classList.add('hidden');
-            document.getElementById('rj-text').value = "";
-        }
-        document.getElementById('rep-title-ui').innerText = t === 'pointage' ? "🕒 Nouveau Pointage" : "📝 Nouveau Journal";
-        document.getElementById('form-pointage').classList.toggle('hidden', t !== 'pointage');
-        document.getElementById('form-journalier').classList.toggle('hidden', t !== 'journalier');
-        document.getElementById('report-overlay').style.display = 'flex';
-    }
-
-    function saveReport() {
-        const d = document.getElementById('rep-date').value;
-        if(!d) return;
-        let id = curRepId || `${curU}_${Date.now()}`;
-        let r = { user: curU, type: activeT === 'pointage' ? "POINTAGE" : "VOYAGE", date: d };
-        if(activeT === 'pointage') {
-            r.debut = document.getElementById('p-start').value;
-            r.fin = document.getElementById('p-end').value;
-            r.p_pause = document.getElementById('p-pause').value;
-        } else {
-            r.txt = document.getElementById('rj-text').value;
-        }
-        db.ref(`pointages_v18/${d}/${id}`).set(r).then(() => {
-            alert("Enregistré avec succès !");
-            closeReport();
-        });
-    }
-
-    function closeReport() {
-        document.getElementById('report-overlay').style.display = 'none';
-    }
-
-    function deleteReport() {
-        if(confirm("Supprimer cet enregistrement ?")) {
-            db.ref(`pointages_v18/${document.getElementById('rep-date').value}/${curRepId}`).remove().then(() => closeReport());
-        }
-    }
-
+    function openReport(t, isEdit = false) { activeT=t; if(!isEdit) { curRepId = null; document.getElementById('rep-date').value = new Date().toISOString().split('T')[0]; document.getElementById('btn-del-rep').classList.add('hidden'); document.getElementById('rj-text').value=""; } document.getElementById('rep-title-ui').innerText = t==='pointage'?"🕒 Pointage":"📝 Journal"; document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage'); document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier'); document.getElementById('report-overlay').style.display='flex'; }
+    function saveReport() { const d = document.getElementById('rep-date').value; if(!d) return; let id = curRepId || `${curU}_${Date.now()}`; let r = { user: curU, type: activeT==='pointage'?"POINTAGE":"VOYAGE", date: d }; if(activeT==='pointage'){ r.debut=document.getElementById('p-start').value; r.fin=document.getElementById('p-end').value; r.p_pause=document.getElementById('p-pause').value; } else { r.txt=document.getElementById('rj-text').value; } db.ref(`pointages_v18/${d}/${id}`).set(r).then(()=>{ alert("Enregistré !"); closeReport(); }); }
+    function closeReport() { document.getElementById('report-overlay').style.display='none'; }
+    function deleteReport() { if(confirm("Supprimer ?")) { db.ref(`pointages_v18/${document.getElementById('rep-date').value}/${curRepId}`).remove().then(() => closeReport()); } }
+    
     function loadLastReports() {
         db.ref('pointages_v18').limitToLast(5).on('value', s => {
-            const all = s.val() || {};
-            let h = "<b>VOS DERNIERS ENREGISTREMENTS :</b><div style='margin-top:5px;'>";
-            let reps = [];
-            for(let date in all) {
-                for(let id in all[date]) {
-                    if(all[date][id].user === curU) reps.push({...all[date][id], id, date});
-                }
-            }
-            reps.sort((a,b) => b.id.split('_')[1] - a.id.split('_')[1]).slice(0,3).forEach(r => {
-                h += `<div style="background:#f8fafc; padding:6px; border-radius:6px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
-                    <span>📅 ${r.date.split('-')[2]}/${r.date.split('-')[1]} - ${r.type === 'POINTAGE' ? 'HEURES' : 'JOURNAL'}</span>
-                    <button onclick="editOldReport('${r.date}', '${r.id}')" style="background:white; border:1px solid #ddd; padding:2px 6px; border-radius:4px; font-size:9px;">MODIFIER</button>
-                </div>`;
-            });
+            const all = s.val() || {}; let h = "<b>VOS DERNIERS ENREGISTREMENTS :</b><div style='margin-top:5px;'>"; let reps = [];
+            for(let date in all) { for(let id in all[date]) { if(all[date][id].user === curU) reps.push({...all[date][id], id, date}); } }
+            reps.sort((a,b) => b.id.split('_')[1] - a.id.split('_')[1]).slice(0,3).forEach(r => { h += `<div style="background:#f8fafc; padding:6px; border-radius:6px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;"><span>📅 ${r.date.split('-')[2]}/${r.date.split('-')[1]} - ${r.type==='POINTAGE'?'H':'J'}</span><button onclick="editOldReport('${r.date}', '${r.id}')" style="background:white; border:1px solid #ddd; padding:2px 6px; border-radius:4px; font-size:9px;">MODIFIER</button></div>`; });
             document.getElementById('last-reps-list').innerHTML = h + "</div>";
         });
     }
 
     function editOldReport(date, id) {
         db.ref(`pointages_v18/${date}/${id}`).once('value', s => {
-            const r = s.val();
-            curRepId = id;
-            activeT = r.type === 'POINTAGE' ? 'pointage' : 'journalier';
+            const r = s.val(); curRepId = id; activeT = r.type==='POINTAGE'?'pointage':'journalier';
             document.getElementById('rep-date').value = date;
-            if(r.type === 'POINTAGE') {
-                document.getElementById('p-start').value = r.debut;
-                document.getElementById('p-end').value = r.fin;
-                document.getElementById('p-pause').value = r.p_pause;
-            } else {
-                document.getElementById('rj-text').value = r.txt;
-            }
-            document.getElementById('btn-del-rep').classList.remove('hidden');
-            openReport(activeT, true);
+            if(r.type==='POINTAGE') { document.getElementById('p-start').value = r.debut; document.getElementById('p-end').value = r.fin; document.getElementById('p-pause').value = r.p_pause; } else { document.getElementById('rj-text').value = r.txt; }
+            document.getElementById('btn-del-rep').classList.remove('hidden'); openReport(activeT, true);
         });
     }
 
-    function closeEditor() {
-        document.getElementById('editor-overlay').style.display = 'none';
-    }
-
-    function uploadFile(i) {
-        if(!i.files[0]) return;
-        const fd = new FormData();
-        fd.append('file', i.files[0]);
-        fd.append('upload_preset', 'rbf-preset');
-        fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {
-            method: 'POST',
-            body: fd
-        }).then(r => r.json()).then(d => {
-            if(d.secure_url) {
-                currentFiles.push({name: i.files[0].name, url: d.secure_url});
-                renderFiles();
-            }
-        });
-    }
-
-    function renderFiles() {
-        let d = document.getElementById('file-list-admin');
-        d.innerHTML = "";
-        currentFiles.forEach((f,i) => {
-            d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;">
-                <span>📄 ${f.name}</span>
-                <span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer; font-weight:bold;">X</span>
-            </div>`;
-        });
-    }
-
-    function changeWeek(v) {
-        curW += v;
-        if(curW > 52) { curW = 1; curY++; }
-        else if(curW < 1) { curW = 52; curY--; }
-        fetchHolidays(curY);
-        render();
-    }
-
-    function logout() {
-        localStorage.removeItem('rbf_u');
-        location.reload();
-    }
-
-    function applySearch() {
-        const q = document.getElementById('search-input').value.toLowerCase();
-        document.querySelectorAll('.slot').forEach(s => {
-            s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q));
-        });
-    }
-
-    function showHistory() {
-        const q = document.getElementById('search-input').value.trim().toLowerCase();
-        if(!q) return;
-        document.getElementById('history-overlay').style.display = 'flex';
-        db.ref('planning_v18').once('value', s => {
-            const d = s.val() || {};
-            let h = "";
-            let matches = [];
-            for(let k in d) {
+    function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+    function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); } }); }
+    function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer;">X</span></div>`); }
+    function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); render(); }
+    function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
+    function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
+    
+    function showHistory() { 
+        const q = document.getElementById('search-input').value.trim().toLowerCase(); 
+        if(!q) return; 
+        document.getElementById('history-overlay').style.display='flex'; 
+        db.ref('planning_v18').once('value', s => { 
+            const d = s.val() || {}; let h = ""; let matches = []; 
+            for(let k in d) { 
                 const chantOk = d[k].chantier && d[k].chantier.toLowerCase().includes(q);
                 const missOk = d[k].text && d[k].text.toLowerCase().includes(q);
-                if(chantOk || missOk) {
-                    let p = k.split('_');
+                if(chantOk || missOk) { 
+                    let p = k.split('_'); 
                     if (p.length >= 4) {
                         let y = parseInt(p[0]), w = parseInt(p[1]), dI = parseInt(p[3]);
-                        matches.push({
-                            date: getDateFromWeek(w, y, dI),
-                            week: w, year: y, user: p[2],
-                            chantier: d[k].chantier || "SANS NOM",
-                            text: d[k].text || "(Pas de descriptif)",
-                            matos: d[k].matos || ""
-                        });
+                        if (!isNaN(y) && !isNaN(w) && !isNaN(dI)) {
+                            matches.push({ date: getDateFromWeek(w, y, dI), week: w, year: y, user: p[2], chantier: d[k].chantier || "SANS NOM", text: d[k].text || "(Pas de descriptif)", matos: d[k].matos || "" });
+                        }
                     }
-                }
-            }
+                } 
+            } 
             matches.sort((a,b) => b.date - a.date);
-            if (matches.length === 0) {
-                h = `<div style="text-align:center; padding:20px; color:#94a3b8;">Aucun résultat pour "${q}"</div>`;
-            } else {
-                matches.forEach(m => {
-                    h += `<div style="padding:12px; border-bottom:1px solid #eee; background: white; margin-bottom:8px; border-radius:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            if (matches.length === 0) h = `<div style="text-align:center; padding:20px; color:#94a3b8;">Aucun résultat pour "${q}"</div>`;
+            else matches.forEach(m => { 
+                h += `<div style="padding:12px; border-bottom:1px solid #eee; background: white; margin-bottom:8px; border-radius:10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                             <span style="color:var(--blue); font-weight:800; font-size:13px;">${fmtDate(m.date)} <small style="font-weight:normal; opacity:0.5;">(Sem ${m.week})</small></span>
                             <span style="background:var(--blue); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">${m.user.toUpperCase()}</span>
@@ -1027,28 +456,16 @@
                         <div style="color:var(--success); font-weight:bold; font-size:12px;">🏗️ ${m.chantier}</div>
                         <div style="font-size:12px; color:#475569; margin-top:4px; border-top:1px solid #f8fafc; padding-top:4px;">${m.text}</div>
                         ${m.matos ? `<div style="font-size:11px; background:#f0fdf4; padding:5px; margin-top:5px; border-radius:4px;"><b>📦 Logistique:</b> ${m.matos}</div>` : ''}
-                    </div>`;
-                });
-            }
-            document.getElementById('history-results').innerHTML = h;
-        });
+                    </div>`; 
+            }); 
+            document.getElementById('history-results').innerHTML = h; 
+        }); 
     }
 
     const colorOpts = ['default', '#fee2e2', '#ffedd5', '#fef3c7', '#d1fae5', '#a7f3d0', '#e9d5ff', '#fce7f3', '#e2e8f0', '#000000'];
-    colorOpts.forEach(c => {
-        let d = document.createElement('div');
-        d.className = 'color-opt';
-        d.style.background = c === 'default' ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : c;
-        d.onclick = () => {
-            document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
-            d.classList.add('active');
-            selectedCol = c;
-        };
-        document.getElementById('cp').appendChild(d);
-    });
+    colorOpts.forEach(c => { let d = document.createElement('div'); d.className = 'color-opt'; d.style.background = c==='default'?'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)':c; d.onclick = () => { document.querySelectorAll('.color-opt').forEach(o=>o.classList.remove('active')); d.classList.add('active'); selectedCol = c; }; document.getElementById('cp').appendChild(d); });
 
     if(curU) login(curU);
 </script>
-
 </body>
 </html>
