@@ -292,22 +292,22 @@
 
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
+        const yearMission = parseInt(parts[0]);
+        const weekMission = parseInt(parts[1]);
         const driverId = parts[2];
         const dayIdxMission = parseInt(parts[3]); 
-        const weekMission = parseInt(parts[1]);
-        const yearMission = parseInt(parts[0]);
 
-        // SÉCURITÉ : On ne notifie que si c'est aujourd'hui ou dans le futur (pour la semaine en cours)
         const today = new Date();
         const currentW = getWeek(today);
         const currentY = today.getFullYear();
-        let currentDayIdx = today.getDay() - 1; // Lundi=0, Mardi=1...
-        if(currentDayIdx < 0) currentDayIdx = 6; // Dimanche
+        let currentDayIdx = today.getDay() - 1; 
+        if(currentDayIdx < 0) currentDayIdx = 6; 
 
+        // CONDITION STRICTE : Semaine actuelle uniquement, jour actuel ou futur
         if (yearMission === currentY && weekMission === currentW) {
-            if (dayIdxMission < currentDayIdx) return; // Stop si c'est un jour d'avant dans la même semaine
-        } else if (yearMission < currentY || (yearMission === currentY && weekMission < currentW)) {
-            return; // Stop si c'est une semaine passée
+            if (dayIdxMission < currentDayIdx) return; 
+        } else {
+            return; 
         }
 
         const dateMission = fmtDate(getDateFromWeek(weekMission, yearMission, dayIdxMission));
