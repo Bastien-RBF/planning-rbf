@@ -203,7 +203,7 @@
         'cedric': 'cedric@gmail.com',
         'jadiel': 'jadiel@gmail.com',
         'nicola': 'nicola@gmail.com',
-        'depot': 'bastien38dominguez@gmail.com', // Email pour le compte dépôt
+        'depot': 'bastien38dominguez@gmail.com',
         'depot_contact': 'bastien38dominguez@gmail.com'
     };
 
@@ -255,7 +255,6 @@
                         let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
                         let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
                         
-                        // AJOUT LOGISTIQUE POUR ADMIN ET DEPOT (JADIEL & NICOLA)
                         let isJN = (u.id === 'jadiel' || u.id === 'nicola');
                         let showMatos = (curU === 'admin' && isJN) || (curU === 'depot' && (dta.toDepot || isJN));
                         
@@ -294,8 +293,26 @@
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
         const driverId = parts[2];
-        const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
+        const dayIdxMission = parseInt(parts[3]); 
+        const weekMission = parseInt(parts[1]);
+        const yearMission = parseInt(parts[0]);
+
+        // SÉCURITÉ : On ne notifie que si c'est aujourd'hui ou dans le futur (pour la semaine en cours)
+        const today = new Date();
+        const currentW = getWeek(today);
+        const currentY = today.getFullYear();
+        let currentDayIdx = today.getDay() - 1; // Lundi=0, Mardi=1...
+        if(currentDayIdx < 0) currentDayIdx = 6; // Dimanche
+
+        if (yearMission === currentY && weekMission === currentW) {
+            if (dayIdxMission < currentDayIdx) return; // Stop si c'est un jour d'avant dans la même semaine
+        } else if (yearMission < currentY || (yearMission === currentY && weekMission < currentW)) {
+            return; // Stop si c'est une semaine passée
+        }
+
+        const dateMission = fmtDate(getDateFromWeek(weekMission, yearMission, dayIdxMission));
         const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
+        
         if (DRIVER_EMAILS[driverId]) {
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
         }
@@ -331,10 +348,7 @@
         if (!document.getElementById('zone-truck').classList.contains('hidden')) { taskData.truck = isConge ? "" : document.getElementById('e-truck').value; } else { taskData.truck = ""; }
         
         db.ref('planning_v18/'+curK).set(taskData).then(() => {
-            const today = new Date();
-            if (curY === today.getFullYear() && curW === getWeek(today)) {
-                sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
-            }
+            sendEmailNotification(curK, taskData, isNew ? "NOUVELLE" : "MODIFIÉE");
             closeEditor();
         }); 
     }
@@ -343,10 +357,7 @@
         if(confirm("Supprimer ?")) {
             let oldData = window.data[curK];
             db.ref('planning_v18/'+curK).remove().then(() => {
-                const today = new Date();
-                if (curY === today.getFullYear() && curW === getWeek(today)) {
-                    sendEmailNotification(curK, oldData, "ANNULÉE");
-                }
+                sendEmailNotification(curK, oldData, "ANNULÉE");
                 closeEditor();
             });
         }
