@@ -222,7 +222,6 @@
     function login(u) { 
         curU = u; document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-content').classList.remove('hidden'); document.getElementById('u-info').classList.remove('hidden'); 
         if(u==='admin') document.getElementById('admin-search-zone').classList.remove('hidden');
-        // Activé pour chauffeurs ET dépôt
         if(u!=='admin') { document.getElementById('driver-tools-zone').classList.remove('hidden'); loadLastReports(); }
         fetchHolidays(curY);
         db.ref('planning_v18').on('value', s => { window.data = s.val() || {}; render(); checkTodayConge(); }); 
@@ -250,10 +249,20 @@
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
-                        if(curU==='depot' && !dta.toDepot) continue;
+                        if(curU==='depot' && !dta.toDepot && u.id!=='jadiel' && u.id!=='nicola') continue;
+                        
                         let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                         let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
                         let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
+                        
+                        // AJOUT LOGISTIQUE POUR ADMIN ET DEPOT (JADIEL & NICOLA)
+                        let isJN = (u.id === 'jadiel' || u.id === 'nicola');
+                        let showMatos = (curU === 'admin' && isJN) || (curU === 'depot' && (dta.toDepot || isJN));
+                        
+                        if(showMatos && dta.matos) {
+                            txt += `<div style="border-top:1px dashed #ccc; margin-top:4px; padding-top:4px; font-size:9px; color:#166534;">📦 ${dta.matos}</div>`;
+                        }
+
                         h += `<div class="slot ${dta.text || dta.isConge?'filled':''} ${dta.toDepot?'is-to-depot':''} ${dta.isConge?'is-conge':''} ${dta.files?.length?'has-link':''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
                     }
                     h += `</td>`;
@@ -282,19 +291,14 @@
         }
     }
 
-    // Gestion de la double notification si case "Dépôt" cochée
     function sendEmailNotification(key, task, action) {
         const parts = key.split('_');
         const driverId = parts[2];
         const dateMission = fmtDate(getDateFromWeek(parseInt(parts[1]), parseInt(parts[0]), parseInt(parts[3])));
         const msg = `[${action}] Chantier: ${task.chantier || 'N/A'} - Mission: ${task.text || (task.isConge?'CONGÉ':'')}`;
-
-        // Notification au chauffeur
         if (DRIVER_EMAILS[driverId]) {
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
         }
-        
-        // Double notification au dépôt si la case est cochée
         if (task.toDepot) {
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, { chauffeur: driverId.toUpperCase(), jour: dateMission, message: msg });
         }
