@@ -171,15 +171,15 @@
         <div class="color-picker" id="cp" style="display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:10px 0;"></div>
         <div id="file-list-admin" style="margin-bottom:10px;"></div>
         <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
-        <button onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-bottom:10px; font-size:11px; font-weight:bold;">📎 PIÈCE JOINTE</button>
+        <button id="btn-upload-admin" onclick="document.getElementById('e-file').click()" style="width:100%; background:#f1f5f9; padding:10px; border-radius:8px; border:1px dashed #cbd5e1; margin-bottom:10px; font-size:11px; font-weight:bold;">📎 PIÈCE JOINTE</button>
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
             <label style="display:flex; align-items:center; gap:8px; font-size:11px;"><input type="checkbox" id="e-depot" style="width:18px; height:18px;"> <b>DÉPÔT</b></label>
             <label id="zone-conge-checkbox" class="hidden" style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px; height:18px;"> <b>🌴 CONGÉ</b></label>
         </div>
 
-        <button onclick="saveTask()" class="btn-main" style="background:var(--blue); color:white;">SAUVEGARDER</button>
-        <button onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; font-weight:bold;">Supprimer</button>
+        <button id="btn-save-admin" onclick="saveTask()" class="btn-main" style="background:var(--blue); color:white;">SAUVEGARDER</button>
+        <button id="btn-del-admin" onclick="deleteTask()" style="background:none; color:var(--danger); border:none; width:100%; margin-top:10px; font-weight:bold;">Supprimer</button>
         <button onclick="closeEditor()" style="width:100%; border:none; background:none; color:#94a3b8; margin-top:5px;">Annuler</button>
     </div>
 </div>
@@ -323,7 +323,8 @@
 
     function openEd(k) { 
         curK = k; let d = window.data[k] || {files:[]}; 
-        if(curU!=='admin') return; 
+        if(curU!=='admin' && curU!=='depot') return; 
+        
         currentFiles = d.files || []; 
         selectedCol = d.col || 'default'; 
         document.getElementById('e-chantier').value = d.chantier || ""; 
@@ -332,11 +333,26 @@
         document.getElementById('e-truck').value = d.truck || ""; 
         document.getElementById('e-depot').checked = !!d.toDepot; 
         document.getElementById('e-conge').checked = !!d.isConge; 
+        
+        // Mode lecture seule pour le dépôt (sauf pour Jadiel/Nicola si nécessaire)
+        const isDepot = curU === 'depot';
+        document.getElementById('e-chantier').readOnly = isDepot;
+        document.getElementById('e-input').readOnly = isDepot;
+        document.getElementById('e-matos').readOnly = isDepot;
+        document.getElementById('e-truck').disabled = isDepot;
+        document.getElementById('e-depot').disabled = isDepot;
+        document.getElementById('e-conge').disabled = isDepot;
+        document.getElementById('btn-upload-admin').classList.toggle('hidden', isDepot);
+        document.getElementById('btn-save-admin').classList.toggle('hidden', isDepot);
+        document.getElementById('btn-del-admin').classList.toggle('hidden', isDepot);
+        document.getElementById('cp').classList.toggle('hidden', isDepot);
+
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
         let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
         document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
         let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
         document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHaveHoliday);
+        
         renderFiles(); 
         document.getElementById('editor-overlay').style.display='flex'; 
     }
@@ -439,7 +455,21 @@
 
     function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
     function uploadFile(i) { if(!i.files[0]) return; const fd = new FormData(); fd.append('file', i.files[0]); fd.append('upload_preset', 'rbf-preset'); fetch(`https://api.cloudinary.com/v1_1/dixdmejal/upload`, {method:'POST', body:fd}).then(r=>r.json()).then(d=>{ if(d.secure_url) { currentFiles.push({name:i.files[0].name, url:d.secure_url}); renderFiles(); } }); }
-    function renderFiles() { let d = document.getElementById('file-list-admin'); d.innerHTML = ""; currentFiles.forEach((f,i) => d.innerHTML += `<div style="font-size:10px; padding:5px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between;"><span>📄 ${f.name}</span><span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer;">X</span></div>`); }
+    
+    function renderFiles() { 
+        let d = document.getElementById('file-list-admin'); 
+        d.innerHTML = ""; 
+        currentFiles.forEach((f,i) => {
+            let item = `<div style="font-size:10px; padding:8px; background:#f1f5f9; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center;">
+                <a href="${f.url}" target="_blank" style="text-decoration:none; color:var(--blue); font-weight:bold; flex:1;">📄 ${f.name}</a>`;
+            if(curU === 'admin') {
+                item += `<span onclick="currentFiles.splice(${i},1);renderFiles()" style="color:red; cursor:pointer; padding-left:10px; font-weight:bold;">X</span>`;
+            }
+            item += `</div>`;
+            d.innerHTML += item;
+        });
+    }
+
     function changeWeek(v) { curW += v; if(curW>52){curW=1;curY++;} else if(curW<1){curW=52;curY--;} fetchHolidays(curY); render(); }
     function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
     function applySearch() { const q = document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('.slot').forEach(s => s.classList.toggle('hidden', q !== "" && !s.innerText.toLowerCase().includes(q))); }
