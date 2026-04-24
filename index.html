@@ -33,11 +33,14 @@
         td { border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; padding: 6px; vertical-align: top; }
         .user-cell { background: #fdfdfd; font-weight: 800; color: var(--blue); text-align: center; width: 90px; position: sticky; left: 0; z-index: 10; border-right: 3px solid var(--yellow) !important; font-size: 11px; }
 
-        .slot { font-size: 10px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px solid #edf2f7; cursor: pointer; color: var(--blue); }
+        .slot { font-size: 10px; padding: 8px; margin-bottom: 5px; border-radius: 8px; background: #fcfcfc; border: 1px solid #edf2f7; cursor: pointer; color: var(--blue); position: relative; }
         .filled { background: #fff; border: 1px solid #3b82f6; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .is-to-depot { border-left: 5px solid var(--success) !important; }
         .is-conge { border-left: 5px solid var(--yellow) !important; background: #fffbeb !important; }
         .holiday-badge { display: block; background: var(--yellow); color: var(--blue); font-size: 8px; padding: 2px; border-radius: 3px; margin-top: 3px; font-weight: 900; }
+
+        /* Ajout de l'indicateur visuel pour fichiers joints */
+        .slot.has-link::after { content: "📎"; position: absolute; top: 2px; right: 2px; font-size: 10px; color: var(--danger); font-weight: bold; }
 
         #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(6px); }
         .editor-box { background: white; padding: 20px; border-radius: 20px; width: 92%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
@@ -253,7 +256,10 @@
                         
                         let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                         let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
-                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (dta.text || '...'));
+                        
+                        // Détection présence fichier pour l'icône trombone
+                        let attachmentIcon = (dta.files && dta.files.length > 0) ? "📎 " : "";
+                        let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${attachmentIcon}${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (attachmentIcon + (dta.text || '...')));
                         
                         let isJN = (u.id === 'jadiel' || u.id === 'nicola');
                         let showMatos = (curU === 'admin' && isJN) || (curU === 'depot' && (dta.toDepot || isJN));
@@ -303,7 +309,6 @@
         let currentDayIdx = today.getDay() - 1; 
         if(currentDayIdx < 0) currentDayIdx = 6; 
 
-        // CONDITION STRICTE : Semaine actuelle uniquement, jour actuel ou futur
         if (yearMission === currentY && weekMission === currentW) {
             if (dayIdxMission < currentDayIdx) return; 
         } else {
@@ -334,7 +339,6 @@
         document.getElementById('e-depot').checked = !!d.toDepot; 
         document.getElementById('e-conge').checked = !!d.isConge; 
         
-        // Mode lecture seule pour le dépôt (sauf pour Jadiel/Nicola si nécessaire)
         const isDepot = curU === 'depot';
         document.getElementById('e-chantier').readOnly = isDepot;
         document.getElementById('e-input').readOnly = isDepot;
