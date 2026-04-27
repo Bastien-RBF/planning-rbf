@@ -835,7 +835,24 @@
                         txt += `<div style="border-top:1px dashed #ccc; margin-top:4px; padding-top:4px; font-size:9px; color:#166534;">📦 ${dta.matos}</div>`;
                     }
 
-                    h += `<div class="slot ${dta.text || dta.isConge ? 'filled' : ''} ${dta.toDepot ? 'is-to-depot' : ''} ${dta.isConge ? 'is-conge' : ''}" style="${st}" onclick="openEd('${k}')">${txt}</div>`;
+                    // Fichiers cliquables pour l'admin
+                    let filesHtml = '';
+                    if (state.curU === 'admin' && dta.files && dta.files.length > 0) {
+                        filesHtml = `<div style="border-top:1px dashed #cbd5e1; margin-top:5px; padding-top:5px;">`;
+                        dta.files.forEach(f => {
+                            const ext  = f.name.split('.').pop().toUpperCase();
+                            const icon = ['PDF'].includes(ext) ? '📄' : ['JPG','JPEG','PNG','WEBP'].includes(ext) ? '🖼️' : '📎';
+                            filesHtml += `<a href="${f.url}" target="_blank"
+                                onclick="event.stopPropagation()"
+                                title="${f.name}"
+                                style="display:inline-flex; align-items:center; gap:3px; background:#1b2e58; color:white; padding:3px 6px; border-radius:5px; font-size:8px; font-weight:bold; text-decoration:none; margin:2px 2px 0 0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                ${icon} ${f.name.length > 18 ? f.name.substring(0,16)+'…' : f.name}
+                            </a>`;
+                        });
+                        filesHtml += `</div>`;
+                    }
+
+                    h += `<div class="slot ${dta.text || dta.isConge ? 'filled' : ''} ${dta.toDepot ? 'is-to-depot' : ''} ${dta.isConge ? 'is-conge' : ''}" style="${st}" onclick="openEd('${k}')">${txt}${filesHtml}</div>`;
                 }
                 h += `</td>`;
             }
