@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RBF Planning</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png.png">
+    <link rel="apple-touch-icon" href="icon.png.png">
     <meta name="theme-color" content="#1b2e58">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
@@ -916,7 +916,9 @@
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, {
                 chauffeur: driverId.toUpperCase(),
                 jour     : dateMission,
-                message  : msg
+                message  : msg,
+                name     : 'RBF Planning',
+                email    : 'planning@rbf-transport.fr'
             }).catch(err => console.error('Email chauffeur KO :', err));
         }
 
@@ -924,7 +926,9 @@
             emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, {
                 chauffeur: driverId.toUpperCase(),
                 jour     : dateMission,
-                message  : msg
+                message  : msg,
+                name     : 'RBF Planning',
+                email    : 'planning@rbf-transport.fr'
             }).catch(err => console.error('Email dépôt KO :', err));
         }
     }
@@ -1013,32 +1017,36 @@
     function uploadFile(input) {
         if (!input.files[0]) return;
 
+        // Sauvegarder avant reset (reset efface input.files)
+        const fileName = input.files[0].name;
+        const fileObj  = input.files[0];
+        input.value    = "";
+
         const progressZone = document.getElementById('upload-progress-zone');
-        progressZone.innerHTML = `<div class="upload-progress"><div class="spinner"></div> Envoi en cours…</div>`;
+        progressZone.innerHTML = '<div class="upload-progress"><div class="spinner"></div> Envoi en cours&hellip;</div>';
 
         const fd = new FormData();
-        fd.append('file', input.files[0]);
+        fd.append('file', fileObj);
         fd.append('upload_preset', 'rbf-preset');
 
         fetch('https://api.cloudinary.com/v1_1/dixdmejal/upload', { method: 'POST', body: fd })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 progressZone.innerHTML = '';
                 if (data.secure_url) {
-                    state.currentFiles.push({ name: input.files[0].name, url: data.secure_url });
+                    state.currentFiles.push({ name: fileName, url: data.secure_url });
                     renderFiles();
-                    showToast('Fichier ajouté ✓');
+                    showToast('Fichier ajout\u00e9 \u2713');
                 } else {
-                    showToast("Échec de l'envoi du fichier", 'error');
+                    console.error('Cloudinary error:', data);
+                    showToast("Erreur Cloudinary : " + (data.error && data.error.message || 'inconnu'), 'error');
                 }
             })
-            .catch(err => {
+            .catch(function(err) {
                 progressZone.innerHTML = '';
                 console.error(err);
-                showToast("Erreur lors de l'envoi", 'error');
+                showToast("Erreur r\u00e9seau lors de l'envoi", 'error');
             });
-
-        input.value = ""; // Permet de ré-uploader le même fichier
     }
 
     function renderFiles() {
