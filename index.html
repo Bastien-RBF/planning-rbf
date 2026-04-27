@@ -39,7 +39,7 @@
         .is-conge { border-left: 5px solid var(--yellow) !important; background: #fffbeb !important; }
         .holiday-badge { display: block; background: var(--yellow); color: var(--blue); font-size: 8px; padding: 2px; border-radius: 3px; margin-top: 3px; font-weight: 900; }
 
-        /* Ajout de l'indicateur visuel pour fichiers joints */
+        /* Indicateur visuel pour fichiers joints */
         .slot.has-link::after { content: "📎"; position: absolute; top: 2px; right: 2px; font-size: 10px; color: var(--danger); font-weight: bold; }
 
         #editor-overlay, #report-overlay, #history-overlay, #rh-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter: blur(6px); }
@@ -245,7 +245,8 @@
 
         if(curU==='admin' || curU==='depot') {
             document.getElementById('v-admin').classList.remove('hidden'); document.getElementById('v-driver').classList.add('hidden');
-            let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
+            // AJOUT DE L'UNITÉ "BENNE 3T500" DANS LA LISTE CI-DESSOUS
+            let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'benne 3t500',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
                 for(let dI=0; dI<5; dI++) {
@@ -352,7 +353,7 @@
         document.getElementById('cp').classList.toggle('hidden', isDepot);
 
         document.getElementById('zone-matos').classList.toggle('hidden', !k.includes('jadiel') && !k.includes('nicola')); 
-        let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric');
+        let isTrucker = k.includes('interne') || k.includes('externe') || k.includes('cedric') || k.includes('benne');
         document.getElementById('zone-truck').classList.toggle('hidden', !isTrucker);
         let canHaveHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers');
         document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHaveHoliday);
