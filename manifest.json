@@ -1,0 +1,26 @@
+{
+  "name": "RBF Planning",
+  "short_name": "RBF",
+  "description": "Planning hebdomadaire RBF Transport",
+  "start_url": "/planning-rbf/index.html",
+  "scope": "/planning-rbf/",
+  "display": "standalone",
+  "background_color": "#1b2e58",
+  "theme_color": "#1b2e58",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/planning-rbf/icon.png.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/planning-rbf/icon.png.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
