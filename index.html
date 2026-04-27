@@ -245,7 +245,6 @@
 
         if(curU==='admin' || curU==='depot') {
             document.getElementById('v-admin').classList.remove('hidden'); document.getElementById('v-driver').classList.add('hidden');
-            // AJOUT DE L'UNITÉ "BENNE 3T500" DANS LA LISTE CI-DESSOUS
             let h = ""; const users = [{id:'interne',s:4},{id:'externe',s:4},{id:'cedric',s:4},{id:'benne 3t500',s:4},{id:'divers',s:4},{id:'instal',s:4},{id:'jadiel',s:2},{id:'nicola',s:2}];
             users.forEach(u => {
                 h += `<tr><td class="user-cell">${u.id.toUpperCase()}</td>`;
@@ -253,17 +252,18 @@
                     h += `<td>`;
                     for(let s=1; s<=u.s; s++) {
                         let k = `${curY}_${curW}_${u.id}_${dI}_s${s}`, dta = window.data[k] || {};
-                        if(curU==='depot' && !dta.toDepot && u.id!=='jadiel' && u.id!=='nicola') continue;
+                        
+                        // ICI MODIFICATION : Pour le mode DEPOT, on ne montre que si dta.toDepot est vrai (plus d'exception pour jadiel/nicola)
+                        if(curU==='depot' && !dta.toDepot) continue;
                         
                         let st = dta.col && dta.col !== 'default' ? `background:${dta.col}; color:${dta.col==='#000000'?'#fff':'var(--blue)'};` : '';
                         let truckTag = dta.truck ? `<span style="font-size:8px; opacity:0.7;">[${dta.truck.split(' ')[0]}]</span> ` : "";
                         
-                        // Détection présence fichier pour l'icône trombone
                         let attachmentIcon = (dta.files && dta.files.length > 0) ? "📎 " : "";
                         let txt = dta.isConge ? "🌴 CONGÉ" : (dta.chantier ? `<b>${attachmentIcon}${truckTag}[${dta.chantier.toUpperCase()}]</b><br>${dta.text}` : (attachmentIcon + (dta.text || '...')));
                         
                         let isJN = (u.id === 'jadiel' || u.id === 'nicola');
-                        let showMatos = (curU === 'admin' && isJN) || (curU === 'depot' && (dta.toDepot || isJN));
+                        let showMatos = (curU === 'admin' && isJN) || (curU === 'depot' && dta.toDepot);
                         
                         if(showMatos && dta.matos) {
                             txt += `<div style="border-top:1px dashed #ccc; margin-top:4px; padding-top:4px; font-size:9px; color:#166534;">📦 ${dta.matos}</div>`;
