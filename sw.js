@@ -101,7 +101,8 @@ self.addEventListener('push', event => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || '🚛 RBF Planning', options)
+    Promise.resolve(self.registration.showNotification(data.title || 'RBF Planning', options))
+      .catch(function(e) { console.warn('Notification impossible (permission ?) :', e); })
   );
 });
 
