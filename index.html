@@ -398,7 +398,7 @@ function subscribeToNotifications() {
 
 // Envoyer une notif a un role specifique
 function sendOSPush(role, title, body) {
-    if (!OS_WORKER_URL || OS_WORKER_URL === 'VOTRE_WORKER_URL_ICI') return;
+    if (!OS_WORKER_URL || OS_WORKER_URL === 'https://rbf-notifs.bastien38dominguez.workers.dev/') return;
     fetch(OS_WORKER_URL, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
