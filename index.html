@@ -102,7 +102,7 @@
         <h3 style="text-align:center;color:var(--blue);margin-top:0;" id="cm-title">Copier la mission</h3>
         <div style="background:#f8fafc;padding:15px;border-radius:12px;margin-bottom:15px;">
             <label style="font-size:10px;font-weight:bold;display:block;margin-bottom:6px;">PERSONNE :</label>
-            <select id="cm-user" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:12px;">
+            <select id="cm-user-modal" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:12px;">
                 <option value="interne">INTERNE</option>
                 <option value="externe">EXTERNE</option>
                 <option value="cedric">CEDRIC</option>
@@ -113,7 +113,7 @@
                 <option value="nicola">NICOLA</option>
             </select>
             <label style="font-size:10px;font-weight:bold;display:block;margin-bottom:6px;">JOUR :</label>
-            <select id="cm-day" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:12px;">
+            <select id="cm-day-modal" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:12px;">
                 <option value="0">LUNDI</option>
                 <option value="1">MARDI</option>
                 <option value="2">MERCREDI</option>
@@ -121,7 +121,7 @@
                 <option value="4">VENDREDI</option>
             </select>
             <label style="font-size:10px;font-weight:bold;display:block;margin-bottom:6px;">SLOT :</label>
-            <select id="cm-slot" style="padding:10px;border-radius:8px;border:1px solid #ddd;">
+            <select id="cm-slot-modal" style="padding:10px;border-radius:8px;border:1px solid #ddd;">
                 <option value="1">Slot 1</option>
                 <option value="2">Slot 2</option>
                 <option value="3">Slot 3</option>
@@ -244,9 +244,9 @@
             <label style="font-size:10px;font-weight:bold;color:var(--blue);">VEHICULE :</label>
             <select id="e-truck" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;background:#f8fafc;">
                 <option value="">-- Non specifie --</option>
-                <option value="PORTEUR">PORTEUR SEUL</option>
-                <option value="PORTEUR + REMORQUE">PORTEUR + REMORQUE</option>
-                <option value="AUTRE / GRUE">AUTRE / SPECIAL</option>
+                <option value="PORTEUR">🚚 PORTEUR SEUL</option>
+                <option value="PORTEUR + REMORQUE">🚛 PORTEUR + REMORQUE</option>
+                <option value="AUTRE / GRUE">🏗️ AUTRE / SPECIAL</option>
             </select>
         </div>
         <textarea id="e-input" style="height:60px;padding:10px;border-radius:8px;border:1px solid #ddd;resize:vertical;" placeholder="Mission"></textarea>
@@ -268,7 +268,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
         <div>
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">PERSONNE</div>
-            <select id="cm-user" onchange="updateCmSlots()" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
+            <select id="cm-user-ed" onchange="updateCmSlots()" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
                 <option value="interne">INTERNE</option><option value="externe">EXTERNE</option>
                 <option value="cedric">CEDRIC</option><option value="divers">DIVERS</option>
                 <option value="instal">INSTAL</option><option value="3t500">3T500</option>
@@ -277,14 +277,14 @@
         </div>
         <div>
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">JOUR</div>
-            <select id="cm-day" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
+            <select id="cm-day-ed" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
                 <option value="0">LUN</option><option value="1">MAR</option><option value="2">MER</option>
                 <option value="3">JEU</option><option value="4">VEN</option>
             </select>
         </div>
         <div>
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">SLOT</div>
-            <select id="cm-slot" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
+            <select id="cm-slot-ed" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
                 <option value="1">S1</option><option value="2">S2</option><option value="3">S3</option><option value="4">S4</option>
             </select>
         </div>
@@ -294,7 +294,7 @@
         <button onclick="executeCopyMove('move')" style="background:#f59e0b;color:white;border:none;padding:8px;border-radius:8px;font-size:10px;font-weight:bold;cursor:pointer;">DEPLACER ICI</button>
     </div>
 </div>
-        <button onclick="deleteTask()"  style="background:none;color:var(--danger);border:none;width:100%;font-weight:bold;cursor:pointer;padding:6px;">Supprimer</button>
+        <button onclick="deleteTask()" style="width:100%;background:#fee2e2;color:var(--danger);border:1px solid #fca5a5;padding:10px;border-radius:10px;font-weight:bold;cursor:pointer;margin-top:4px;">🗑️ SUPPRIMER LA MISSION</button>
         <button onclick="closeEditor()" style="width:100%;border:none;background:none;color:#94a3b8;cursor:pointer;padding:8px;">Annuler</button>
     </div>
 </div>
@@ -369,14 +369,21 @@ function subscribeToNotifications() {
     var role = state.curU;
     OneSignalDeferred.push(async function(OneSignal) {
         try {
+            // Demander la permission
             var granted = await OneSignal.Notifications.requestPermission();
+            console.log('Permission:', granted);
             if (granted) {
+                // Taguer l'utilisateur avec son role
                 await OneSignal.User.addTag('role', role);
-                showToast('Notifications activees !');
+                // Aussi enregistrer l'ID externe pour ciblage
+                try { await OneSignal.login(role + '_' + Date.now()); } catch(e2) {}
+                var tags = await OneSignal.User.getTags();
+                console.log('Tags enregistres:', tags);
+                showToast('Notifications activees pour ' + role + ' !');
                 var btn = document.getElementById('btn-notif');
                 if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-            } else { showToast('Permission refusee', 'error'); }
-        } catch(e) { console.warn('OneSignal:', e); }
+            } else { showToast('Permission refusee dans le navigateur', 'error'); }
+        } catch(e) { console.warn('OneSignal erreur:', e); showToast('Erreur notifications', 'error'); }
     });
 }
 
@@ -728,17 +735,16 @@ function saveTask() {
 }
 
 function deleteTask() {
-    showConfirm('Cette mission sera supprimee.', function() {
-        var old = window.data[state.curK] || {};
-        db.ref('planning_v18/'+state.curK).remove()
-            .then(function() {
-                sendEmailNotification(state.curK, old, 'ANNULEE');
-                sendTargetedPush(state.curK, old, 'ANNULEE');
-                closeEditor();
-                showToast('Mission supprimee');
-            })
-            .catch(function(err) { console.error(err); showToast('Erreur suppression', 'error'); });
-    }, 'Supprimer la mission');
+    var old = window.data[state.curK] || {};
+    // Suppression directe - un seul clic
+    db.ref('planning_v18/'+state.curK).remove()
+        .then(function() {
+            sendEmailNotification(state.curK, old, 'ANNULEE');
+            sendTargetedPush(state.curK, old, 'ANNULEE');
+            closeEditor();
+            showToast('Mission supprimee');
+        })
+        .catch(function(err) { console.error(err); showToast('Erreur suppression', 'error'); });
 }
 
 function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
@@ -747,21 +753,23 @@ function closeEditor() { document.getElementById('editor-overlay').style.display
    COPIER / DEPLACER
 ========================================= */
 function openCopyMove() {
+    // Les selecteurs sont maintenant inline dans l'editeur
+    // On pre-remplit juste les valeurs courantes
     if (!state.curK) return;
     var parts = state.curK.split('_');
-    document.getElementById('cm-user').value = parts[2] || 'interne';
-    document.getElementById('cm-day').value  = parts[3] || '0';
-    document.getElementById('cm-slot').value = (parts[4] || 's1').replace('s','');
-    // Mettre a jour les slots disponibles selon l'utilisateur cible
+    var userEl = document.getElementById('cm-user-ed');
+    var dayEl  = document.getElementById('cm-day-ed');
+    var slotEl = document.getElementById('cm-slot-ed');
+    if (userEl) userEl.value = parts[2] || 'interne';
+    if (dayEl)  dayEl.value  = parts[3] || '0';
+    if (slotEl) slotEl.value = (parts[4] || 's1').replace('s','');
     updateCmSlots();
-    document.getElementById('cm-user').onchange = updateCmSlots;
-    document.getElementById('copymove-overlay').style.display = 'flex';
 }
 
 function updateCmSlots() {
-    var u = document.getElementById('cm-user').value;
+    var u = document.getElementById('cm-user-ed').value;
     var maxS = (u === 'jadiel' || u === 'nicola') ? 2 : 4;
-    var sel  = document.getElementById('cm-slot');
+    var sel  = document.getElementById('cm-slot-ed');
     var cur  = parseInt(sel.value);
     sel.innerHTML = '';
     for (var i = 1; i <= maxS; i++) {
@@ -775,27 +783,25 @@ function updateCmSlots() {
 function executeCopyMove(mode) {
     var srcData = window.data[state.curK];
     if (!srcData) { showToast('Aucune donnee source', 'error'); return; }
-    var user    = document.getElementById('cm-user').value;
-    var day     = document.getElementById('cm-day').value;
-    var slot    = document.getElementById('cm-slot').value;
+    // Lire depuis les selecteurs INLINE de l'editeur (suffixe -ed)
+    var user    = document.getElementById('cm-user-ed').value;
+    var day     = document.getElementById('cm-day-ed').value;
+    var slot    = document.getElementById('cm-slot-ed').value;
     var destKey = state.curY+'_'+state.curW+'_'+user+'_'+day+'_s'+slot;
     if (destKey === state.curK) { showToast('Source et destination identiques', 'error'); return; }
 
-    var action = mode === 'move' ? 'deplacer' : 'copier';
-    showConfirm('Voulez-vous vraiment '+action+' cette mission ?', function() {
-        db.ref('planning_v18/'+destKey).set(srcData)
-            .then(function() {
-                if (mode === 'move') {
-                    return db.ref('planning_v18/'+state.curK).remove();
-                }
-            })
-            .then(function() {
-                document.getElementById('copymove-overlay').style.display = 'none';
-                closeEditor();
-                showToast('Mission '+action+'e avec succes');
-            })
-            .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
-    }, mode === 'move' ? 'Deplacer' : 'Copier');
+    var label = mode === 'move' ? 'deplace' : 'copie';
+    db.ref('planning_v18/'+destKey).set(srcData)
+        .then(function() {
+            if (mode === 'move') {
+                return db.ref('planning_v18/'+state.curK).remove();
+            }
+        })
+        .then(function() {
+            closeEditor();
+            showToast('Mission '+label+'e !');
+        })
+        .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
 }
 
 /* =========================================
