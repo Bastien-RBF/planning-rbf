@@ -263,7 +263,37 @@
             <label id="zone-conge-checkbox" class="hidden" style="display:flex;align-items:center;gap:8px;font-size:11px;color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px;height:18px;"> <b>CONGE</b></label>
         </div>
         <button onclick="saveTask()"    class="btn-main" style="background:var(--blue);color:white;margin-bottom:8px;">SAUVEGARDER</button>
-        <button onclick="openCopyMove()" style="width:100%;background:#f1f5f9;color:var(--blue);border:none;padding:10px;border-radius:10px;font-weight:bold;cursor:pointer;margin-bottom:8px;">COPIER / DEPLACER</button>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;">
+    <div style="font-size:10px;font-weight:bold;color:var(--blue);margin-bottom:8px;">COPIER / DEPLACER VERS :</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+        <div>
+            <div style="font-size:9px;color:#64748b;margin-bottom:3px;">PERSONNE</div>
+            <select id="cm-user" onchange="updateCmSlots()" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
+                <option value="interne">INTERNE</option><option value="externe">EXTERNE</option>
+                <option value="cedric">CEDRIC</option><option value="divers">DIVERS</option>
+                <option value="instal">INSTAL</option><option value="3t500">3T500</option>
+                <option value="jadiel">JADIEL</option><option value="nicola">NICOLA</option>
+            </select>
+        </div>
+        <div>
+            <div style="font-size:9px;color:#64748b;margin-bottom:3px;">JOUR</div>
+            <select id="cm-day" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
+                <option value="0">LUN</option><option value="1">MAR</option><option value="2">MER</option>
+                <option value="3">JEU</option><option value="4">VEN</option>
+            </select>
+        </div>
+        <div>
+            <div style="font-size:9px;color:#64748b;margin-bottom:3px;">SLOT</div>
+            <select id="cm-slot" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
+                <option value="1">S1</option><option value="2">S2</option><option value="3">S3</option><option value="4">S4</option>
+            </select>
+        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <button onclick="executeCopyMove('copy')" style="background:#1b2e58;color:white;border:none;padding:8px;border-radius:8px;font-size:10px;font-weight:bold;cursor:pointer;">COPIER ICI</button>
+        <button onclick="executeCopyMove('move')" style="background:#f59e0b;color:white;border:none;padding:8px;border-radius:8px;font-size:10px;font-weight:bold;cursor:pointer;">DEPLACER ICI</button>
+    </div>
+</div>
         <button onclick="deleteTask()"  style="background:none;color:var(--danger);border:none;width:100%;font-weight:bold;cursor:pointer;padding:6px;">Supprimer</button>
         <button onclick="closeEditor()" style="width:100%;border:none;background:none;color:#94a3b8;cursor:pointer;padding:8px;">Annuler</button>
     </div>
@@ -352,10 +382,10 @@ function subscribeToNotifications() {
 
 // Envoyer une notif a un role specifique
 function sendOSPush(role, title, body) {
-    if (!OS_REST_KEY || OS_REST_KEY === 'VOTRE_CLE_REST_ICI') return;
-    fetch('https://onesignal.com/api/v1/notifications', {
+    if (!OS_WORKER_URL || OS_WORKER_URL === 'VOTRE_WORKER_URL_ICI') return;
+    fetch(OS_WORKER_URL, {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'key '+OS_REST_KEY},
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
             app_id  : OS_APP_ID,
             filters : [{field:'tag', key:'role', relation:'=', value:role}],
