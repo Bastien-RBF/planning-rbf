@@ -354,15 +354,15 @@ var ALL_USERS = [
 /* =========================================
    ONESIGNAL
 ========================================= */
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-        appId: OS_APP_ID,
-        serviceWorkerPath: '/planning-rbf/OneSignalSDKWorker.js',
-        serviceWorkerParam: { scope: '/planning-rbf/' },
-        notifyButton: { enable: false },
-        promptOptions: { slidedown: { enabled: false } }
-    });
+window.OneSignal = window.OneSignal || [];
+OneSignal.push(function() {
+  OneSignal.init({
+    appId: "56c8a111-2082-4419-bbf6-a58008935dbd",
+    // On précise explicitement le chemin et le périmètre (scope)
+    serviceWorkerPath: "OneSignalSDKWorker.js", 
+    serviceWorkerParam: { scope: "/planning-rbf/" }, 
+    allowLocalhostAsSecureOrigin: true,
+  });
 });
 
 function subscribeToNotifications() {
