@@ -351,10 +351,10 @@ function subscribeToNotifications() {
 
 // Envoyer une notif a un role specifique
 function sendOSPush(role, title, body) {
-    if (!OS_REST_KEY || OS_REST_KEY === 'os_v2_app_k3ekcejaqjcbto7wuwaare25xug6jwtb6dfe565shkv42b247vulmedbouya42vqsjczwmpomre2vaq7t72qbbgzctc2vj5i2l2piui') return;
+    if (!OS_REST_KEY || OS_REST_KEY === 'VOTRE_CLE_REST_ICI') return;
     fetch('https://onesignal.com/api/v1/notifications', {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Basic '+OS_REST_KEY},
+        headers:{'Content-Type':'application/json','Authorization':'key '+OS_REST_KEY},
         body: JSON.stringify({
             app_id  : OS_APP_ID,
             filters : [{field:'tag', key:'role', relation:'=', value:role}],
@@ -541,7 +541,10 @@ function fileTagHtml(f, forAdmin) {
         url = url.replace('/upload/', '/upload/fl_attachment/');
     }
     if (forAdmin) {
-        return '<a href="'+url+'" target="_blank" onclick="event.stopPropagation()" title="'+f.name+'" class="file-tag '+cls+'">'+ico+' '+name+'</a>';
+        return '<a href="'+url+'" target="_blank" '
+            + 'onclick="event.stopPropagation();event.preventDefault();window.open(this.href,\'_blank\');return false;" '
+            + 'title="'+f.name+'" class="file-tag '+cls+'" '
+            + 'style="position:relative;z-index:100;pointer-events:auto;">'+ico+' '+name+'</a>';
     } else {
         return '<a href="'+url+'" target="_blank" title="'+f.name+'" style="display:block;background:var(--blue);color:white;padding:10px;border-radius:8px;margin-top:8px;text-decoration:none;text-align:center;font-size:11px;font-weight:bold;">'+(ext==='xlsx'||ext==='xls'?'Telecharger':'Ouvrir')+' : '+name+'</a>';
     }
