@@ -357,12 +357,11 @@ var ALL_USERS = [
 window.OneSignal = window.OneSignal || [];
 OneSignal.push(function() {
   OneSignal.init({
-    appId: "56c8a111-2082-4419-bbf6-a58008935dbd",
-    // On précise explicitement le chemin et le périmètre (scope)
-    serviceWorkerPath: "OneSignalSDKWorker.js", 
-    serviceWorkerParam: { scope: "/planning-rbf/" }, 
-    allowLocalhostAsSecureOrigin: true,
-  });
+  appId: "56c8a111-2082-4419-bbf6-a58008935dbd",
+  serviceWorkerPath: "sw.js", // On utilise ton sw.js personnalisé
+  serviceWorkerParam: { scope: "/planning-rbf/" },
+  allowLocalhostAsSecureOrigin: true,
+});
 });
 
 function subscribeToNotifications() {
