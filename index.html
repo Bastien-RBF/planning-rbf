@@ -369,20 +369,29 @@ function subscribeToNotifications() {
     var role = state.curU;
     OneSignalDeferred.push(async function(OneSignal) {
         try {
-            // Demander la permission
             var granted = await OneSignal.Notifications.requestPermission();
             console.log('Permission:', granted);
             if (granted) {
-                // Taguer l'utilisateur avec son role
-                await OneSignal.User.addTag('role', role);
-                // Aussi enregistrer l'ID externe pour ciblage
-                try { await OneSignal.login(role + '_' + Date.now()); } catch(e2) {}
-                var tags = await OneSignal.User.getTags();
-                console.log('Tags enregistres:', tags);
-                showToast('Notifications activees pour ' + role + ' !');
+                // SDK v16 : utiliser login() pour definir l'external ID
+                // puis addTag via la nouvelle API
+                try { await OneSignal.login(role); } catch(e2) { console.log('login err:', e2); }
+                // Attendre que le login soit effectif
+                await new Promise(function(r) { setTimeout(r, 1000); });
+                try {
+                    OneSignal.User.addTag('role', role);
+                    console.log('Tag role='+role+' envoye');
+                } catch(e3) { console.log('addTag err:', e3); }
+                // Verifier via le tableau de bord OneSignal
+                var oId = await OneSignal.User.getOnesignalId();
+                console.log('OneSignal User ID:', oId);
+                showToast('Notifications activees !');
                 var btn = document.getElementById('btn-notif');
-                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-            } else { showToast('Permission refusee dans le navigateur', 'error'); }
+                if (btn) {
+                    btn.style.background='#dcfce7';
+                    btn.style.color='#166534';
+                    btn.textContent='NOTIFS ON';
+                }
+            } else { showToast('Permission refusee', 'error'); }
         } catch(e) { console.warn('OneSignal erreur:', e); showToast('Erreur notifications', 'error'); }
     });
 }
