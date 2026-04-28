@@ -354,14 +354,15 @@ var ALL_USERS = [
 /* =========================================
    ONESIGNAL
 ========================================= */
-window.OneSignal = window.OneSignal || [];
-OneSignal.push(function() {
-  OneSignal.init({
-  appId: "56c8a111-2082-4419-bbf6-a58008935dbd",
-  serviceWorkerPath: "sw.js", // Enlève "planning-rbf/" ici
-  serviceWorkerParam: { scope: "/planning-rbf/" },
-  allowLocalhostAsSecureOrigin: true,
-});
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+        appId: OS_APP_ID,
+        serviceWorkerPath: '/planning-rbf/OneSignalSDKWorker.js',
+        serviceWorkerParam: { scope: '/planning-rbf/' },
+        notifyButton: { enable: false },
+        promptOptions: { slidedown: { enabled: false } }
+    });
 });
 
 function subscribeToNotifications() {
@@ -397,7 +398,7 @@ function subscribeToNotifications() {
 
 // Envoyer une notif a un role specifique
 function sendOSPush(role, title, body) {
-    if (!OS_WORKER_URL || OS_WORKER_URL === 'https://rbf-notifs.bastien38dominguez.workers.dev/') return;
+    if (!OS_WORKER_URL || OS_WORKER_URL === 'VOTRE_WORKER_URL_ICI') return;
     fetch(OS_WORKER_URL, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
