@@ -371,30 +371,17 @@ function subscribeToNotifications() {
             var granted = await OneSignal.Notifications.requestPermission();
             console.log('Permission:', granted);
             if (granted) {
-                // Attendre l'enregistrement complet
-                await new Promise(function(r) { setTimeout(r, 1500); });
-                var oId = await OneSignal.User.getOnesignalId();
-                console.log('Abonne avec ID:', oId);
-                if (oId) {
-                    showToast('Notifications activees !');
-                    var btn = document.getElementById('btn-notif');
-                    if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-                    localStorage.setItem('notifs_ok', '1');
-                } else {
-                    showToast('En attente inscription OneSignal...', 'info');
-                    // Reessayer dans 3 secondes
-                    setTimeout(function() {
-                        OneSignalDeferred.push(async function(OS) {
-                            var id2 = await OS.User.getOnesignalId();
-                            console.log('ID apres retry:', id2);
-                            if (id2) { showToast('Notifications activees !'); localStorage.setItem('notifs_ok','1'); }
-                        });
-                    }, 3000);
-                }
+                showToast('Notifications activees !');
+                var btn = document.getElementById('btn-notif');
+                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
+                localStorage.setItem('notifs_ok', '1');
             } else {
-                showToast('Clique sur le cadenas dans la barre et autorise les notifications', 'error');
+                showToast('Permission refusee dans le navigateur', 'error');
             }
-        } catch(e) { console.warn('OneSignal:', e); showToast('Erreur: '+e.message, 'error'); }
+        } catch(e) {
+            console.warn('OneSignal:', e);
+            showToast('Erreur notifications: ' + e.message, 'error');
+        }
     });
 }
 
@@ -417,14 +404,41 @@ function sendOSPush(role, title, body) {
 
 // Envoyer les notifs ciblees selon la tache
 function sendTargetedPush(key, taskData, action) {
-    if (!OS_WORKER_URL || OS_WORKER_URL === 'VOTRE_WORKER_URL_ICI') return;
-    var parts  = key.split('_');
-    var userId = parts[2] || '';
-    var chan   = taskData.chantier ? ' - ' + taskData.chantier.toUpperCase() : '';
-    var miss   = taskData.text ? ' : ' + taskData.text.substring(0,40) : (taskData.isConge ? ' : CONGE' : '');
-    var title  = 'RBF Planning - Mission ' + action;
-    var body   = userId.toUpperCase() + chan + miss;
-    sendOSPush('all', title, body);
+    var parts   = key.split('_');
+    var yearM   = parseInt(parts[0]);
+    var weekM   = parseInt(parts[1]);
+    var userId  = parts[2];
+    var dayIdx  = parseInt(parts[3]);
+
+    var today   = new Date();
+    var todayW  = getWeek(today);
+    var todayY  = today.getFullYear();
+    var todayD  = today.getDay() - 1;
+    if (todayD < 0) todayD = 6;
+
+    // Verifier si la date est presente ou future
+    var isFuture = yearM > todayY
+        || (yearM === todayY && weekM > todayW)
+        || (yearM === todayY && weekM === todayW && dayIdx >= todayD);
+
+    var chantierLabel = taskData.chantier ? taskData.chantier.toUpperCase() : '';
+    var missionLabel  = taskData.text ? taskData.text.substring(0,50) : (taskData.isConge ? 'CONGE' : '');
+    var title = 'Mission ' + action;
+    var body  = userId.toUpperCase() + (chantierLabel ? ' - ' + chantierLabel : '') + (missionLabel ? ' : ' + missionLabel : '');
+
+    // Toujours notifier les admins
+    sendOSPush('admin', title, body);
+
+    if (isFuture) {
+        // Notifier le chauffeur concerne
+        if (['interne','cedric','jadiel','nicola'].indexOf(userId) !== -1) {
+            sendOSPush(userId, title, body);
+        }
+        // Notifier le depot si case cochee
+        if (taskData.toDepot) {
+            sendOSPush('depot', title, body);
+        }
+    }
 }
 
 /* =========================================
@@ -505,13 +519,6 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
-    // Verifier si deja abonne
-    if (localStorage.getItem('notifs_ok')) {
-        setTimeout(function() {
-            var btn = document.getElementById('btn-notif');
-            if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-        }, 500);
-    }
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
