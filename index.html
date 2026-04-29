@@ -380,7 +380,12 @@ function subscribeToNotifications() {
     Notification.requestPermission().then(function(permission) {
         console.log('Permission:', permission);
         if (permission === 'granted') {
-            fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY }).then(function(token) {
+            // Enregistrer le SW manuellement pour forcer le bon chemin
+            navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js')
+            .then(function(swReg) {
+                console.log('SW FCM enregistre:', swReg.scope);
+                return fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+            }).then(function(token) {
                 if (token) {
                     console.log('FCM Token:', token.substring(0,30)+'...');
                     db.ref('fcm_tokens/' + state.curU).set({
