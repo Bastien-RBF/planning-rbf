@@ -390,8 +390,9 @@ function sendTargetedPush(key, taskData, action) {
     var user  = parts[2] || '';
     var chan   = taskData.chantier ? ' - '+taskData.chantier.toUpperCase() : '';
     var miss  = taskData.text ? ' : '+taskData.text.substring(0,40) : (taskData.isConge ? ' : CONGE' : '');
-    var title = 'RBF Planning - Mission '+action;
-    var body  = user.toUpperCase()+chan+miss;
+    var title = 'RBF - Mission ' + action;
+    var body  = user.toUpperCase() + chan + miss;
+
     db.ref('push_subs').once('value').then(function(snap) {
         var data = snap.val() || {};
         var subs = [];
@@ -399,15 +400,24 @@ function sendTargetedPush(key, taskData, action) {
             try { var s = JSON.parse(data[u].sub); if (s && s.endpoint) subs.push(s); } catch(e) {}
         }
         if (!subs.length) { console.log('Aucun abonne push'); return; }
-        console.log('Envoi push a', subs.length, 'abonnes');
+        console.log('Envoi push a', subs.length, 'abonnes - titre:', title);
+
+        // Informer le SW du message a afficher (pour push vide)
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SET_NOTIF_DATA',
+                payload: { title: title, body: body }
+            });
+        }
+
         fetch(PUSH_WORKER_URL, {
-            method: 'POST',
+            method : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscriptions: subs, title: title, message: body })
+            body   : JSON.stringify({ subscriptions: subs, title: title, message: body })
         })
-        .then(function(r){return r.json();})
-        .then(function(d){ console.log('Push OK:', d.sent, 'envoyes'); })
-        .catch(function(e){ console.warn('Push erreur:', e.message); });
+        .then(function(r) { return r.json(); })
+        .then(function(d) { console.log('Push OK:', d.sent, 'envoyes,', d.errors, 'erreurs'); })
+        .catch(function(e) { console.warn('Push erreur:', e.message); });
     });
 }
 

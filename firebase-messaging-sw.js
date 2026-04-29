@@ -1,35 +1,53 @@
 // ================================================
-// RBF Planning — Service Worker Web Push natif
+// RBF Planning — Service Worker Web Push
 // ================================================
 
-// Gestion des notifications push natives
+// Stocker le dernier message recu via postMessage
+var lastNotifData = { title: 'RBF Planning', body: 'Mise a jour du planning' };
+
+self.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'SET_NOTIF_DATA') {
+        lastNotifData = event.data.payload;
+    }
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
+// Push recu (vide ou avec data)
 self.addEventListener('push', function(event) {
-    var data = {};
-    try { data = event.data.json(); } catch(e) { data = { title: 'RBF Planning', body: event.data ? event.data.text() : 'Mise a jour planning' }; }
-    
-    var options = {
-        body   : data.body  || data.message || 'Mise a jour du planning',
-        icon   : '/planning-rbf/icon.png.png',
-        badge  : '/planning-rbf/icon.png.png',
-        vibrate: [200, 100, 200],
-        data   : { url: 'https://bastien-rbf.github.io/planning-rbf/' },
-        requireInteraction: true
-    };
+    var title = lastNotifData.title || 'RBF Planning';
+    var body  = lastNotifData.body  || 'Mise a jour du planning';
+
+    if (event.data) {
+        try {
+            var d = event.data.json();
+            title = d.title || title;
+            body  = d.body  || d.message || body;
+        } catch(e) {
+            var txt = event.data.text();
+            if (txt) body = txt;
+        }
+    }
+
     event.waitUntil(
-        self.registration.showNotification(data.title || 'RBF Planning', options)
+        self.registration.showNotification(title, {
+            body             : body,
+            icon             : '/planning-rbf/icon.png.png',
+            badge            : '/planning-rbf/icon.png.png',
+            vibrate          : [200, 100, 200],
+            requireInteraction: true,
+            data             : { url: 'https://bastien-rbf.github.io/planning-rbf/' }
+        })
     );
 });
 
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     event.waitUntil(
-        clients.matchAll({ type: 'window' }).then(function(list) {
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
             for (var c of list) { if ('focus' in c) return c.focus(); }
             if (clients.openWindow) return clients.openWindow('https://bastien-rbf.github.io/planning-rbf/');
         })
     );
-});
-
-self.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
