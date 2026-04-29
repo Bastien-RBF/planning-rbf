@@ -1,120 +1,86 @@
 // ================================================
 // RBF Planning — Cloudflare Worker
-// Firebase Cloud Messaging (FCM) V1
+// Web Push natif avec VAPID
 // ================================================
 
-const PROJECT_ID    = "rbf-transport";
-const CLIENT_EMAIL  = "firebase-adminsdk-fbsvc@rbf-transport.iam.gserviceaccount.com";
-const PRIVATE_KEY   = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC8DU7Cd5ZL6UKk\n2p9jjiLCh/oMswt4XuQcMHhaKKlQDRVgBEZIku1NNByOb8KHr7DkoQMEWTBET57h\nABQVguiOf3cSEUldp2Fb9yDbV8XGCJFGiNkjR1nWoAWrQPsQDTUZtSUR+HhMtMbn\nqpbmqNEuIA9URp9ojXs0FYbuXBcuwVjWl0Tkv4O/EOuKeQbjDQQ8PYb6k5vD4jhs\nLlB7mHOx38pdi1krMXTHVns1BkmO3nNbAA3nMh0PsSv3H4dUfUd/ZbuBDgt+Snav\nIpy+BZFWlqpbglUlHZL0u0Lcx6a4KbAGRPF+MDm4WLPjkOl1TX7sqEmLAs1XJAT8\nzy19OznJAgMBAAECggEAFPZBdUPx/lGTcDTpLNEckXqpe4jpxRKEHZr5j3NA4aop\nBnmeLAYqFZUIKd3OCA9O30K4x19PFg5Es5KtVR3b4SaBlgNUnkVDgQYxz2wf9kyL\nhRqeublWYP+YIi2Czu3p9rej2OD4PUoEHLF9/gWLa7d/KJxxYIIviEVuCQaS6aR1\nWU+p4Irg7ZeciZqNTxjEUfYmV6uxT5iwWQhZuxHdBhn8fByTRvsWKBYW2t1GLrel\nclBAtDhc+BXEXPljEjuvtl8Mx4L0sQE1vLJ/o2k6kl0d59TAq06gpqL3ycDQw+kn\nVZMuF4nJb60yCjsweGMqJTpbHIfd4uQsIJv4ulJ/0QKBgQDwHB4+s8UP4eNJRm1v\nY1HMjAI2NcNI/88szDFAzN9EDL1epUwkTMruvRN1czayCBQ9zBdpv/5hi0guvgxC\n1XbQyNWFhtjvUL7psLixv/+yNbPR6Q3iTz3rRq2E1IytOUntSOPqPUG0pXB9qF8y\nz8Ww0NoLfJ07jPY+Qd3cseNq+wKBgQDIfzz3O4LtnB6ngMV/VOf/2eqQ51FvAxTe\nncSdjnOQdUb2LrOSAURgFSPNJB0F+2UvvhZHM+uYjVT5w0US15BTCZaYVbO5f554\nphjvCXyS+5yEQ6NLieDrAurlEWnv8ECZVxsYKnY37Z9nE+cwDM2Rim4emnbFyksn\nO/2On38TCwKBgEKu/HNbh9oeWPortg7eXYRaSe72RXMLoGUHnJIrk8IZa6pSa/AU\n57MgDbxrsAAHoF99Q+9Zo/NBNF3O6CbTk/juHebEiZEFMtBCBTlQYloC8hrVB8cX\nTNH/wgcG5L7jDzX4LVwLgSkDXVd4oF/DNlsh1byk8iHsxyKJNm2pdchrAoGBAJ6f\nE5OhsIbd0d7BYP7JJLblJ8+2QlXqgTNSbEAeeE1ci2SvNAAaIodFkkp0/MVDzB0G\nbUetywGpJwZmt5odkyAu4MbqXsMuNSjMd8N9pOIAUCbQADv9/ETRzRanPUHHuMPY\nByaKSXcb9tWtCGWaa3RuqYpqt/bpgaWrr4GLrBRbAoGBAJH9B+MY28vTIKgnHs2O\nM50IWegEpr4+JuaUxuBmhlK9D1JzsUYxo/D9ygpPElnRgIAqYXy9BPwOXL/jBZdO\nGmohho1pgyyrmSR0qBIXAA0mZrMRVQN0hVblM6aZLfeFqtzGZoElCCBt52VkD7yC\nKoqNqoBw8Q3mb9bqxoSVH1Zz\n-----END PRIVATE KEY-----\n";
+// Cle privee VAPID (a generer une seule fois)
+// Cette cle correspond a la cle publique : BNSavHKMaOt_jVAWhklw2pWy_dSbM8sSFCbK6xM704tAEj14ptZAOAJlb2q25O33sZFqV5eqjEWTSdnnPBueW58
+const VAPID_PRIVATE_KEY = "_oiYBRE4VXVznWsX-UZcE3p-cpd9FgqA2hh5m_i6Bg8";
+const VAPID_PUBLIC_KEY  = "BCejATBh5hDLun-J4UrWt9U9VjjCM1uxqvi92X9QyWGsI0ykkwZDsr41hcA7xHUNYAt3r97NaQ3YNQlvMNOZoWc";
+const VAPID_SUBJECT     = "mailto:bastien38dominguez@gmail.com";
 
-// Generer un JWT pour l'authentification Google
-async function getAccessToken() {
-  const now   = Math.floor(Date.now() / 1000);
-  const claim = {
-    iss  : CLIENT_EMAIL,
-    scope: "https://www.googleapis.com/auth/firebase.messaging",
-    aud  : "https://oauth2.googleapis.com/token",
-    exp  : now + 3600,
-    iat  : now
-  };
+function base64UrlToUint8Array(base64UrlData) {
+    const padding = '='.repeat((4 - base64UrlData.length % 4) % 4);
+    const base64 = (base64UrlData + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from(rawData, c => c.charCodeAt(0));
+}
 
-  // Encoder le header et payload JWT
-  const header  = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" })).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-  const payload = btoa(JSON.stringify(claim)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-  const toSign  = header + '.' + payload;
+async function generateVapidToken(endpoint) {
+    const now     = Math.floor(Date.now() / 1000);
+    const url     = new URL(endpoint);
+    const audience= url.protocol + '//' + url.host;
+    const header  = { typ: 'JWT', alg: 'ES256' };
+    const payload = { aud: audience, exp: now + 43200, sub: VAPID_SUBJECT };
+    const enc     = v => btoa(JSON.stringify(v)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+    const unsigned= enc(header) + '.' + enc(payload);
 
-  // Importer la cle privee RSA
-  const keyData = PRIVATE_KEY
-    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-    .replace(/-----END PRIVATE KEY-----/g, '')
-    .replace(/\n/g, '');
-  const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8', binaryKey.buffer,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false, ['sign']
-  );
-
-  // Signer
-  const encoder   = new TextEncoder();
-  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, encoder.encode(toSign));
-  const sigB64    = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-  const jwt       = toSign + '.' + sigB64;
-
-  // Echanger le JWT contre un access token
-  const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
-    method : 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body   : `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-  });
-  const tokenData = await tokenResp.json();
-  return tokenData.access_token;
+    const keyData  = base64UrlToUint8Array(VAPID_PRIVATE_KEY);
+    const cryptoKey= await crypto.subtle.importKey(
+        'raw', keyData, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']
+    );
+    const sig   = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, cryptoKey, new TextEncoder().encode(unsigned));
+    const sigB64= btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+    return unsigned + '.' + sigB64;
 }
 
 export default {
-  async fetch(request) {
-    const cors = {
-      "Access-Control-Allow-Origin" : "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
-    if (request.method === "OPTIONS") return new Response(null, { headers: cors });
-    if (request.method !== "POST")    return new Response("Method not allowed", { status: 405, headers: cors });
+    async fetch(request) {
+        const cors = {
+            'Access-Control-Allow-Origin' : '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        };
+        if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+        if (request.method !== 'POST')    return new Response('Method not allowed', { status: 405, headers: cors });
 
-    try {
-      const body   = await request.json();
-      const tokens = body.tokens || [];
-      const title  = (body.headings && body.headings.fr) || "RBF Planning";
-      const msg    = (body.contents && body.contents.fr) || "Mise a jour du planning";
+        try {
+            const body         = await request.json();
+            const subscriptions= body.subscriptions || [];
+            const title        = body.title    || 'RBF Planning';
+            const message      = body.message  || 'Mise a jour du planning';
 
-      if (tokens.length === 0) {
-        return new Response(JSON.stringify({ error: "Aucun token" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
-      }
+            if (subscriptions.length === 0) {
+                return new Response(JSON.stringify({ error: 'Aucun abonne' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
+            }
 
-      // Obtenir le token OAuth2
-      const accessToken = await getAccessToken();
+            const payload = JSON.stringify({ title, body: message });
+            let sent = 0, errors = 0;
 
-      // Envoyer a chaque token FCM
-      const results = [];
-      for (const token of tokens) {
-        const fcmResp = await fetch(
-          `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`,
-          {
-            method : "POST",
-            headers: {
-              "Content-Type" : "application/json",
-              "Authorization": "Bearer " + accessToken
-            },
-            body: JSON.stringify({
-              message: {
-                token      : token,
-                notification: { title, body: msg },
-                webpush    : {
-                  notification: {
-                    title,
-                    body : msg,
-                    icon : "https://bastien-rbf.github.io/planning-rbf/icon.png.png",
-                    click_action: "https://bastien-rbf.github.io/planning-rbf/"
-                  },
-                  fcm_options: { link: "https://bastien-rbf.github.io/planning-rbf/" }
+            for (const sub of subscriptions) {
+                try {
+                    const vapidToken = await generateVapidToken(sub.endpoint);
+                    const resp = await fetch(sub.endpoint, {
+                        method : 'POST',
+                        headers: {
+                            'Content-Type'   : 'application/octet-stream',
+                            'Authorization'  : 'vapid t=' + vapidToken + ', k=' + VAPID_PUBLIC_KEY,
+                            'TTL'            : '86400',
+                            'Content-Encoding': 'aes128gcm',
+                        },
+                        body: new TextEncoder().encode(payload)
+                    });
+                    console.log('Push to', sub.endpoint.substring(0,50), ':', resp.status);
+                    if (resp.status < 300) sent++;
+                    else errors++;
+                } catch(e) {
+                    console.error('Push error:', e.message);
+                    errors++;
                 }
-              }
-            })
-          }
-        );
-        const fcmData = await fcmResp.json();
-        console.log("FCM token:", token.substring(0,20), "status:", fcmResp.status, "resp:", JSON.stringify(fcmData));
-        results.push({ status: fcmResp.status, data: fcmData });
-      }
-
-      return new Response(JSON.stringify({ sent: results.length, results }), {
-        status : 200,
-        headers: { ...cors, "Content-Type": "application/json" }
-      });
-
-    } catch(err) {
-      console.error("Worker error:", err.message);
-      return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+            }
+            return new Response(JSON.stringify({ sent, errors }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+        } catch(err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } });
+        }
     }
-  }
 };

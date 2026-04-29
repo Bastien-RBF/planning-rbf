@@ -14,9 +14,6 @@
     <meta name="mobile-web-app-capable" content="yes">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-messaging-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue:#1b2e58; --yellow:#f9c311; --success:#10b981; --danger:#ef4444; --bg:#f3f4f6; }
         * { box-sizing:border-box; }
@@ -313,30 +310,15 @@
 /* =========================================
    CONFIG
 ========================================= */
-var EMAILJS_PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
-var EMAILJS_SERVICE_ID = "service_1j5bpwf";
-var TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
-var TEMPLATE_DEPOT     = "template_8gqnnh7";
-var FCM_VAPID_KEY    = "BNSavHKMaOt_jVAWhklw2pWy_dSbM8sSFCbK6xM704tAEj14ptZAOAJlb2q25O33sZFqV5eqjEWTSdnnPBueW58";
-var FCM_WORKER_URL  = "https://rbf-notifs.bastien38dominguez.workers.dev";
+var VAPID_PUBLIC_KEY = "BCejATBh5hDLun-J4UrWt9U9VjjCM1uxqvi92X9QyWGsI0ykkwZDsr41hcA7xHUNYAt3r97NaQ3YNQlvMNOZoWc";
+var PUSH_WORKER_URL  = "https://rbf-notifs.bastien38dominguez.workers.dev";
 // Recuperez votre cle REST dans OneSignal > Settings > Keys & IDs
 // URL du Cloudflare Worker — à remplir après déploiement
+var OS_WORKER_URL = "https://rbf-notifs.bastien38dominguez.workers.dev";
 
-var DRIVER_EMAILS = {
-    interne:'chauffeur_interne@gmail.com', cedric:'cedric@gmail.com',
-    jadiel:'jadiel@gmail.com', nicola:'nicola@gmail.com', depot:'bastien38dominguez@gmail.com'
-};
 
-emailjs.init(EMAILJS_PUBLIC_KEY);
-firebase.initializeApp({
-    apiKey           : "AIzaSyB8f5_NGtHX6iPp-reUolnxHH6Du2mUJks",
-    authDomain       : "rbf-transport.firebaseapp.com",
-    databaseURL      : "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/",
-    projectId        : "rbf-transport",
-    storageBucket    : "rbf-transport.firebasestorage.app",
-    messagingSenderId: "857293034627",
-    appId            : "1:857293034627:web:dfa3390ee0a798638f77b6"
-});
+
+firebase.initializeApp({ databaseURL:"https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
 var db = firebase.database();
 
 /* =========================================
@@ -363,119 +345,70 @@ var ALL_USERS = [
 /* =========================================
    ONESIGNAL
 ========================================= */
-// FCM Messaging initialise apres firebase.initializeApp()
-var fcmMessaging = null;
-function initFCM() {
-    try {
-        fcmMessaging = firebase.messaging();
-        console.log('FCM initialise');
-    } catch(e) { console.warn('FCM init error:', e); }
-}
+;
 
 function subscribeToNotifications() {
-    // Initialiser FCM maintenant si pas encore fait
-    if (!fcmMessaging) {
-        try { fcmMessaging = firebase.messaging(); console.log('FCM initialise au clic'); }
-        catch(e) { console.error('FCM init error:', e); showToast('Erreur FCM: ' + e.message, 'error'); return; }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        showToast('Notifications non supportees', 'error'); return;
     }
     Notification.requestPermission().then(function(permission) {
-        console.log('Permission:', permission);
-        if (permission === 'granted') {
-            // Se connecter anonymement puis recuperer le token FCM
-            var authPromise = firebase.auth().currentUser
-                ? Promise.resolve(firebase.auth().currentUser)
-                : firebase.auth().signInAnonymously();
-
-            authPromise.then(function() {
-                console.log('Auth OK, recuperation token FCM...');
-                return navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js');
-            }).then(function(swReg) {
-                console.log('SW FCM enregistre:', swReg.scope);
-                return fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
-            }).then(function(token) {
-                if (token) {
-                    console.log('FCM Token:', token.substring(0,30)+'...');
-                    db.ref('fcm_tokens/' + state.curU).set({
-                        token: token, user: state.curU, updatedAt: Date.now()
-                    }).then(function() {
-                        showToast('Notifications activees !');
-                        var btn = document.getElementById('btn-notif');
-                        if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-                        localStorage.setItem('fcm_token', token);
-                    });
-                } else {
-                    showToast('Token FCM vide - verifie les parametres', 'error');
-                }
-            }).catch(function(e) {
-                console.error('FCM error:', e);
-                showToast('Erreur FCM: ' + e.message, 'error');
-            });
-        } else {
-            showToast('Active les notifications dans les parametres du navigateur', 'error');
+        if (permission !== 'granted') {
+            showToast('Active les notifications dans les parametres', 'error'); return;
         }
+        navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js')
+        .then(function(swReg) {
+            return swReg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToArray(VAPID_PUBLIC_KEY)
+            });
+        })
+        .then(function(sub) {
+            console.log('Push abonnement OK');
+            db.ref('push_subs/' + state.curU).set({ sub: JSON.stringify(sub), user: state.curU, ts: Date.now() })
+            .then(function() {
+                showToast('Notifications activees !');
+                var btn = document.getElementById('btn-notif');
+                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON'; }
+                localStorage.setItem('notifs_ok','1');
+            });
+        })
+        .catch(function(e) { console.error('Push error:', e); showToast('Erreur: '+e.message, 'error'); });
     });
+}
+function urlB64ToArray(b64) {
+    var pad = '='.repeat((4-b64.length%4)%4);
+    var raw = atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+    return Uint8Array.from(raw, function(c){return c.charCodeAt(0);});
 }
 
 // Envoyer une notif a un role specifique
-function sendFCMPush(title, body) {
-    // Lire tous les tokens depuis Firebase et envoyer via le Worker
-    db.ref('fcm_tokens').once('value').then(function(snap) {
-        var data   = snap.val() || {};
-        var tokens = Object.values(data).map(function(u) { return u.token; }).filter(Boolean);
-        console.log('Envoi FCM a', tokens.length, 'appareils - titre:', title);
-        if (tokens.length === 0) { console.warn('Aucun token FCM enregistre'); return; }
-        fetch(FCM_WORKER_URL, {
-            method : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body   : JSON.stringify({
-                tokens  : tokens,
-                headings: { fr: title, en: title },
-                contents: { fr: body,  en: body  }
-            })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) { console.log('FCM envoye:', d.sent, 'appareils notifies'); })
-        .catch(function(e) { console.warn('FCM erreur:', e.message); });
-    });
-}
+
 
 // Envoyer les notifs ciblees selon la tache
 function sendTargetedPush(key, taskData, action) {
-    var parts   = key.split('_');
-    var yearM   = parseInt(parts[0]);
-    var weekM   = parseInt(parts[1]);
-    var userId  = parts[2];
-    var dayIdx  = parseInt(parts[3]);
-
-    var today   = new Date();
-    var todayW  = getWeek(today);
-    var todayY  = today.getFullYear();
-    var todayD  = today.getDay() - 1;
-    if (todayD < 0) todayD = 6;
-
-    // Verifier si la date est presente ou future
-    var isFuture = yearM > todayY
-        || (yearM === todayY && weekM > todayW)
-        || (yearM === todayY && weekM === todayW && dayIdx >= todayD);
-
-    var chantierLabel = taskData.chantier ? taskData.chantier.toUpperCase() : '';
-    var missionLabel  = taskData.text ? taskData.text.substring(0,50) : (taskData.isConge ? 'CONGE' : '');
-    var title = 'Mission ' + action;
-    var body  = userId.toUpperCase() + (chantierLabel ? ' - ' + chantierLabel : '') + (missionLabel ? ' : ' + missionLabel : '');
-
-    // Toujours notifier les admins
-    sendFCMPush(title, body);
-
-    if (isFuture) {
-        // Notifier le chauffeur concerne
-        if (['interne','cedric','jadiel','nicola'].indexOf(userId) !== -1) {
-            sendFCMPush(title, body);
+    var parts = key.split('_');
+    var user  = parts[2] || '';
+    var chan   = taskData.chantier ? ' - '+taskData.chantier.toUpperCase() : '';
+    var miss  = taskData.text ? ' : '+taskData.text.substring(0,40) : (taskData.isConge ? ' : CONGE' : '');
+    var title = 'RBF Planning - Mission '+action;
+    var body  = user.toUpperCase()+chan+miss;
+    db.ref('push_subs').once('value').then(function(snap) {
+        var data = snap.val() || {};
+        var subs = [];
+        for (var u in data) {
+            try { var s = JSON.parse(data[u].sub); if (s && s.endpoint) subs.push(s); } catch(e) {}
         }
-        // Notifier le depot si case cochee
-        if (taskData.toDepot) {
-            sendFCMPush(title, body);
-        }
-    }
+        if (!subs.length) { console.log('Aucun abonne push'); return; }
+        console.log('Envoi push a', subs.length, 'abonnes');
+        fetch(PUSH_WORKER_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subscriptions: subs, title: title, message: body })
+        })
+        .then(function(r){return r.json();})
+        .then(function(d){ console.log('Push OK:', d.sent, 'envoyes'); })
+        .catch(function(e){ console.warn('Push erreur:', e.message); });
+    });
 }
 
 /* =========================================
@@ -556,6 +489,13 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
+    setTimeout(function() {
+        var btn = document.getElementById('btn-notif');
+        if (!btn) return;
+        if (localStorage.getItem('notifs_ok') && Notification.permission === 'granted') {
+            btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON';
+        }
+    }, 800);
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
@@ -692,30 +632,7 @@ function renderDriverView(days, hList) {
 /* =========================================
    EMAILS
 ========================================= */
-function sendEmailNotification(key, task, action) {
-    var parts  = key.split('_');
-    var yearM  = parseInt(parts[0]), weekM = parseInt(parts[1]);
-    var dId    = parts[2], dayIdx = parseInt(parts[3]);
-    var today  = new Date();
-    var curW   = getWeek(today), curY = today.getFullYear();
-    var curDay = today.getDay() - 1;
-    if (curDay < 0) curDay = 6;
-    if (yearM !== curY || weekM !== curW || dayIdx < curDay) return;
-    var dateM = fmtDate(getDateFromWeek(weekM, yearM, dayIdx));
-    var msg   = '['+action+'] Chantier: '+(task.chantier||'N/A')+' - '+(task.text||(task.isConge?'CONGE':''));
-    if (DRIVER_EMAILS[dId]) {
-        emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, {
-            chauffeur:dId.toUpperCase(), jour:dateM, message:msg,
-            name:'RBF Planning', email:'planning@rbf-transport.fr'
-        }).catch(function(e) { console.error(e); });
-    }
-    if (task.toDepot) {
-        emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, {
-            chauffeur:dId.toUpperCase(), jour:dateM, message:msg,
-            name:'RBF Planning', email:'planning@rbf-transport.fr'
-        }).catch(function(e) { console.error(e); });
-    }
-}
+// Emails supprimes - remplaces par Web Push
 
 /* =========================================
    EDITEUR
@@ -761,8 +678,7 @@ function saveTask() {
     db.ref('planning_v18/'+state.curK).set(taskData)
         .then(function() {
             var action = isNew ? 'NOUVELLE' : 'MODIFIEE';
-            sendEmailNotification(state.curK, taskData, action);
-            sendTargetedPush(state.curK, taskData, action);
+                        sendTargetedPush(state.curK, taskData, action);
             closeEditor();
             showToast('Mission enregistree');
         })
@@ -774,8 +690,7 @@ function deleteTask() {
     // Suppression directe - un seul clic
     db.ref('planning_v18/'+state.curK).remove()
         .then(function() {
-            sendEmailNotification(state.curK, old, 'ANNULEE');
-            sendTargetedPush(state.curK, old, 'ANNULEE');
+                        sendTargetedPush(state.curK, old, 'ANNULEE');
             closeEditor();
             showToast('Mission supprimee');
         })
