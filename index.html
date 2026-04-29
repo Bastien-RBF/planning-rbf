@@ -12,9 +12,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RBF Planning">
     <meta name="mobile-web-app-capable" content="yes">
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-messaging-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue:#1b2e58; --yellow:#f9c311; --success:#10b981; --danger:#ef4444; --bg:#f3f4f6; }
         * { box-sizing:border-box; }
@@ -311,17 +312,32 @@
 /* =========================================
    CONFIG
 ========================================= */
-var OS_APP_ID          = "56c8a111-2082-4419-bbf6-a58008935dbd";
+var EMAILJS_PUBLIC_KEY = "q2ZFtf0rJf0I0jLbq";
+var EMAILJS_SERVICE_ID = "service_1j5bpwf";
+var TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
+var TEMPLATE_DEPOT     = "template_8gqnnh7";
+var FCM_VAPID_KEY    = "BNSavHKMaOt_jVAWhklw2pWy_dSbM8sSFCbK6xM704tAEj14ptZAOAJlb2q25O33sZFqV5eqjEWTSdnnPBueW58";
+var FCM_WORKER_URL  = "https://rbf-notifs.bastien38dominguez.workers.dev";
 // Recuperez votre cle REST dans OneSignal > Settings > Keys & IDs
-// Appel direct OneSignal depuis le navigateur
+// URL du Cloudflare Worker — à remplir après déploiement
 
 var DRIVER_EMAILS = {
     interne:'chauffeur_interne@gmail.com', cedric:'cedric@gmail.com',
     jadiel:'jadiel@gmail.com', nicola:'nicola@gmail.com', depot:'bastien38dominguez@gmail.com'
 };
 
-firebase.initializeApp({ databaseURL:"https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
+emailjs.init(EMAILJS_PUBLIC_KEY);
+firebase.initializeApp({
+    apiKey           : "AIzaSyB8f5_NGtHX6iPp-reUolnxHH6Du2mUJks",
+    authDomain       : "rbf-transport.firebaseapp.com",
+    databaseURL      : "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/",
+    projectId        : "rbf-transport",
+    storageBucket    : "rbf-transport.firebasestorage.app",
+    messagingSenderId: "857293034627",
+    appId            : "1:857293034627:web:dfa3390ee0a798638f77b6"
+});
 var db = firebase.database();
+initFCM();
 
 /* =========================================
    ETAT
@@ -347,55 +363,68 @@ var ALL_USERS = [
 /* =========================================
    ONESIGNAL
 ========================================= */
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-        appId: OS_APP_ID,
-        serviceWorkerPath: '/planning-rbf/OneSignalSDKWorker.js',
-        serviceWorkerParam: { scope: '/planning-rbf/' },
-        notifyButton: { enable: false },
-        promptOptions: { slidedown: { enabled: false } }
-    });
-});
+// FCM Messaging initialise apres firebase.initializeApp()
+var fcmMessaging = null;
+function initFCM() {
+    try {
+        fcmMessaging = firebase.messaging();
+        console.log('FCM initialise');
+    } catch(e) { console.warn('FCM init error:', e); }
+}
 
 function subscribeToNotifications() {
-    OneSignalDeferred.push(async function(OneSignal) {
-        try {
-            var granted = await OneSignal.Notifications.requestPermission();
-            console.log('Permission:', granted);
-            if (granted) {
-                showToast('Notifications activees !');
-                var btn = document.getElementById('btn-notif');
-                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-                localStorage.setItem('notifs_ok','1');
-            } else {
-                showToast('Permission refusee - verifie les parametres du navigateur', 'error');
-            }
-        } catch(e) {
-            console.warn('OneSignal:', e);
-            showToast('Erreur: ' + e.message, 'error');
+    if (!fcmMessaging) { showToast('FCM non initialise', 'error'); return; }
+    Notification.requestPermission().then(function(permission) {
+        console.log('Permission:', permission);
+        if (permission === 'granted') {
+            fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY }).then(function(token) {
+                if (token) {
+                    console.log('FCM Token obtenu:', token.substring(0,30)+'...');
+                    // Sauvegarder le token dans Firebase DB
+                    db.ref('fcm_tokens/' + state.curU).set({
+                        token    : token,
+                        user     : state.curU,
+                        updatedAt: Date.now()
+                    }).then(function() {
+                        showToast('Notifications activees !');
+                        var btn = document.getElementById('btn-notif');
+                        if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
+                        localStorage.setItem('fcm_token', token);
+                    });
+                } else {
+                    showToast('Impossible d obtenir le token FCM', 'error');
+                }
+            }).catch(function(e) {
+                console.error('FCM getToken error:', e);
+                showToast('Erreur FCM: ' + e.message, 'error');
+            });
+        } else {
+            showToast('Permission refusee - active dans les parametres du navigateur', 'error');
         }
     });
 }
 
 // Envoyer une notif a un role specifique
-function sendOSPush(role, title, body) {
-    var workerUrl = 'https://rbf-notifs.bastien38dominguez.workers.dev';
-    console.log('Envoi push via Worker - titre:', title);
-    fetch(workerUrl, {
-        method : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body   : JSON.stringify({
-            contents: { fr: body,  en: body  },
-            headings: { fr: title, en: title }
+function sendFCMPush(title, body) {
+    // Lire tous les tokens depuis Firebase et envoyer via le Worker
+    db.ref('fcm_tokens').once('value').then(function(snap) {
+        var data   = snap.val() || {};
+        var tokens = Object.values(data).map(function(u) { return u.token; }).filter(Boolean);
+        console.log('Envoi FCM a', tokens.length, 'appareils - titre:', title);
+        if (tokens.length === 0) { console.warn('Aucun token FCM enregistre'); return; }
+        fetch(FCM_WORKER_URL, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({
+                tokens  : tokens,
+                headings: { fr: title, en: title },
+                contents: { fr: body,  en: body  }
+            })
         })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-        if (d.id) { console.log('Push OK ! ID:', d.id, '| Destinataires:', d.recipients); }
-        else       { console.warn('Push erreur:', JSON.stringify(d)); }
-    })
-    .catch(function(e) { console.warn('Push erreur reseau:', e.message); });
+        .then(function(r) { return r.json(); })
+        .then(function(d) { console.log('FCM envoye:', d.sent, 'appareils notifies'); })
+        .catch(function(e) { console.warn('FCM erreur:', e.message); });
+    });
 }
 
 // Envoyer les notifs ciblees selon la tache
@@ -423,16 +452,16 @@ function sendTargetedPush(key, taskData, action) {
     var body  = userId.toUpperCase() + (chantierLabel ? ' - ' + chantierLabel : '') + (missionLabel ? ' : ' + missionLabel : '');
 
     // Toujours notifier les admins
-    sendOSPush('admin', title, body);
+    sendFCMPush(title, body);
 
     if (isFuture) {
         // Notifier le chauffeur concerne
         if (['interne','cedric','jadiel','nicola'].indexOf(userId) !== -1) {
-            sendOSPush(userId, title, body);
+            sendFCMPush(title, body);
         }
         // Notifier le depot si case cochee
         if (taskData.toDepot) {
-            sendOSPush('depot', title, body);
+            sendFCMPush(title, body);
         }
     }
 }
@@ -515,24 +544,6 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
-
-    // Restaurer etat bouton NOTIFS au chargement
-    setTimeout(function() {
-        OneSignalDeferred.push(async function(OneSignal) {
-            try {
-                var perm = await OneSignal.Notifications.permission;
-                var btn  = document.getElementById('btn-notif');
-                if (!btn) return;
-                if (perm === true) {
-                    btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON';
-                    console.log('Notifications deja actives');
-                } else {
-                    console.log('Notifications non actives, permission =', perm);
-                }
-            } catch(e) { console.warn('Check notifs:', e); }
-        });
-    }, 2500);
-
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
@@ -669,7 +680,30 @@ function renderDriverView(days, hList) {
 /* =========================================
    EMAILS
 ========================================= */
-// Emails remplaces par notifications OneSignal
+function sendEmailNotification(key, task, action) {
+    var parts  = key.split('_');
+    var yearM  = parseInt(parts[0]), weekM = parseInt(parts[1]);
+    var dId    = parts[2], dayIdx = parseInt(parts[3]);
+    var today  = new Date();
+    var curW   = getWeek(today), curY = today.getFullYear();
+    var curDay = today.getDay() - 1;
+    if (curDay < 0) curDay = 6;
+    if (yearM !== curY || weekM !== curW || dayIdx < curDay) return;
+    var dateM = fmtDate(getDateFromWeek(weekM, yearM, dayIdx));
+    var msg   = '['+action+'] Chantier: '+(task.chantier||'N/A')+' - '+(task.text||(task.isConge?'CONGE':''));
+    if (DRIVER_EMAILS[dId]) {
+        emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_CHAUFFEUR, {
+            chauffeur:dId.toUpperCase(), jour:dateM, message:msg,
+            name:'RBF Planning', email:'planning@rbf-transport.fr'
+        }).catch(function(e) { console.error(e); });
+    }
+    if (task.toDepot) {
+        emailjs.send(EMAILJS_SERVICE_ID, TEMPLATE_DEPOT, {
+            chauffeur:dId.toUpperCase(), jour:dateM, message:msg,
+            name:'RBF Planning', email:'planning@rbf-transport.fr'
+        }).catch(function(e) { console.error(e); });
+    }
+}
 
 /* =========================================
    EDITEUR
@@ -715,6 +749,7 @@ function saveTask() {
     db.ref('planning_v18/'+state.curK).set(taskData)
         .then(function() {
             var action = isNew ? 'NOUVELLE' : 'MODIFIEE';
+            sendEmailNotification(state.curK, taskData, action);
             sendTargetedPush(state.curK, taskData, action);
             closeEditor();
             showToast('Mission enregistree');
@@ -727,6 +762,7 @@ function deleteTask() {
     // Suppression directe - un seul clic
     db.ref('planning_v18/'+state.curK).remove()
         .then(function() {
+            sendEmailNotification(state.curK, old, 'ANNULEE');
             sendTargetedPush(state.curK, old, 'ANNULEE');
             closeEditor();
             showToast('Mission supprimee');
@@ -1033,7 +1069,7 @@ if (state.curU) login(state.curU);
    PWA
 ========================================= */
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/planning-rbf/OneSignalSDKWorker.js', {scope:'/planning-rbf/'})
+    navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js', {scope:'/planning-rbf/'})
         .then(function(r){console.log('SW:',r.scope);}).catch(function(e){console.warn(e);});
 }
 var deferredPrompt=null;
