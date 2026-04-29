@@ -364,7 +364,7 @@ function subscribeToNotifications() {
         })
         .then(function(sub) {
             console.log('Push abonnement OK');
-            db.ref('push_subs/' + state.curU).set({ sub: JSON.stringify(sub), user: state.curU, ts: Date.now() })
+            db.ref('push_subs/' + state.curU).set({ sub: JSON.stringify(sub), user: state.curU, role: state.curU, ts: Date.now() })
             .then(function() {
                 showToast('Notifications activees !');
                 var btn = document.getElementById('btn-notif');
@@ -387,27 +387,53 @@ function sendTargetedPush(key, taskData, action) {
     var parts   = key.split('_');
     var yearK   = parseInt(parts[0]);
     var weekK   = parseInt(parts[1]);
-    var user    = parts[2] || '';
+    var userId  = parts[2] || '';
     var dayIdx  = parseInt(parts[3]);
+
+    // Uniquement semaine en cours, jour present ou futur
+    var today   = new Date();
+    var todayW  = getWeek(today);
+    var todayY  = today.getFullYear();
+    var todayD  = today.getDay() - 1; if (todayD < 0) todayD = 6;
+    var isFuture= (yearK === todayY && weekK === todayW && dayIdx >= todayD);
+
     var days    = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
-    var dayName = (days[dayIdx] || '');
+    var dayName = days[dayIdx] || '';
     var dateStr = fmtDate(getDateFromWeek(weekK, yearK, dayIdx));
     var chan    = taskData.chantier ? ' ['+taskData.chantier.toUpperCase()+']' : '';
     var miss    = taskData.text ? ' '+taskData.text.substring(0,40) : (taskData.isConge ? ' CONGE' : '');
     var title   = 'RBF Planning - ' + action;
-    var body    = user.toUpperCase() + ' | ' + dayName + ' ' + dateStr + chan + miss;
+    var body    = userId.toUpperCase() + ' | ' + dayName + ' ' + dateStr + chan + miss;
+
     db.ref('push_subs').once('value').then(function(snap) {
         var data = snap.val() || {};
-        var subs = [];
+        var allSubs    = [];  // Admins - recoivent tout
+        var driverSubs = [];  // Chauffeur concerne uniquement
+        var depotSubs  = [];  // Depot si toDepot
+
         for (var u in data) {
-            try { var s = JSON.parse(data[u].sub); if (s && s.endpoint) subs.push(s); } catch(e) {}
+            try {
+                var s = JSON.parse(data[u].sub);
+                if (!s || !s.endpoint) continue;
+                var role = data[u].role || u;
+                if (role === 'admin') {
+                    allSubs.push(s);               // Admin recoit toujours
+                } else if (role === userId && isFuture) {
+                    driverSubs.push(s);            // Chauffeur concerne si date future
+                } else if (role === 'depot' && taskData.toDepot && isFuture) {
+                    depotSubs.push(s);             // Depot si case cochee
+                }
+            } catch(e) {}
         }
-        if (!subs.length) { console.log('Aucun abonne push'); return; }
-        console.log('Envoi push a', subs.length, 'abonnes:', title);
+
+        var targets = allSubs.concat(driverSubs).concat(depotSubs);
+        if (!targets.length) { console.log('Aucun destinataire push'); return; }
+        console.log('Push:', targets.length, 'destinataires (admin:'+allSubs.length+', chauffeur:'+driverSubs.length+', depot:'+depotSubs.length+')');
+
         fetch(PUSH_WORKER_URL, {
-            method: 'POST',
+            method : 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subscriptions: subs, title: title, message: body })
+            body   : JSON.stringify({ subscriptions: targets, title: title, message: body })
         })
         .then(function(r){return r.json();})
         .then(function(d){ console.log('Push OK:', d.sent, 'envoyes,', d.errors, 'erreurs'); })
@@ -691,7 +717,6 @@ function deleteTask() {
     // Suppression directe - un seul clic
     db.ref('planning_v18/'+state.curK).remove()
         .then(function() {
-            sendEmailNotification(state.curK, old, 'ANNULEE');
             sendTargetedPush(state.curK, old, 'ANNULEE');
             closeEditor();
             showToast('Mission supprimee');
