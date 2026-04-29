@@ -386,25 +386,22 @@ function subscribeToNotifications() {
 
 // Envoyer une notif a un role specifique
 function sendOSPush(role, title, body) {
-    // Appel direct OneSignal (pas besoin de Worker - CORS OK depuis le navigateur)
-    fetch('https://api.onesignal.com/notifications', {
+    var workerUrl = 'https://rbf-notifs.bastien38dominguez.workers.dev';
+    console.log('Envoi push via Worker - titre:', title);
+    fetch(workerUrl, {
         method : 'POST',
-        headers: {
-            'Content-Type' : 'application/json',
-            'Authorization': 'Key os_v2_app_k3ekcejaqjcbto7wuwaare25xxscswdi2nxe2ouuiesbiaa4xd6k442u3bp2kkrxbucnkoyxsb6uiuryvdclvnz5sjfhps2t3fmnzti'
-        },
-        body: JSON.stringify({
-            app_id           : OS_APP_ID,
-            included_segments: ['All'],
-            contents         : { fr: body,  en: body  },
-            headings         : { fr: title, en: title },
-            url              : 'https://bastien-rbf.github.io/planning-rbf/',
-            chrome_web_icon  : 'https://bastien-rbf.github.io/planning-rbf/icon.png.png'
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({
+            contents: { fr: body,  en: body  },
+            headings: { fr: title, en: title }
         })
     })
     .then(function(r) { return r.json(); })
-    .then(function(d) { console.log('Push OK:', d.id || d); })
-    .catch(function(e) { console.warn('Push error:', e); });
+    .then(function(d) {
+        if (d.id) { console.log('Push OK ! ID:', d.id, '| Destinataires:', d.recipients); }
+        else       { console.warn('Push erreur:', JSON.stringify(d)); }
+    })
+    .catch(function(e) { console.warn('Push erreur reseau:', e.message); });
 }
 
 // Envoyer les notifs ciblees selon la tache
@@ -524,6 +521,24 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
+
+    // Restaurer etat bouton NOTIFS au chargement
+    setTimeout(function() {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                var perm = await OneSignal.Notifications.permission;
+                var btn  = document.getElementById('btn-notif');
+                if (!btn) return;
+                if (perm === true) {
+                    btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON';
+                    console.log('Notifications deja actives');
+                } else {
+                    console.log('Notifications non actives, permission =', perm);
+                }
+            } catch(e) { console.warn('Check notifs:', e); }
+        });
+    }, 2500);
+
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
