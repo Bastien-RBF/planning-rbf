@@ -2,22 +2,10 @@
 // RBF Planning — Service Worker Web Push
 // ================================================
 
-// Stocker le dernier message recu via postMessage
-var lastNotifData = { title: 'RBF Planning', body: 'Mise a jour du planning' };
-
-self.addEventListener('message', function(event) {
-    if (event.data && event.data.type === 'SET_NOTIF_DATA') {
-        lastNotifData = event.data.payload;
-    }
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
-});
-
-// Push recu (vide ou avec data)
 self.addEventListener('push', function(event) {
-    var title = lastNotifData.title || 'RBF Planning';
-    var body  = lastNotifData.body  || 'Mise a jour du planning';
+    var title = 'RBF Planning';
+    var body  = 'Mise a jour du planning';
+    var icon  = '/planning-rbf/icon.png.png';
 
     if (event.data) {
         try {
@@ -26,15 +14,21 @@ self.addEventListener('push', function(event) {
             body  = d.body  || d.message || body;
         } catch(e) {
             var txt = event.data.text();
-            if (txt) body = txt;
+            if (txt) {
+                try {
+                    var d2 = JSON.parse(txt);
+                    title  = d2.title || title;
+                    body   = d2.body  || body;
+                } catch(e2) { body = txt; }
+            }
         }
     }
 
     event.waitUntil(
         self.registration.showNotification(title, {
             body             : body,
-            icon             : '/planning-rbf/icon.png.png',
-            badge            : '/planning-rbf/icon.png.png',
+            icon             : icon,
+            badge            : icon,
             vibrate          : [200, 100, 200],
             requireInteraction: true,
             data             : { url: 'https://bastien-rbf.github.io/planning-rbf/' }
@@ -50,4 +44,8 @@ self.addEventListener('notificationclick', function(event) {
             if (clients.openWindow) return clients.openWindow('https://bastien-rbf.github.io/planning-rbf/');
         })
     );
+});
+
+self.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
