@@ -337,7 +337,6 @@ firebase.initializeApp({
     appId            : "1:857293034627:web:dfa3390ee0a798638f77b6"
 });
 var db = firebase.database();
-initFCM();
 
 /* =========================================
    ETAT
@@ -373,18 +372,19 @@ function initFCM() {
 }
 
 function subscribeToNotifications() {
-    if (!fcmMessaging) { showToast('FCM non initialise', 'error'); return; }
+    // Initialiser FCM maintenant si pas encore fait
+    if (!fcmMessaging) {
+        try { fcmMessaging = firebase.messaging(); console.log('FCM initialise au clic'); }
+        catch(e) { console.error('FCM init error:', e); showToast('Erreur FCM: ' + e.message, 'error'); return; }
+    }
     Notification.requestPermission().then(function(permission) {
         console.log('Permission:', permission);
         if (permission === 'granted') {
             fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY }).then(function(token) {
                 if (token) {
-                    console.log('FCM Token obtenu:', token.substring(0,30)+'...');
-                    // Sauvegarder le token dans Firebase DB
+                    console.log('FCM Token:', token.substring(0,30)+'...');
                     db.ref('fcm_tokens/' + state.curU).set({
-                        token    : token,
-                        user     : state.curU,
-                        updatedAt: Date.now()
+                        token: token, user: state.curU, updatedAt: Date.now()
                     }).then(function() {
                         showToast('Notifications activees !');
                         var btn = document.getElementById('btn-notif');
@@ -392,14 +392,14 @@ function subscribeToNotifications() {
                         localStorage.setItem('fcm_token', token);
                     });
                 } else {
-                    showToast('Impossible d obtenir le token FCM', 'error');
+                    showToast('Token FCM vide - verifie les parametres', 'error');
                 }
             }).catch(function(e) {
-                console.error('FCM getToken error:', e);
-                showToast('Erreur FCM: ' + e.message, 'error');
+                console.error('FCM getToken:', e);
+                showToast('Erreur token: ' + e.message, 'error');
             });
         } else {
-            showToast('Permission refusee - active dans les parametres du navigateur', 'error');
+            showToast('Active les notifications dans les parametres du navigateur', 'error');
         }
     });
 }
