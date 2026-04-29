@@ -368,19 +368,33 @@ OneSignalDeferred.push(async function(OneSignal) {
 function subscribeToNotifications() {
     OneSignalDeferred.push(async function(OneSignal) {
         try {
-            var granted = await OneSignal.Notifications.requestPermission();
-            console.log('Permission:', granted);
-            if (granted) {
-                showToast('Notifications activees !');
+            // Verifier d'abord si deja abonne
+            var currentPerm = OneSignal.Notifications.permission;
+            console.log('Permission actuelle:', currentPerm);
+
+            if (currentPerm === true || currentPerm === 'granted') {
+                // Deja abonne - juste mettre a jour le bouton
                 var btn = document.getElementById('btn-notif');
                 if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-                localStorage.setItem('notifs_ok', '1');
+                localStorage.setItem('notifs_ok','1');
+                showToast('Vous etes deja abonne aux notifications !', 'info');
+                return;
+            }
+
+            var granted = await OneSignal.Notifications.requestPermission();
+            console.log('Resultat demande permission:', granted);
+
+            if (granted) {
+                var btn = document.getElementById('btn-notif');
+                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
+                localStorage.setItem('notifs_ok','1');
+                showToast('Notifications activees ! Vous recevrez les alertes planning.');
             } else {
-                showToast('Permission refusee dans le navigateur', 'error');
+                showToast('Pour activer : cliquez sur le cadenas dans la barre URL > Notifications > Autoriser', 'error');
             }
         } catch(e) {
-            console.warn('OneSignal:', e);
-            showToast('Erreur notifications: ' + e.message, 'error');
+            console.warn('OneSignal erreur:', e);
+            showToast('Erreur: ' + e.message, 'error');
         }
     });
 }
@@ -519,6 +533,23 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
+
+    // Verifier etat subscription OneSignal au chargement
+    setTimeout(function() {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                var perm = OneSignal.Notifications.permission;
+                var btn  = document.getElementById('btn-notif');
+                if (!btn) return;
+                if (perm === true || perm === 'granted') {
+                    btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON';
+                } else {
+                    btn.style.background='#eff6ff'; btn.style.color='#1b2e58'; btn.textContent='NOTIFS';
+                }
+            } catch(e) { console.warn('Check notifs:', e); }
+        });
+    }, 2000);
+
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
