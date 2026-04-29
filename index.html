@@ -15,6 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         :root { --blue:#1b2e58; --yellow:#f9c311; --success:#10b981; --danger:#ef4444; --bg:#f3f4f6; }
@@ -380,9 +381,15 @@ function subscribeToNotifications() {
     Notification.requestPermission().then(function(permission) {
         console.log('Permission:', permission);
         if (permission === 'granted') {
-            // Enregistrer le SW manuellement pour forcer le bon chemin
-            navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js')
-            .then(function(swReg) {
+            // Se connecter anonymement puis recuperer le token FCM
+            var authPromise = firebase.auth().currentUser
+                ? Promise.resolve(firebase.auth().currentUser)
+                : firebase.auth().signInAnonymously();
+
+            authPromise.then(function() {
+                console.log('Auth OK, recuperation token FCM...');
+                return navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js');
+            }).then(function(swReg) {
                 console.log('SW FCM enregistre:', swReg.scope);
                 return fcmMessaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
             }).then(function(token) {
@@ -400,8 +407,8 @@ function subscribeToNotifications() {
                     showToast('Token FCM vide - verifie les parametres', 'error');
                 }
             }).catch(function(e) {
-                console.error('FCM getToken:', e);
-                showToast('Erreur token: ' + e.message, 'error');
+                console.error('FCM error:', e);
+                showToast('Erreur FCM: ' + e.message, 'error');
             });
         } else {
             showToast('Active les notifications dans les parametres du navigateur', 'error');
