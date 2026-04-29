@@ -318,8 +318,7 @@ var TEMPLATE_CHAUFFEUR = "template_5xn3o8u";
 var TEMPLATE_DEPOT     = "template_8gqnnh7";
 var OS_APP_ID          = "56c8a111-2082-4419-bbf6-a58008935dbd";
 // Recuperez votre cle REST dans OneSignal > Settings > Keys & IDs
-// URL du Cloudflare Worker — à remplir après déploiement
-var OS_WORKER_URL = "https://rbf-notifs.bastien38dominguez.workers.dev";
+// Appel direct OneSignal depuis le navigateur
 
 var DRIVER_EMAILS = {
     interne:'chauffeur_interne@gmail.com', cedric:'cedric@gmail.com',
@@ -366,54 +365,57 @@ OneSignalDeferred.push(async function(OneSignal) {
 });
 
 function subscribeToNotifications() {
+    var role = state.curU;
     OneSignalDeferred.push(async function(OneSignal) {
         try {
-            // Verifier d'abord si deja abonne
-            var currentPerm = OneSignal.Notifications.permission;
-            console.log('Permission actuelle:', currentPerm);
-
-            if (currentPerm === true || currentPerm === 'granted') {
-                // Deja abonne - juste mettre a jour le bouton
-                var btn = document.getElementById('btn-notif');
-                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-                localStorage.setItem('notifs_ok','1');
-                showToast('Vous etes deja abonne aux notifications !', 'info');
-                return;
-            }
-
             var granted = await OneSignal.Notifications.requestPermission();
-            console.log('Resultat demande permission:', granted);
-
+            console.log('Permission:', granted);
             if (granted) {
+                // SDK v16 : utiliser login() pour definir l'external ID
+                // puis addTag via la nouvelle API
+                try { await OneSignal.login(role); } catch(e2) { console.log('login err:', e2); }
+                // Attendre que le login soit effectif
+                await new Promise(function(r) { setTimeout(r, 1000); });
+                try {
+                    OneSignal.User.addTag('role', role);
+                    console.log('Tag role='+role+' envoye');
+                } catch(e3) { console.log('addTag err:', e3); }
+                // Verifier via le tableau de bord OneSignal
+                var oId = await OneSignal.User.getOnesignalId();
+                console.log('OneSignal User ID:', oId);
+                showToast('Notifications activees !');
                 var btn = document.getElementById('btn-notif');
-                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON'; }
-                localStorage.setItem('notifs_ok','1');
-                showToast('Notifications activees ! Vous recevrez les alertes planning.');
-            } else {
-                showToast('Pour activer : cliquez sur le cadenas dans la barre URL > Notifications > Autoriser', 'error');
-            }
-        } catch(e) {
-            console.warn('OneSignal erreur:', e);
-            showToast('Erreur: ' + e.message, 'error');
-        }
+                if (btn) {
+                    btn.style.background='#dcfce7';
+                    btn.style.color='#166534';
+                    btn.textContent='NOTIFS ON';
+                }
+            } else { showToast('Permission refusee', 'error'); }
+        } catch(e) { console.warn('OneSignal erreur:', e); showToast('Erreur notifications', 'error'); }
     });
 }
 
 // Envoyer une notif a un role specifique
 function sendOSPush(role, title, body) {
-    if (!OS_WORKER_URL || OS_WORKER_URL === 'VOTRE_WORKER_URL_ICI') return;
-    fetch(OS_WORKER_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+    // Appel direct OneSignal (pas besoin de Worker - CORS OK depuis le navigateur)
+    fetch('https://api.onesignal.com/notifications', {
+        method : 'POST',
+        headers: {
+            'Content-Type' : 'application/json',
+            'Authorization': 'Key os_v2_app_k3ekcejaqjcbto7wuwaare25xxscswdi2nxe2ouuiesbiaa4xd6k442u3bp2kkrxbucnkoyxsb6uiuryvdclvnz5sjfhps2t3fmnzti'
+        },
         body: JSON.stringify({
-            app_id  : OS_APP_ID,
-            filters : [{field:'tag', key:'role', relation:'=', value:role}],
-            headings: {fr:title, en:title},
-            contents: {fr:body,  en:body},
-            url     : 'https://bastien-rbf.github.io/planning-rbf/',
-            chrome_web_icon:'https://bastien-rbf.github.io/planning-rbf/icon.png.png'
+            app_id           : OS_APP_ID,
+            included_segments: ['All'],
+            contents         : { fr: body,  en: body  },
+            headings         : { fr: title, en: title },
+            url              : 'https://bastien-rbf.github.io/planning-rbf/',
+            chrome_web_icon  : 'https://bastien-rbf.github.io/planning-rbf/icon.png.png'
         })
-    }).catch(function(e) { console.warn('Push ['+role+'] error:', e); });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { console.log('Push OK:', d.id || d); })
+    .catch(function(e) { console.warn('Push error:', e); });
 }
 
 // Envoyer les notifs ciblees selon la tache
@@ -533,23 +535,6 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
-
-    // Verifier etat subscription OneSignal au chargement
-    setTimeout(function() {
-        OneSignalDeferred.push(async function(OneSignal) {
-            try {
-                var perm = OneSignal.Notifications.permission;
-                var btn  = document.getElementById('btn-notif');
-                if (!btn) return;
-                if (perm === true || perm === 'granted') {
-                    btn.style.background='#dcfce7'; btn.style.color='#166534'; btn.textContent='NOTIFS ON';
-                } else {
-                    btn.style.background='#eff6ff'; btn.style.color='#1b2e58'; btn.textContent='NOTIFS';
-                }
-            } catch(e) { console.warn('Check notifs:', e); }
-        });
-    }, 2000);
-
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
