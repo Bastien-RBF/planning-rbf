@@ -270,9 +270,11 @@
             <label style="font-size:10px;font-weight:bold;color:var(--blue);">VEHICULE :</label>
             <select id="e-truck" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;background:#f8fafc;">
                 <option value="">-- Non specifie --</option>
-                <option value="PORTEUR">🚚 PORTEUR SEUL</option>
-                <option value="PORTEUR + REMORQUE">🚛 PORTEUR + REMORQUE</option>
-                <option value="AUTRE / GRUE">🏗️ AUTRE / SPECIAL</option>
+                <option value="🚚[P] PORTEUR">🚚 [P] PORTEUR SEUL</option>
+                <option value="🚛[P+R] PORTEUR + REMORQUE">🚛 [P+R] PORTEUR + REMORQUE</option>
+                <option value="🚚[B] BENNE">🚚 [B] BENNE</option>
+                <option value="🚛[B+R] BENNE + REMORQUE">🚛 [B+R] BENNE + REMORQUE</option>
+                <option value="🏗️ GRUE / SPECIAL">🏗️ GRUE / SPECIAL</option>
             </select>
         </div>
         <textarea id="e-input" style="height:60px;padding:10px;border-radius:8px;border:1px solid #ddd;resize:vertical;" placeholder="Mission"></textarea>
@@ -713,7 +715,7 @@ function renderAdminView(hList) {
                 // Vue depot : afficher seulement si toDepot est coche (pour TOUS les utilisateurs y compris jadiel/nicola)
                 if (isDepot && !dta.toDepot) continue;
                 var st  = (dta.col && dta.col !== 'default') ? 'background:'+dta.col+';color:'+(dta.col==='#000000'?'#fff':'var(--blue)')+';' : '';
-                var trk = dta.truck ? '<span style="font-size:8px;opacity:0.7;">['+dta.truck.split(' ')[0]+']</span> ' : '';
+                var trk = dta.truck ? '<span style="font-size:8px;opacity:0.7;">'+dta.truck+'</span> ' : '';
                 var txt = '';
                 if (dta.isConge)       txt = 'CONGE';
                 else if (dta.chantier) txt = '<b>'+trk+'['+dta.chantier.toUpperCase()+']</b><br>'+dta.text;
