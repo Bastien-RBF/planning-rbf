@@ -650,6 +650,14 @@ function render() {
 }
 
 /* Fichier HTML selon extension */
+function getFileUrl(f) {
+    var ext = f.name.split('.').pop().toLowerCase();
+    // Excel : Microsoft Office Online Viewer — fonctionne sur iPhone/Android sans appli
+    if (['xlsx','xls'].indexOf(ext) !== -1) {
+        return 'https://view.officeapps.live.com/op/view.aspx?src=' + encodeURIComponent(f.url);
+    }
+    return f.url;
+}
 function fileTagHtml(f, forAdmin) {
     var ext = f.name.split('.').pop().toLowerCase();
     var cls, ico;
@@ -863,6 +871,8 @@ function executeCopyMove(mode) {
             }
         })
         .then(function() {
+            // Notif sur la destination (nouvelle cle)
+            sendTargetedPush(destKey, srcData, mode === 'move' ? 'DEPLACEE' : 'COPIEE');
             closeEditor();
             showToast('Mission '+label+'e !');
         })
