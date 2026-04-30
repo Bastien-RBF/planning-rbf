@@ -228,8 +228,14 @@
             </div>
             <div style="margin-top:12px;">
                 <div id="rep-file-list" style="margin-bottom:8px;"></div>
+                <!-- input galerie/fichier -->
                 <input type="file" id="rep-file-input" class="hidden" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" onchange="uploadRepFile(this)">
-                <button onclick="document.getElementById('rep-file-input').click()" type="button" style="width:100%;background:#f1f5f9;padding:10px;border-radius:8px;border:1px dashed #cbd5e1;font-size:11px;font-weight:bold;cursor:pointer;">📎 JOINDRE PHOTO / DOCUMENT</button>
+                <!-- input caméra directe (photo uniquement) -->
+                <input type="file" id="rep-cam-input" class="hidden" accept="image/*" capture="environment" onchange="uploadRepFile(this)">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <button onclick="document.getElementById('rep-cam-input').click()" type="button" style="background:#1b2e58;color:white;padding:10px;border-radius:8px;border:none;font-size:11px;font-weight:bold;cursor:pointer;">📷 PRENDRE PHOTO</button>
+                    <button onclick="document.getElementById('rep-file-input').click()" type="button" style="background:#f1f5f9;color:#1b2e58;padding:10px;border-radius:8px;border:1px dashed #cbd5e1;font-size:11px;font-weight:bold;cursor:pointer;">📎 GALERIE / FICHIER</button>
+                </div>
                 <div id="rep-upload-progress" style="margin-top:6px;"></div>
             </div>
         </div>
@@ -1042,26 +1048,38 @@ function renderRepFiles() {
 }
 
 function uploadRepFile(input) {
-    if (!input.files[0]) return;
-    var fileName = input.files[0].name;
-    input.value  = '';
+    if (!input.files || !input.files[0]) return;
+    // Sauvegarder le fichier AVANT de vider l'input (important sur iPhone)
+    var file     = input.files[0];
+    var fileName = file.name || ('photo_'+Date.now()+'.jpg');
     var pz = document.getElementById('rep-upload-progress');
     pz.innerHTML = '<div class="upload-progress"><div class="spinner"></div> Envoi en cours...</div>';
     var fd = new FormData();
-    fd.append('file', input.files[0]);
+    fd.append('file', file);
     fd.append('upload_preset', 'rbf-preset');
+    input.value = ''; // vider APRES avoir sauvegarde le fichier
     fetch('https://api.cloudinary.com/v1_1/dixdmejal/upload', {method:'POST', body:fd})
-        .then(function(r){return r.json();})
+        .then(function(r){
+            if (!r.ok) throw new Error('HTTP '+r.status);
+            return r.json();
+        })
         .then(function(data) {
             pz.innerHTML = '';
             if (data.secure_url) {
                 if (!state.repFiles) state.repFiles = [];
                 state.repFiles.push({name:fileName, url:data.secure_url});
                 renderRepFiles();
-                showToast('Fichier ajoute');
-            } else { showToast('Erreur upload', 'error'); }
+                showToast('Fichier ajoute !');
+            } else {
+                console.error('Cloudinary error:', data.error);
+                showToast('Erreur: '+(data.error&&data.error.message||'upload refuse'), 'error');
+            }
         })
-        .catch(function(){ pz.innerHTML=''; showToast('Erreur reseau', 'error'); });
+        .catch(function(err){
+            pz.innerHTML='';
+            console.error('Upload error:', err);
+            showToast('Erreur reseau: '+err.message, 'error');
+        });
 }
 
 /* =========================================
