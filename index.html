@@ -175,6 +175,7 @@
         <button class="btn-nav-admin" style="background:#64748b" onclick="showHistory()">HISTO</button>
         <button class="btn-nav-admin" onclick="openRH('HEURES')">RH</button>
         <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH('JOURNAL')">RAPPORTS</button>
+        <button class="btn-nav-admin" style="background:#6366f1" onclick="openRecap()">RECAP</button>
     </div>
     <div class="week-nav-bar">
         <button class="wk-btn" onclick="changeWeek(-1)">&#8249;</button>
@@ -260,6 +261,7 @@
             <label style="display:flex;align-items:center;gap:8px;font-size:11px;"><input type="checkbox" id="e-depot" style="width:18px;height:18px;"> <b>DEPOT</b></label>
             <label id="zone-conge-checkbox" class="hidden" style="display:flex;align-items:center;gap:8px;font-size:11px;color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px;height:18px;"> <b>CONGE</b></label>
         </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:10px;background:#eff6ff;padding:10px;border-radius:8px;color:var(--blue);font-weight:bold;cursor:pointer;"><input type="checkbox" id="e-recur" style="width:16px;height:16px;"> REPETER SUR TOUTE LA SEMAINE</label>
         <button onclick="saveTask()"    class="btn-main" style="background:var(--blue);color:white;margin-bottom:8px;">SAUVEGARDER</button>
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;">
     <div style="font-size:10px;font-weight:bold;color:var(--blue);margin-bottom:8px;">COPIER / DEPLACER VERS :</div>
@@ -294,6 +296,18 @@
 </div>
         <button onclick="deleteTask()" style="width:100%;background:#fee2e2;color:var(--danger);border:1px solid #fca5a5;padding:10px;border-radius:10px;font-weight:bold;cursor:pointer;margin-top:4px;">🗑️ SUPPRIMER LA MISSION</button>
         <button onclick="closeEditor()" style="width:100%;border:none;background:none;color:#94a3b8;cursor:pointer;padding:8px;">Annuler</button>
+    </div>
+</div>
+
+<!-- RECAP HEBDO -->
+<div id="recap-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.8);display:none;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(6px);">
+    <div class="editor-box" style="padding:0;overflow:hidden;display:flex;flex-direction:column;max-width:700px;width:96%;">
+        <div style="background:var(--blue);color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-weight:bold;font-size:15px;" id="recap-title">RECAP SEMAINE</span>
+            <button onclick="printRecap()" style="background:var(--yellow);color:var(--blue);border:none;padding:8px 14px;border-radius:8px;font-weight:bold;cursor:pointer;">🖨️ IMPRIMER</button>
+        </div>
+        <div id="recap-content" style="padding:15px;overflow-y:auto;flex:1;background:#f8fafc;max-height:70vh;"></div>
+        <button onclick="document.getElementById('recap-overlay').style.display='none'" class="btn-main" style="background:white;border-top:1px solid #eee;border-radius:0;">FERMER</button>
     </div>
 </div>
 
@@ -600,6 +614,18 @@ function login(u) {
 }
 function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
 
+var _aLTimer;
+function resetAutoLogout() {
+    clearTimeout(_aLTimer);
+    _aLTimer = setTimeout(function() {
+        if (state.curU) { showToast('Deconnecte pour inactivite', 'info'); setTimeout(logout, 1500); }
+    }, 4*60*60*1000);
+}
+['click','touchstart','keydown','scroll'].forEach(function(ev) {
+    document.addEventListener(ev, resetAutoLogout, {passive:true});
+});
+resetAutoLogout();
+
 /* =========================================
    JOURS FERIES
 ========================================= */
@@ -690,6 +716,9 @@ function renderAdminView(hList) {
                     dta.files.forEach(function(f) { filesHtml += fileTagHtml(f, true); });
                     filesHtml += '</div>';
                 }
+                if (state.curU === 'admin' && dta.comment) {
+                    filesHtml += '<div style="margin-top:4px;font-size:9px;background:#fffbeb;border-left:3px solid #f59e0b;padding:3px 6px;border-radius:4px;">&#128172; '+dta.comment+'</div>';
+                }
                 h += '<div class="slot '+(dta.text||dta.isConge?'filled':'')+' '+(dta.toDepot?'is-to-depot':'')+' '+(dta.isConge?'is-conge':'')+'" style="'+st+'" onclick="openEd(\''+k+'\')">'+txt+filesHtml+'</div>';
             }
             h += '</td>';
@@ -718,7 +747,10 @@ function renderDriverView(days, hList) {
                 (dta.files || []).forEach(function(f) { fl += fileTagHtml(f, false); });
                 var truckHtml   = dta.truck ? '<div style="font-size:10px;background:#e2e8f0;display:inline-block;padding:2px 6px;border-radius:4px;margin-bottom:4px;">'+dta.truck+'</div>' : '';
                 var borderColor = (dta.col && dta.col !== 'default') ? dta.col : '#3b82f6';
-                cards += '<div style="padding:15px;background:white;margin-bottom:10px;border-radius:12px;border-left:5px solid '+borderColor+';box-shadow:0 2px 5px rgba(0,0,0,0.05);">'+truckHtml+'<b>'+(dta.chantier?dta.chantier.toUpperCase():'')+'</b><p style="margin:8px 0;font-size:13px;">'+dta.text+'</p>'+(dta.matos?'<div style="background:#f0fdf4;padding:8px;border-radius:8px;font-size:11px;"><b>LOGISTIQUE :</b> '+dta.matos+'</div>':'')+fl+'</div>';
+                var mK = state.curY+'_'+state.curW+'_'+state.curU+'_'+dI+'_s'+s;
+                var curCmt = (dta.comment||'').replace(/"/g,'&quot;');
+                var cHtml = '<div style="margin-top:10px;border-top:1px dashed #cbd5e1;padding-top:10px;">'                    +'<div style="font-size:10px;font-weight:bold;color:#64748b;margin-bottom:5px;">MON COMMENTAIRE :</div>'                    +'<textarea id="cmt-'+mK+'" placeholder="Ajouter un commentaire..." style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;resize:none;height:60px;">'+curCmt+'</textarea>'                    +'<button onclick="saveComment(\''+mK+'\')" style="margin-top:6px;background:var(--success);color:white;border:none;padding:8px 16px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;width:100%;">✓ ENVOYER</button>'                    +(dta.comment?'<div style="margin-top:4px;font-size:10px;color:var(--success);">✓ Commentaire enregistre</div>':'')+'</div>';
+                cards += '<div style="padding:15px;background:white;margin-bottom:10px;border-radius:12px;border-left:5px solid '+borderColor+';box-shadow:0 2px 5px rgba(0,0,0,0.05);">'+truckHtml+'<b>'+(dta.chantier?dta.chantier.toUpperCase():'')+'</b><p style="margin:8px 0;font-size:13px;">'+dta.text+'</p>'+(dta.matos?'<div style="background:#f0fdf4;padding:8px;border-radius:8px;font-size:11px;"><b>LOGISTIQUE :</b> '+dta.matos+'</div>':'')+fl+cHtml+'</div>';
             }
         }
         v.innerHTML += '<div style="margin-bottom:15px;"><b style="color:var(--blue);font-size:15px;border-left:4px solid var(--yellow);padding-left:8px;">'+days[dI]+' '+fmtDate(dD)+'</b>'+(hList[dI]?'<span class="holiday-badge" style="display:inline-block;margin-left:10px;">'+hList[dI]+'</span>':'')+'<div style="margin-top:8px;">'+(cards||'<p style="color:#94a3b8;font-size:11px;">Aucune mission</p>')+'</div></div>';
@@ -774,6 +806,11 @@ function saveTask() {
         .then(function() {
             var action = isNew ? 'NOUVELLE' : 'MODIFIEE';
             sendTargetedPush(state.curK, taskData, action);
+            logHistory(action, state.curK, taskData);
+            if (document.getElementById('e-recur') && document.getElementById('e-recur').checked) {
+                var p2 = state.curK.split('_');
+                for (var d2=0;d2<5;d2++) { if (d2===parseInt(p2[3])) continue; db.ref('planning_v18/'+p2[0]+'_'+p2[1]+'_'+p2[2]+'_'+d2+'_'+p2[4]).set(taskData); }
+            }
             closeEditor();
             showToast('Mission enregistree');
         })
@@ -786,6 +823,7 @@ function deleteTask() {
     db.ref('planning_v18/'+state.curK).remove()
         .then(function() {
             sendTargetedPush(state.curK, old, 'ANNULEE');
+            logHistory('ANNULEE', state.curK, old);
             closeEditor();
             showToast('Mission supprimee');
         })
@@ -793,6 +831,14 @@ function deleteTask() {
 }
 
 function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
+
+function saveComment(key) {
+    var el = document.getElementById('cmt-'+key);
+    if (!el) return;
+    db.ref('planning_v18/'+key+'/comment').set(el.value.trim())
+        .then(function() { showToast('Commentaire envoye !'); })
+        .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
+}
 
 /* =========================================
    COPIER / DEPLACER
@@ -909,33 +955,29 @@ function applySearch() {
         s.classList.toggle('hidden', q !== '' && !s.textContent.toLowerCase().includes(q));
     });
 }
+function logHistory(action, key, taskData) {
+    var entry = { action:action, key:key, who:state.curU, ts:Date.now(),
+                  chantier:(taskData.chantier||''), text:(taskData.text||'').substring(0,60) };
+    db.ref('historique_v18').push(entry).catch(function(){});
+}
+
 function showHistory() {
-    var q = document.getElementById('search-input').value.trim().toLowerCase();
-    if (!q) { showToast('Tapez un mot-cle avant de rechercher', 'info'); return; }
     document.getElementById('history-overlay').style.display = 'flex';
     document.getElementById('history-results').innerHTML = "<div style='text-align:center;padding:20px;'>Chargement...</div>";
-    db.ref('planning_v18').once('value', function(snap) {
-        var d = snap.val() || {};
-        var matches = [];
-        for (var k in d) {
-            if (!((d[k].chantier||'').toLowerCase().includes(q)||(d[k].text||'').toLowerCase().includes(q))) continue;
-            var p = k.split('_');
-            if (p.length < 4) continue;
-            var y=parseInt(p[0]),w=parseInt(p[1]),dI=parseInt(p[3]);
-            if (isNaN(y)||isNaN(w)||isNaN(dI)) continue;
-            matches.push({date:getDateFromWeek(w,y,dI),week:w,user:p[2],chantier:d[k].chantier||'',text:d[k].text||'',matos:d[k].matos||''});
-        }
-        matches.sort(function(a,b){return b.date-a.date;});
-        var h = matches.length===0
-            ? "<div style='text-align:center;padding:20px;color:#94a3b8;'>Aucun resultat</div>"
-            : matches.map(function(m) {
-                return '<div style="padding:12px;border-bottom:1px solid #eee;background:white;margin-bottom:8px;border-radius:10px;">'
-                    +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
-                    +'<span style="color:var(--blue);font-weight:800;font-size:13px;">'+fmtDate(m.date)+' <small style="opacity:0.5;">(Sem '+m.week+')</small></span>'
-                    +'<span style="background:var(--blue);color:white;padding:2px 6px;border-radius:4px;font-size:10px;">'+m.user.toUpperCase()+'</span></div>'
-                    +'<div style="color:var(--success);font-weight:bold;font-size:12px;">'+m.chantier+'</div>'
-                    +'<div style="font-size:12px;color:#475569;margin-top:4px;">'+m.text+'</div>'
-                    +(m.matos?'<div style="font-size:11px;background:#f0fdf4;padding:5px;margin-top:5px;border-radius:4px;"><b>Logistique:</b> '+m.matos+'</div>':'')+'</div>';
+    db.ref('historique_v18').limitToLast(60).once('value', function(snap) {
+        var d = snap.val() || {}, entries = [];
+        for (var id in d) entries.push(d[id]);
+        entries.sort(function(a,b){ return b.ts - a.ts; });
+        var q = (document.getElementById('search-input').value||'').trim().toLowerCase();
+        if (q) entries = entries.filter(function(e){ return (e.chantier+' '+e.text+' '+e.key).toLowerCase().includes(q); });
+        var bgc  = {NOUVELLE:'#d1fae5',MODIFIEE:'#dbeafe',ANNULEE:'#fee2e2'};
+        var tc   = {NOUVELLE:'#166534',MODIFIEE:'#1e40af',ANNULEE:'#991b1b'};
+        var h = entries.length===0
+            ? "<div style='text-align:center;padding:20px;color:#94a3b8;'>Aucun historique</div>"
+            : entries.map(function(e) {
+                var d2=new Date(e.ts);
+                var dt=String(d2.getDate()).padStart(2,'0')+'/'+String(d2.getMonth()+1).padStart(2,'0')+' '+String(d2.getHours()).padStart(2,'0')+'h'+String(d2.getMinutes()).padStart(2,'0');
+                return '<div style="padding:10px;border-radius:10px;background:'+(bgc[e.action]||'#f1f5f9')+';margin-bottom:8px;">'                    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'                    +'<span style="font-size:11px;font-weight:900;color:'+(tc[e.action]||'#475569')+';">'+e.action+'</span>'                    +'<span style="font-size:10px;color:#64748b;">'+dt+' — '+(e.who||'?').toUpperCase()+'</span></div>'                    +'<div style="font-size:11px;color:#1e293b;"><b>'+(e.chantier||'')+'</b> '+(e.text||'')+'</div>'                    +'<div style="font-size:9px;color:#94a3b8;margin-top:3px;">'+e.key+'</div></div>';
             }).join('');
         document.getElementById('history-results').innerHTML = h;
     }, function(err) {
@@ -1027,6 +1069,45 @@ function checkTodayConge() {
 /* =========================================
    RH
 ========================================= */
+function openRecap() {
+    document.getElementById('recap-overlay').style.display = 'flex';
+    document.getElementById('recap-title').textContent = 'RECAP — SEMAINE '+state.curW+' / '+state.curY;
+    var days=['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI'];
+    var uc={interne:'#3b82f6',externe:'#64748b',cedric:'#f59e0b',divers:'#94a3b8',instal:'#8b5cf6','3t500':'#10b981',jadiel:'#ec4899',nicola:'#06b6d4'};
+    var html='';
+    ALL_USERS.forEach(function(u) {
+        var ms=[];
+        for(var dI=0;dI<5;dI++) for(var s=1;s<=u.s;s++) {
+            var dta=window.data[state.curY+'_'+state.curW+'_'+u.id+'_'+dI+'_s'+s];
+            if(dta&&(dta.text||dta.isConge)) ms.push({day:dI,data:dta});
+        }
+        if(!ms.length) return;
+        html+='<div style="margin-bottom:15px;border-radius:12px;overflow:hidden;border:2px solid '+(uc[u.id]||'#e2e8f0')+';background:white;">';
+        html+='<div style="background:'+(uc[u.id]||'#e2e8f0')+';color:white;padding:10px 15px;font-weight:900;font-size:14px;">'+u.id.toUpperCase()+'</div>';
+        ms.forEach(function(m) {
+            var d=m.data;
+            html+='<div style="padding:8px 15px;border-bottom:1px solid #f1f5f9;font-size:12px;">';
+            html+='<span style="font-weight:bold;color:var(--blue);min-width:70px;display:inline-block;">'+days[m.day]+'</span>';
+            if(d.isConge) html+='<span style="color:#92400e;font-weight:bold;">CONGE</span>';
+            else if(d.chantier) html+='<b>['+d.chantier.toUpperCase()+']</b> '+d.text;
+            else html+=d.text;
+            if(d.toDepot) html+=' <span style="background:#d1fae5;color:#166534;padding:1px 5px;border-radius:4px;font-size:10px;">DEPOT</span>';
+            if(d.comment) html+='<div style="margin-top:3px;font-size:10px;background:#fffbeb;padding:4px 7px;border-radius:4px;border-left:3px solid #f59e0b;">💬 '+d.comment+'</div>';
+            html+='</div>';
+        });
+        html+='</div>';
+    });
+    document.getElementById('recap-content').innerHTML=html||'<div style="text-align:center;padding:30px;color:#94a3b8;">Aucune mission cette semaine</div>';
+}
+function printRecap() {
+    var w=window.open('','_blank');
+    w.document.write('<html><head><title>Recap S'+state.curW+'</title><style>body{font-family:sans-serif;font-size:12px;margin:20px;}h2{color:#1b2e58;}.block{margin-bottom:15px;border:2px solid #ddd;border-radius:8px;overflow:hidden;}.head{background:#1b2e58;color:white;padding:8px 12px;font-weight:bold;}.row{padding:7px 12px;border-bottom:1px solid #eee;font-size:12px;}.day{font-weight:bold;color:#1b2e58;display:inline-block;min-width:70px;}</style></head><body>');
+    w.document.write('<h2>Planning RBF — Semaine '+state.curW+' / '+state.curY+'</h2>');
+    w.document.write(document.getElementById('recap-content').innerHTML);
+    w.document.write('</body></html>');
+    w.document.close(); w.print();
+}
+
 function openRH(mode) {
     state.rhMode=mode;
     document.getElementById('rh-overlay').style.display='flex';
