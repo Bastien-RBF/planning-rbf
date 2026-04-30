@@ -357,22 +357,52 @@ function subscribeToNotifications() {
         }
         navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js')
         .then(function(swReg) {
-            return swReg.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlB64ToArray(VAPID_PUBLIC_KEY)
+            // Desabonner l'ancien (fix iPhone "key error" + anciens abonnements OneSignal)
+            return swReg.pushManager.getSubscription().then(function(existingSub) {
+                var doSub = function() {
+                    return swReg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlB64ToArray(VAPID_PUBLIC_KEY)
+                    });
+                };
+                return existingSub ? existingSub.unsubscribe().then(doSub).catch(doSub) : doSub();
             });
         })
         .then(function(sub) {
             console.log('Push abonnement OK');
-            db.ref('push_subs/' + state.curU).set({ sub: JSON.stringify(sub), user: state.curU, role: state.curU, ts: Date.now() })
-            .then(function() {
-                showToast('Notifications activees !');
-                var btn = document.getElementById('btn-notif');
-                if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON'; }
-                localStorage.setItem('notifs_ok','1');
+            var endpoint = sub.endpoint;
+            // Supprimer toute ancienne entree Firebase avec le meme endpoint
+            // (evite qu'un meme appareil soit enregistre sous 2 roles differents)
+            return db.ref('push_subs').once('value').then(function(snap) {
+                var d = snap.val() || {};
+                var removes = [];
+                for (var u in d) {
+                    if (u === state.curU) continue;
+                    try {
+                        var s = JSON.parse(d[u].sub || '{}');
+                        if (s.endpoint === endpoint) {
+                            removes.push(db.ref('push_subs/' + u).remove());
+                            console.log('Ancienne entree supprimee:', u, '(meme endpoint)');
+                        }
+                    } catch(e) {}
+                }
+                return Promise.all(removes).then(function() {
+                    return db.ref('push_subs/' + state.curU).set({
+                        sub : JSON.stringify(sub),
+                        user: state.curU,
+                        role: state.curU,
+                        ts  : Date.now()
+                    });
+                });
             });
         })
-        .catch(function(e) { console.error('Push error:', e); showToast('Erreur: '+e.message, 'error'); });
+        .then(function() {
+            showToast('Notifications activees !');
+            var btn = document.getElementById('btn-notif');
+            if (btn) { btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON'; }
+            localStorage.setItem('notifs_ok','1');
+        })
+        .catch(function(e) { console.error('Push error:', e); showToast('Erreur activation: '+e.message, 'error'); });
     });
 }
 function urlB64ToArray(b64) {
@@ -407,28 +437,36 @@ function sendTargetedPush(key, taskData, action) {
 
     db.ref('push_subs').once('value').then(function(snap) {
         var data = snap.val() || {};
-        var allSubs    = [];  // Admins - recoivent tout
-        var driverSubs = [];  // Chauffeur concerne uniquement
-        var depotSubs  = [];  // Depot si toDepot
+        var allSubs    = [];
+        var driverSubs = [];
+        var depotSubs  = [];
+        var seenEndpoints = {}; // Deduplication : 1 seul envoi par endpoint
 
         for (var u in data) {
             try {
                 var s = JSON.parse(data[u].sub);
                 if (!s || !s.endpoint) continue;
-                var role = data[u].role || u;
-                if (role === 'admin') {
-                    allSubs.push(s);               // Admin recoit toujours
-                } else if (role === userId && isFuture) {
-                    driverSubs.push(s);            // Chauffeur concerne si date future
-                } else if (role === 'depot' && taskData.toDepot && isFuture) {
-                    depotSubs.push(s);             // Depot si case cochee
+                // Deduplication : ignorer si cet endpoint a deja ete vu
+                if (seenEndpoints[s.endpoint]) continue;
+                seenEndpoints[s.endpoint] = true;
+
+                // On utilise la CLE Firebase (u) comme source de verite du role,
+                // pas le champ "role" qui peut etre corrompu (ex: 'admin' au lieu de 'interne')
+                var realRole = u;
+
+                if (realRole === 'admin') {
+                    allSubs.push(s);
+                } else if (realRole === userId && isFuture) {
+                    driverSubs.push(s);
+                } else if (realRole === 'depot' && taskData.toDepot && isFuture) {
+                    depotSubs.push(s);
                 }
             } catch(e) {}
         }
 
         var targets = allSubs.concat(driverSubs).concat(depotSubs);
         if (!targets.length) { console.log('Aucun destinataire push'); return; }
-        console.log('Push:', targets.length, 'destinataires (admin:'+allSubs.length+', chauffeur:'+driverSubs.length+', depot:'+depotSubs.length+')');
+        console.log('Push:', targets.length, 'dest (admin:'+allSubs.length+', chauffeur:'+driverSubs.length+', depot:'+depotSubs.length+')');
 
         fetch(PUSH_WORKER_URL, {
             method : 'POST',
@@ -518,12 +556,42 @@ function login(u) {
         loadLastReports();
     }
     fetchHolidays(state.curY);
+    // Verification abonnement push au demarrage
     setTimeout(function() {
         var btn = document.getElementById('btn-notif');
-        if (btn && localStorage.getItem('notifs_ok') && Notification.permission === 'granted') {
-            btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON';
-        }
-    }, 800);
+        if (!btn || Notification.permission !== 'granted' || !localStorage.getItem('notifs_ok')) return;
+        navigator.serviceWorker.ready.then(function(swReg) {
+            swReg.pushManager.getSubscription().then(function(sub) {
+                if (sub) {
+                    // Abonnement valide : mettre a jour Firebase avec le bon role
+                    // (corrige si l'ancien role etait mauvais ex: 'admin' au lieu de 'interne')
+                    btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON';
+                    var endpoint = sub.endpoint;
+                    db.ref('push_subs').once('value').then(function(snap) {
+                        var d = snap.val() || {};
+                        for (var u in d) {
+                            if (u === state.curU) continue;
+                            try {
+                                var s = JSON.parse(d[u].sub || '{}');
+                                if (s.endpoint === endpoint) {
+                                    db.ref('push_subs/' + u).remove();
+                                }
+                            } catch(e) {}
+                        }
+                        db.ref('push_subs/' + state.curU).set({
+                            sub : JSON.stringify(sub),
+                            user: state.curU,
+                            role: state.curU,
+                            ts  : Date.now()
+                        });
+                    });
+                } else {
+                    localStorage.removeItem('notifs_ok');
+                    btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS';
+                }
+            }).catch(function() { btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS'; });
+        });
+    }, 1000);
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
         render();
