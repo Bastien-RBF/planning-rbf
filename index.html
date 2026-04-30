@@ -40,9 +40,13 @@
         .is-to-depot { border-left:5px solid var(--success) !important; }
         .is-conge { border-left:5px solid var(--yellow) !important; background:#fffbeb !important; }
         .holiday-badge { display:block; background:var(--yellow); color:var(--blue); font-size:8px; padding:2px; border-radius:3px; margin-top:3px; font-weight:900; }
-        #editor-overlay,#report-overlay,#history-overlay,#rh-overlay,#confirm-overlay,#copymove-overlay {
+        #editor-overlay,#report-overlay,#history-overlay,#rh-overlay,#copymove-overlay {
             position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8);
             display:none; align-items:center; justify-content:center; z-index:10000; backdrop-filter:blur(6px);
+        }
+        #confirm-overlay {
+            position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.85);
+            display:none; align-items:center; justify-content:center; z-index:20000; backdrop-filter:blur(6px);
         }
         .editor-box { background:white; padding:20px; border-radius:20px; width:92%; max-width:500px; max-height:85vh; overflow-y:auto; }
         .rh-user-section { margin-bottom:15px; border-radius:12px; overflow:hidden; background:white; border:1px solid #e2e8f0; }
