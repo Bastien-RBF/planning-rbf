@@ -182,8 +182,17 @@
     </div>
     <div class="week-nav-bar">
         <button class="wk-btn" onclick="changeWeek(-1)">&#8249;</button>
-        <div id="wk-disp"></div>
+        <div id="wk-disp" onclick="openWeekPicker()" style="cursor:pointer;" title="Cliquer pour aller a une semaine precise"></div>
         <button class="wk-btn" onclick="changeWeek(1)">&#8250;</button>
+        <button class="wk-btn" onclick="goToToday()" title="Semaine actuelle" style="font-size:11px;width:auto;padding:0 8px;">AUJ.</button>
+    </div>
+    <!-- Picker semaine rapide -->
+    <div id="week-picker" class="hidden" style="background:white;margin:0 10px 10px;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:bold;color:var(--blue);">ALLER A :</span>
+        <select id="wp-year" onchange="updateWeekPickerMax()" style="padding:6px;border-radius:8px;border:1px solid #ddd;font-weight:bold;"></select>
+        <select id="wp-week" style="padding:6px;border-radius:8px;border:1px solid #ddd;font-weight:bold;"></select>
+        <button onclick="applyWeekPicker()" style="background:var(--blue);color:white;border:none;padding:7px 14px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:12px;">OK</button>
+        <button onclick="document.getElementById('week-picker').classList.add('hidden')" style="background:#f1f5f9;color:#64748b;border:none;padding:7px 10px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:12px;">✕</button>
     </div>
     <div id="v-admin" class="table-container">
         <table>
@@ -203,6 +212,9 @@
         <div style="background:var(--blue);color:white;padding:15px;text-align:center;">
             <div id="rh-modal-title" style="font-weight:bold;margin-bottom:10px;">RELEVE</div>
             <div id="rh-selector"></div>
+        </div>
+        <div id="rh-search-zone" class="hidden" style="padding:10px 15px;background:white;border-bottom:1px solid #e2e8f0;">
+            <input type="text" id="rh-search-input" placeholder="Rechercher dans les journaux..." oninput="filterRHResults()" style="width:100%;padding:9px 12px;border-radius:8px;border:2px solid #f1f5f9;font-size:13px;background:#f8fafc;">
         </div>
         <div id="rh-content" style="padding:15px;overflow-y:auto;overflow-x:auto;flex:1;background:#f8fafc;"></div>
         <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="background:white;border-top:1px solid #eee;border-radius:0;">FERMER</button>
@@ -938,6 +950,49 @@ function renderFiles() {
 /* =========================================
    NAVIGATION SEMAINE
 ========================================= */
+function goToToday() {
+    var now = new Date();
+    state.curW = getWeek(now);
+    state.curY = now.getFullYear();
+    render();
+}
+function openWeekPicker() {
+    var picker = document.getElementById('week-picker');
+    picker.classList.toggle('hidden');
+    // Remplir les années
+    var ysel = document.getElementById('wp-year');
+    ysel.innerHTML = '';
+    for (var y = state.curY - 2; y <= state.curY + 2; y++) {
+        var opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === state.curY) opt.selected = true;
+        ysel.appendChild(opt);
+    }
+    updateWeekPickerMax();
+}
+function updateWeekPickerMax() {
+    var y   = parseInt(document.getElementById('wp-year').value);
+    var max = getWeek(new Date(y, 11, 28));
+    var wsel = document.getElementById('wp-week');
+    var cur  = parseInt(wsel.value) || state.curW;
+    wsel.innerHTML = '';
+    for (var w = 1; w <= max; w++) {
+        var opt = document.createElement('option');
+        var d0  = getDateFromWeek(w, y, 0);
+        var d4  = getDateFromWeek(w, y, 4);
+        opt.value = w;
+        opt.textContent = 'S'+w+' — '+fmtDate(d0)+' au '+fmtDate(d4);
+        if (w === cur) opt.selected = true;
+        wsel.appendChild(opt);
+    }
+}
+function applyWeekPicker() {
+    state.curY = parseInt(document.getElementById('wp-year').value);
+    state.curW = parseInt(document.getElementById('wp-week').value);
+    document.getElementById('week-picker').classList.add('hidden');
+    fetchHolidays(state.curY);
+    render();
+}
 function changeWeek(v) {
     state.curW += v;
     var maxW = getWeek(new Date(state.curY,11,28));
@@ -1145,6 +1200,9 @@ function openRH(mode) {
             + '<button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8250;</button>'
             + '</div>';
     }
+    // Afficher recherche uniquement pour les journaux
+    document.getElementById('rh-search-zone').classList.toggle('hidden', mode!=='VOYAGE');
+    if (mode==='VOYAGE') { setTimeout(function(){ var si=document.getElementById('rh-search-input'); if(si) si.value=''; },50); }
     renderRH();
 }
 function rhChangeWeek(v) {
@@ -1222,6 +1280,17 @@ function printRH() {
     w.document.close(); w.print();
 }
 
+function filterRHResults() {
+    var q = (document.getElementById('rh-search-input').value || '').toLowerCase().trim();
+    document.querySelectorAll('.journal-bubble').forEach(function(el) {
+        el.style.display = (!q || el.textContent.toLowerCase().includes(q)) ? '' : 'none';
+    });
+    // Masquer les sections vides
+    document.querySelectorAll('.rh-user-section').forEach(function(sec) {
+        var visible = sec.querySelectorAll('.journal-bubble:not([style*="none"])').length;
+        sec.style.display = (!q || visible > 0) ? '' : 'none';
+    });
+}
 function calcDur(s,e,p) { if(!s||!e) return 0; var st=new Date("2000-01-01 "+s), en=new Date("2000-01-01 "+e); return Math.max(0,(en-st)/60000-parseInt(p||0)); }
 function fmtMin(m) { return Math.floor(m/60)+"h"+String(m%60).padStart(2,'0'); }
 
