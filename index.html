@@ -198,12 +198,7 @@
     <div class="editor-box" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:var(--blue);color:white;padding:15px;text-align:center;">
             <div id="rh-modal-title" style="font-weight:bold;margin-bottom:10px;">RELEVE</div>
-            <input type="month" id="rh-month-select" onchange="renderRH()" style="padding:8px;border-radius:8px;border:none;font-weight:bold;">
-            <div id="rh-week-nav" class="hidden" style="display:flex;align-items:center;gap:10px;justify-content:center;">
-                <button onclick="rhChangeWeek(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">&#8249;</button>
-                <span id="rh-week-label" style="font-weight:bold;font-size:13px;min-width:170px;text-align:center;"></span>
-                <button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">&#8250;</button>
-            </div>
+            <div id="rh-selector"></div>
         </div>
         <div id="rh-content" style="padding:15px;overflow-y:auto;overflow-x:auto;flex:1;background:#f8fafc;"></div>
         <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="background:white;border-top:1px solid #eee;border-radius:0;">FERMER</button>
@@ -861,14 +856,17 @@ function updateCmSlots() {
 function executeCopyMove(mode) {
     var srcData = window.data[state.curK];
     if (!srcData) { showToast('Aucune donnee source', 'error'); return; }
-    // Lire depuis les selecteurs INLINE de l'editeur (suffixe -ed)
-    var user    = document.getElementById('cm-user-ed').value;
-    var day     = document.getElementById('cm-day-ed').value;
-    var slot    = document.getElementById('cm-slot-ed').value;
+    var user = document.getElementById('cm-user-ed').value;
+    var day  = document.getElementById('cm-day-ed').value;
+    var slot = document.getElementById('cm-slot-ed').value;
     var destKey = state.curY+'_'+state.curW+'_'+user+'_'+day+'_s'+slot;
     if (destKey === state.curK) { showToast('Source et destination identiques', 'error'); return; }
 
+    var days   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+    var destTxt = user.toUpperCase()+' — '+days[parseInt(day)]+', slot '+slot;
+    var destExisting = window.data[destKey];
     var label = mode === 'move' ? 'deplace' : 'copie';
+
     var doExec = function() {
         db.ref('planning_v18/'+destKey).set(srcData)
             .then(function() {
@@ -881,14 +879,14 @@ function executeCopyMove(mode) {
             })
             .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
     };
-    var destExisting = window.data[destKey];
+
+    // Toujours demander confirmation, avec avertissement si destination occupée
+    var msg = (mode==='move' ? 'Déplacer' : 'Copier') + ' vers ' + destTxt + ' ?';
     if (destExisting && (destExisting.text || destExisting.isConge)) {
         var preview = (destExisting.chantier ? '['+destExisting.chantier+'] ' : '') + (destExisting.text || 'Conge');
-        showConfirm('Case deja occupee : "'+preview.substring(0,50)+'"\nEcraser avec cette mission ?', doExec,
-            mode==='move' ? 'Confirmer deplacement' : 'Confirmer copie');
-    } else {
-        doExec();
+        msg += '\n\n⚠️ Cette case est occupee : "'+preview.substring(0,40)+'"\nElle sera ecrasee.';
     }
+    showConfirm(msg, doExec, mode==='move' ? 'Confirmer deplacement' : 'Confirmer copie');
 }
 
 /* =========================================
@@ -1129,18 +1127,17 @@ function openRH(mode) {
     state.rhMode = mode;
     state.rhWeek = getWeek(new Date());
     state.rhYear = new Date().getFullYear();
-    document.getElementById('rh-overlay').style.display='flex';
+    document.getElementById('rh-overlay').style.display = 'flex';
     document.getElementById('rh-modal-title').innerText = mode==='HEURES' ? 'RELEVE DES HEURES' : 'JOURNAUX DE BORD';
     var sel = document.getElementById('rh-selector');
     if (mode === 'HEURES') {
-        var today = new Date().toISOString().slice(0,7);
-        sel.innerHTML = '<input type="month" id="rh-month-select" onchange="renderRH()" value="'+today+'" style="padding:8px;border-radius:8px;border:none;font-weight:bold;">';
+        sel.innerHTML = '<input type="month" id="rh-month-select" onchange="renderRH()" value="'+new Date().toISOString().slice(0,7)+'" style="padding:8px;border-radius:8px;border:none;font-weight:bold;">';
     } else {
         sel.innerHTML = '<div style="display:flex;align-items:center;gap:10px;justify-content:center;">'
-            +'<button onclick="rhChangeWeek(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8249;</button>'
-            +'<span id="rh-week-label" style="font-weight:bold;font-size:13px;min-width:175px;text-align:center;"></span>'
-            +'<button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8250;</button>'
-            +'</div>';
+            + '<button onclick="rhChangeWeek(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8249;</button>'
+            + '<span id="rh-week-label" style="font-weight:bold;font-size:13px;min-width:175px;text-align:center;"></span>'
+            + '<button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8250;</button>'
+            + '</div>';
     }
     renderRH();
 }
