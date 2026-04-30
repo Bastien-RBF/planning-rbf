@@ -329,6 +329,20 @@
 </div>
 
 <!-- RECAP HEBDO -->
+<!-- MODAL XLSX -->
+<div id="xlsx-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.8);display:none;align-items:center;justify-content:center;z-index:20000;">
+    <div style="background:white;border-radius:16px;padding:20px;width:90%;max-width:420px;">
+        <div style="font-weight:bold;font-size:14px;color:#1b2e58;margin-bottom:6px;">📊 Ouvrir le fichier Excel</div>
+        <div style="font-size:11px;color:#64748b;margin-bottom:10px;"><b>Android :</b> appuie sur Ouvrir.<br><b>iPhone :</b> copie le lien et colle-le dans Safari.</div>
+        <input id="xlsx-url-input" type="text" readonly style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:10px;color:#475569;margin-bottom:10px;background:#f8fafc;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <button id="xlsx-copy-btn" onclick="doXlsxCopy()" style="background:#1b6cb8;color:white;border:none;padding:10px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;">📋 Copier</button>
+            <button onclick="window.open(document.getElementById('xlsx-url-input').value,'_blank')" style="background:#166534;color:white;border:none;padding:10px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;">🌐 Ouvrir</button>
+            <button onclick="document.getElementById('xlsx-modal').style.display='none'" style="background:#f1f5f9;color:#64748b;border:none;padding:10px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;">✕ Fermer</button>
+        </div>
+    </div>
+</div>
+
 <!-- HISTORIQUE -->
 <div id="history-overlay">
     <div class="editor-box">
@@ -699,11 +713,7 @@ function fileTagHtml(f, forAdmin) {
     } else {
         if (ext==='xlsx'||ext==='xls') {
             var safeUrl = f.url.replace(/'/g,"\'");
-            return '<div style="margin-top:8px;background:#eff6ff;border-radius:10px;padding:10px;">'
-                +'<div style="font-size:11px;font-weight:bold;color:#1b2e58;margin-bottom:6px;">📊 '+name+'</div>'
-                +'<div style="font-size:10px;color:#64748b;margin-bottom:8px;">Copie le lien et colle-le dans Safari ou Google Sheets</div>'
-                +'<button onclick="copyXlsxLink(\''+safeUrl+'\',this)" style="width:100%;background:#1b6cb8;color:white;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;">📋 Copier le lien</button>'
-                +'</div>';
+            return '<button onclick="copyXlsxLink(\''+safeUrl+'\')" style="width:100%;background:#1b6cb8;color:white;border:none;padding:11px;border-radius:8px;margin-top:8px;font-size:12px;font-weight:bold;cursor:pointer;">📊 Ouvrir / Copier : '+name+'</button>';
         }
         return '<a href="'+url+'" target="_blank" title="'+f.name+'" style="display:block;background:var(--blue);color:white;padding:10px;border-radius:8px;margin-top:8px;text-decoration:none;text-align:center;font-size:11px;font-weight:bold;">Ouvrir : '+name+'</a>';
     }
@@ -1299,6 +1309,20 @@ function filterRHResults() {
         var visible = sec.querySelectorAll('.journal-bubble:not([style*="none"])').length;
         sec.style.display = (!q || visible > 0) ? '' : 'none';
     });
+}
+function copyXlsxLink(url) {
+    document.getElementById('xlsx-url-input').value = url;
+    document.getElementById('xlsx-modal').style.display = 'flex';
+}
+function doXlsxCopy() {
+    var inp = document.getElementById('xlsx-url-input');
+    inp.select(); inp.setSelectionRange(0, 99999);
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) {}
+    if (!ok && navigator.clipboard) navigator.clipboard.writeText(inp.value).catch(function(){});
+    var btn = document.getElementById('xlsx-copy-btn');
+    btn.textContent = '✓ Copie !'; btn.style.background = '#166534';
+    setTimeout(function(){ btn.textContent = '📋 Copier'; btn.style.background = '#1b6cb8'; }, 2000);
 }
 function calcDur(s,e,p) { if(!s||!e) return 0; var st=new Date("2000-01-01 "+s), en=new Date("2000-01-01 "+e); return Math.max(0,(en-st)/60000-parseInt(p||0)); }
 function fmtMin(m) { return Math.floor(m/60)+"h"+String(m%60).padStart(2,'0'); }
