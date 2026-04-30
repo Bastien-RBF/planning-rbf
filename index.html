@@ -198,11 +198,7 @@
     <div class="editor-box" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
         <div style="background:var(--blue);color:white;padding:15px;text-align:center;">
             <div id="rh-modal-title" style="font-weight:bold;margin-bottom:10px;">RELEVE</div>
-            <div style="display:flex;align-items:center;gap:10px;justify-content:center;">
-                <button onclick="rhChangeWeek(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">&#8249;</button>
-                <span id="rh-week-label" style="font-weight:bold;font-size:14px;min-width:160px;text-align:center;"></span>
-                <button onclick="rhChangeWeek(1)"  style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">&#8250;</button>
-            </div>
+            <input type="month" id="rh-month-select" onchange="renderRH()" style="padding:8px;border-radius:8px;border:none;font-weight:bold;">
         </div>
         <div id="rh-content" style="padding:15px;overflow-y:auto;overflow-x:auto;flex:1;background:#f8fafc;"></div>
         <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="background:white;border-top:1px solid #eee;border-radius:0;">FERMER</button>
@@ -230,7 +226,7 @@
                 <label style="font-size:10px;font-weight:bold;">RESUME :</label>
                 <textarea id="rj-text" style="height:100px;padding:10px;border-radius:8px;border:1px solid #ddd;resize:vertical;" placeholder="Votre journee..."></textarea>
             </div>
-            <div style="margin-top:12px;">
+            <div id="rep-pj-zone" style="margin-top:12px;">
                 <div id="rep-file-list" style="margin-bottom:8px;"></div>
                 <!-- input galerie/fichier -->
                 <input type="file" id="rep-file-input" class="hidden" accept="image/*,.pdf,.xlsx,.xls,.doc,.docx" onchange="uploadRepFile(this)">
@@ -988,6 +984,9 @@ function openReport(t, isEdit) {
     document.getElementById('rep-title-ui').innerText = t==='pointage'?'Pointage':'Journal';
     document.getElementById('form-pointage').classList.toggle('hidden', t!=='pointage');
     document.getElementById('form-journalier').classList.toggle('hidden', t!=='journalier');
+    // PJ uniquement pour le journal
+    var pjZone = document.getElementById('rep-pj-zone');
+    if (pjZone) pjZone.classList.toggle('hidden', t!=='journalier');
     document.getElementById('report-overlay').style.display = 'flex';
 }
 function saveReport() {
@@ -1115,40 +1114,20 @@ function checkTodayConge() {
    RH
 ========================================= */
 function openRH(mode) {
-    state.rhMode  = mode;
-    state.rhWeek  = getWeek(new Date());
-    state.rhYear  = new Date().getFullYear();
+    state.rhMode=mode;
     document.getElementById('rh-overlay').style.display='flex';
     document.getElementById('rh-modal-title').innerText=mode==='HEURES'?'RELEVE DES HEURES':'JOURNAUX DE BORD';
+    document.getElementById('rh-month-select').value=new Date().toISOString().slice(0,7);
     renderRH();
-}
-function rhChangeWeek(v) {
-    state.rhWeek += v;
-    var maxW = getWeek(new Date(state.rhYear,11,28));
-    if (state.rhWeek > maxW) { state.rhWeek=1; state.rhYear++; }
-    else if (state.rhWeek < 1) { state.rhYear--; state.rhWeek=getWeek(new Date(state.rhYear,11,28)); }
-    renderRH();
-}
-function getDatesOfWeek(w, y) {
-    // Retourne les dates ISO (YYYY-MM-DD) du lundi au vendredi de la semaine
-    var dates = [];
-    for (var d=0;d<5;d++) {
-        var dt = getDateFromWeek(w, y, d);
-        dates.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
-    }
-    return dates;
 }
 function renderRH() {
-    var w = state.rhWeek, y = state.rhYear;
-    var weekDates = getDatesOfWeek(w, y);
-    var lbl = document.getElementById('rh-week-label');
-    if (lbl) lbl.textContent = 'Sem '+w+' — '+fmtDate(getDateFromWeek(w,y,0))+' au '+fmtDate(getDateFromWeek(w,y,4))+' '+y;
+    var month=document.getElementById('rh-month-select').value;
     var cont=document.getElementById('rh-content');
     cont.innerHTML="<div style='text-align:center;padding:20px;'>Chargement...</div>";
     db.ref('pointages_v18').once('value', function(snap) {
         var all=snap.val()||{}, typeF=state.rhMode==='HEURES'?'POINTAGE':'VOYAGE', ud={};
         for (var date in all) {
-            if (weekDates.indexOf(date) === -1) continue;
+            if (!date.startsWith(month)) continue;
             for (var id in all[date]) { var r=all[date][id]; if(r.type!==typeF) continue; if(!ud[r.user]) ud[r.user]=[]; ud[r.user].push(Object.assign({},r,{id:id,date:date})); }
         }
         var users=['interne','cedric','jadiel','nicola','depot'], html='';
@@ -1179,9 +1158,26 @@ function renderRH() {
             }
             html+='</div>';
         });
-        c.innerHTML=html||"<div style='text-align:center;padding:20px;'>Aucune donnee.</div>";
-    }, function(err) { c.innerHTML="<div style='text-align:center;padding:20px;color:red;'>Erreur</div>"; console.error(err); });
+        // Bouton imprimer pour les heures
+        if (state.rhMode==='HEURES' && html) {
+            html='<div style="text-align:right;margin-bottom:10px;"><button onclick="printRH()" style="background:var(--blue);color:white;border:none;padding:8px 16px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:12px;">🖨️ IMPRIMER</button></div>'+html;
+        }
+        cont.innerHTML=html||"<div style='text-align:center;padding:20px;'>Aucune donnee.</div>";
+    }, function(err) { cont.innerHTML="<div style='text-align:center;padding:20px;color:red;'>Erreur</div>"; console.error(err); });
 }
+function printRH() {
+    var month = document.getElementById('rh-month-select').value;
+    var parts  = month.split('-');
+    var mLabel = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'][parseInt(parts[1])-1]+' '+parts[0];
+    var w = window.open('','_blank');
+    w.document.write('<html><head><title>Heures '+mLabel+'</title>');
+    w.document.write('<style>body{font-family:sans-serif;font-size:12px;margin:20px;}h2{color:#1b2e58;}h3{color:#1b2e58;margin:15px 0 5px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}td{border:1px solid #ddd;padding:6px 10px;}tr:last-child td{font-weight:bold;background:#f1f5f9;}.total{text-align:right;font-weight:bold;}</style>');
+    w.document.write('</head><body><h2>Releve des heures — '+mLabel+'</h2>');
+    w.document.write(document.getElementById('rh-content').innerHTML.replace(/<button[^>]*>.*?<\/button>/gi,''));
+    w.document.write('</body></html>');
+    w.document.close(); w.print();
+}
+
 function calcDur(s,e,p) { if(!s||!e) return 0; var st=new Date("2000-01-01 "+s), en=new Date("2000-01-01 "+e); return Math.max(0,(en-st)/60000-parseInt(p||0)); }
 function fmtMin(m) { return Math.floor(m/60)+"h"+String(m%60).padStart(2,'0'); }
 
