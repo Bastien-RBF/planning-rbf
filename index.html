@@ -670,9 +670,10 @@ function render() {
 /* Fichier HTML selon extension */
 function getFileUrl(f) {
     var ext = f.name.split('.').pop().toLowerCase();
-    // Excel : Microsoft Office Online Viewer — fonctionne sur iPhone/Android sans appli
-    if (['xlsx','xls'].indexOf(ext) !== -1) {
-        return 'https://view.officeapps.live.com/op/view.aspx?src=' + encodeURIComponent(f.url);
+    // Excel : forcer le téléchargement via Cloudinary fl_attachment
+    // Le téléphone l'ouvrira automatiquement avec Excel/Google Sheets
+    if (['xlsx','xls'].indexOf(ext) !== -1 && f.url.includes('cloudinary.com')) {
+        return f.url.replace('/upload/', '/upload/fl_attachment/');
     }
     return f.url;
 }
