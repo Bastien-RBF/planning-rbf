@@ -869,19 +869,26 @@ function executeCopyMove(mode) {
     if (destKey === state.curK) { showToast('Source et destination identiques', 'error'); return; }
 
     var label = mode === 'move' ? 'deplace' : 'copie';
-    db.ref('planning_v18/'+destKey).set(srcData)
-        .then(function() {
-            if (mode === 'move') {
-                return db.ref('planning_v18/'+state.curK).remove();
-            }
-        })
-        .then(function() {
-            // Notif sur la destination (nouvelle cle)
-            sendTargetedPush(destKey, srcData, mode === 'move' ? 'DEPLACEE' : 'COPIEE');
-            closeEditor();
-            showToast('Mission '+label+'e !');
-        })
-        .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
+    var doExec = function() {
+        db.ref('planning_v18/'+destKey).set(srcData)
+            .then(function() {
+                if (mode === 'move') return db.ref('planning_v18/'+state.curK).remove();
+            })
+            .then(function() {
+                sendTargetedPush(destKey, srcData, mode==='move' ? 'DEPLACEE' : 'COPIEE');
+                closeEditor();
+                showToast('Mission '+label+'e !');
+            })
+            .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
+    };
+    var destExisting = window.data[destKey];
+    if (destExisting && (destExisting.text || destExisting.isConge)) {
+        var preview = (destExisting.chantier ? '['+destExisting.chantier+'] ' : '') + (destExisting.text || 'Conge');
+        showConfirm('Case deja occupee : "'+preview.substring(0,50)+'"\nEcraser avec cette mission ?', doExec,
+            mode==='move' ? 'Confirmer deplacement' : 'Confirmer copie');
+    } else {
+        doExec();
+    }
 }
 
 /* =========================================
@@ -1119,15 +1126,22 @@ function checkTodayConge() {
    RH
 ========================================= */
 function openRH(mode) {
-    state.rhMode=mode;
+    state.rhMode = mode;
     state.rhWeek = getWeek(new Date());
     state.rhYear = new Date().getFullYear();
     document.getElementById('rh-overlay').style.display='flex';
-    document.getElementById('rh-modal-title').innerText=mode==='HEURES'?'RELEVE DES HEURES':'JOURNAUX DE BORD';
-    // Heures = selecteur mois / Rapports = navigation semaine
-    document.getElementById('rh-month-select').classList.toggle('hidden', mode!=='HEURES');
-    document.getElementById('rh-week-nav').classList.toggle('hidden', mode!=='VOYAGE');
-    if (mode==='HEURES') document.getElementById('rh-month-select').value=new Date().toISOString().slice(0,7);
+    document.getElementById('rh-modal-title').innerText = mode==='HEURES' ? 'RELEVE DES HEURES' : 'JOURNAUX DE BORD';
+    var sel = document.getElementById('rh-selector');
+    if (mode === 'HEURES') {
+        var today = new Date().toISOString().slice(0,7);
+        sel.innerHTML = '<input type="month" id="rh-month-select" onchange="renderRH()" value="'+today+'" style="padding:8px;border-radius:8px;border:none;font-weight:bold;">';
+    } else {
+        sel.innerHTML = '<div style="display:flex;align-items:center;gap:10px;justify-content:center;">'
+            +'<button onclick="rhChangeWeek(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8249;</button>'
+            +'<span id="rh-week-label" style="font-weight:bold;font-size:13px;min-width:175px;text-align:center;"></span>'
+            +'<button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8250;</button>'
+            +'</div>';
+    }
     renderRH();
 }
 function rhChangeWeek(v) {
@@ -1138,7 +1152,7 @@ function rhChangeWeek(v) {
     renderRH();
 }
 function renderRH() {
-    var month=document.getElementById('rh-month-select').value;
+    var msel=document.getElementById('rh-month-select'); var month=msel?msel.value:'';
     // Pour les rapports : filtrer par semaine
     var weekDates = [];
     if (state.rhMode !== 'HEURES') {
@@ -1193,7 +1207,7 @@ function renderRH() {
     }, function(err) { cont.innerHTML="<div style='text-align:center;padding:20px;color:red;'>Erreur</div>"; console.error(err); });
 }
 function printRH() {
-    var month = document.getElementById('rh-month-select').value;
+    var mselP=document.getElementById('rh-month-select'); var month=mselP?mselP.value:'';
     var parts  = month.split('-');
     var mLabel = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'][parseInt(parts[1])-1]+' '+parts[0];
     var w = window.open('','_blank');
