@@ -1200,8 +1200,8 @@ function openRH(mode) {
             + '<button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer;font-weight:bold;">&#8250;</button>'
             + '</div>';
     }
-        document.getElementById('rh-search-zone').classList.toggle('hidden', mode!=='VOYAGE');
-    if (mode==='VOYAGE') { setTimeout(function(){ var si=document.getElementById('rh-search-input'); if(si) si.value=''; },50); }
+        document.getElementById('rh-search-zone').classList.toggle('hidden', mode==='HEURES');
+    if (mode!=='HEURES') { setTimeout(function(){ var si=document.getElementById('rh-search-input'); if(si) si.value=''; },50); }
     renderRH();
 }
 function rhChangeWeek(v) {
