@@ -199,6 +199,11 @@
         <div style="background:var(--blue);color:white;padding:15px;text-align:center;">
             <div id="rh-modal-title" style="font-weight:bold;margin-bottom:10px;">RELEVE</div>
             <input type="month" id="rh-month-select" onchange="renderRH()" style="padding:8px;border-radius:8px;border:none;font-weight:bold;">
+            <div id="rh-week-nav" class="hidden" style="display:flex;align-items:center;gap:10px;justify-content:center;">
+                <button onclick="rhChangeWeek(-1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">&#8249;</button>
+                <span id="rh-week-label" style="font-weight:bold;font-size:13px;min-width:170px;text-align:center;"></span>
+                <button onclick="rhChangeWeek(1)" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;font-weight:bold;">&#8250;</button>
+            </div>
         </div>
         <div id="rh-content" style="padding:15px;overflow-y:auto;overflow-x:auto;flex:1;background:#f8fafc;"></div>
         <button onclick="document.getElementById('rh-overlay').style.display='none'" class="btn-main" style="background:white;border-top:1px solid #eee;border-radius:0;">FERMER</button>
@@ -1115,19 +1120,41 @@ function checkTodayConge() {
 ========================================= */
 function openRH(mode) {
     state.rhMode=mode;
+    state.rhWeek = getWeek(new Date());
+    state.rhYear = new Date().getFullYear();
     document.getElementById('rh-overlay').style.display='flex';
     document.getElementById('rh-modal-title').innerText=mode==='HEURES'?'RELEVE DES HEURES':'JOURNAUX DE BORD';
-    document.getElementById('rh-month-select').value=new Date().toISOString().slice(0,7);
+    // Heures = selecteur mois / Rapports = navigation semaine
+    document.getElementById('rh-month-select').classList.toggle('hidden', mode!=='HEURES');
+    document.getElementById('rh-week-nav').classList.toggle('hidden', mode!=='VOYAGE');
+    if (mode==='HEURES') document.getElementById('rh-month-select').value=new Date().toISOString().slice(0,7);
+    renderRH();
+}
+function rhChangeWeek(v) {
+    state.rhWeek += v;
+    var maxW = getWeek(new Date(state.rhYear,11,28));
+    if (state.rhWeek > maxW) { state.rhWeek=1; state.rhYear++; }
+    else if (state.rhWeek < 1) { state.rhYear--; state.rhWeek=getWeek(new Date(state.rhYear,11,28)); }
     renderRH();
 }
 function renderRH() {
     var month=document.getElementById('rh-month-select').value;
+    // Pour les rapports : filtrer par semaine
+    var weekDates = [];
+    if (state.rhMode !== 'HEURES') {
+        for (var dd=0;dd<5;dd++) {
+            var dt=getDateFromWeek(state.rhWeek,state.rhYear,dd);
+            weekDates.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
+        }
+        var lbl=document.getElementById('rh-week-label');
+        if(lbl) lbl.textContent='Sem '+state.rhWeek+' — '+fmtDate(getDateFromWeek(state.rhWeek,state.rhYear,0))+' au '+fmtDate(getDateFromWeek(state.rhWeek,state.rhYear,4))+' '+state.rhYear;
+    }
     var cont=document.getElementById('rh-content');
     cont.innerHTML="<div style='text-align:center;padding:20px;'>Chargement...</div>";
     db.ref('pointages_v18').once('value', function(snap) {
         var all=snap.val()||{}, typeF=state.rhMode==='HEURES'?'POINTAGE':'VOYAGE', ud={};
         for (var date in all) {
-            if (!date.startsWith(month)) continue;
+            if (state.rhMode==='HEURES' ? !date.startsWith(month) : weekDates.indexOf(date)===-1) continue;
             for (var id in all[date]) { var r=all[date][id]; if(r.type!==typeF) continue; if(!ud[r.user]) ud[r.user]=[]; ud[r.user].push(Object.assign({},r,{id:id,date:date})); }
         }
         var users=['interne','cedric','jadiel','nicola','depot'], html='';
