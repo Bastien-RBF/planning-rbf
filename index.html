@@ -697,7 +697,14 @@ function fileTagHtml(f, forAdmin) {
             + 'title="'+f.name+'" class="file-tag '+cls+'" '
             + 'style="position:relative;z-index:100;pointer-events:auto;">'+ico+' '+name+'</a>';
     } else {
-        return '<a href="'+url+'" target="_blank" title="'+f.name+'" style="display:block;background:var(--blue);color:white;padding:10px;border-radius:8px;margin-top:8px;text-decoration:none;text-align:center;font-size:11px;font-weight:bold;">'+(ext==='xlsx'||ext==='xls'?'Telecharger':'Ouvrir')+' : '+name+'</a>';
+        if (ext==='xlsx'||ext==='xls') {
+            var gv = 'https://docs.google.com/viewer?url='+encodeURIComponent(f.url)+'&embedded=false';
+            return '<div style="margin-top:8px;">'
+                + '<a href="'+gv+'" target="_blank" style="display:block;background:#1b6cb8;color:white;padding:10px;border-radius:8px 8px 0 0;text-decoration:none;text-align:center;font-size:11px;font-weight:bold;">📊 VOIR : '+name+'</a>'
+                + '<a href="'+f.url+'" target="_blank" style="display:block;background:#0f4c81;color:white;padding:8px;border-radius:0 0 8px 8px;text-decoration:none;text-align:center;font-size:10px;">📥 Telecharger</a>'
+                + '</div>';
+        }
+        return '<a href="'+url+'" target="_blank" title="'+f.name+'" style="display:block;background:var(--blue);color:white;padding:10px;border-radius:8px;margin-top:8px;text-decoration:none;text-align:center;font-size:11px;font-weight:bold;">Ouvrir : '+name+'</a>';
     }
 }
 
