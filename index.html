@@ -878,6 +878,8 @@ function executeCopyMove(mode) {
             })
             .then(function() {
                 sendTargetedPush(destKey, srcData, mode==='move' ? 'DEPLACEE' : 'COPIEE');
+                // Si déplacement : notifier aussi la personne d'origine que la tâche lui a été retirée
+                if (mode === 'move') sendTargetedPush(state.curK, srcData, 'RETIREE');
                 closeEditor();
                 showToast('Mission '+label+'e !');
             })
