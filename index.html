@@ -739,8 +739,8 @@ function renderAdminView(hList) {
                 var txt = '';
                 if (dta.isConge)       txt = 'CONGE';
                 else if (dta.chantier) txt = '<b>'+trk+'['+dta.chantier.toUpperCase()+']</b><br>'+dta.text;
-                if (dta.adresse) txt += '<div style="font-size:8px;color:#94a3b8;margin-top:2px;">📍 '+dta.adresse+'</div>';
                 else                   txt = dta.text || '...';
+                if (dta.adresse) txt += '<div style="font-size:8px;color:#94a3b8;margin-top:2px;">📍 '+dta.adresse+'</div>';
                 // Matos pour admin uniquement
                 if (state.curU === 'admin' && dta.matos) {
                     txt += '<div style="border-top:1px dashed #ccc;margin-top:4px;padding-top:4px;font-size:9px;color:#166534;">'+dta.matos+'</div>';
