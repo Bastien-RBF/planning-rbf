@@ -179,7 +179,6 @@
         <button class="btn-nav-admin" style="background:#64748b" onclick="showHistory()">HISTO</button>
         <button class="btn-nav-admin" onclick="openRH('HEURES')">RH</button>
         <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH('JOURNAL')">RAPPORTS</button>
-        <button class="btn-nav-admin" style="background:#f59e0b;color:#1b2e58;" onclick="toggleNote()">📌 NOTE</button>
     </div>
     <div class="week-nav-bar">
         <button class="wk-btn" onclick="changeWeek(-1)">&#8249;</button>
@@ -194,15 +193,6 @@
         <select id="wp-week" style="padding:6px;border-radius:8px;border:1px solid #ddd;font-weight:bold;"></select>
         <button onclick="applyWeekPicker()" style="background:var(--blue);color:white;border:none;padding:7px 14px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:12px;">OK</button>
         <button onclick="document.getElementById('week-picker').classList.add('hidden')" style="background:#f1f5f9;color:#64748b;border:none;padding:7px 10px;border-radius:8px;font-weight:bold;cursor:pointer;font-size:12px;">✕</button>
-    </div>
-    <!-- ENCART NOTE PARTAGEE -->
-    <div id="note-zone" class="hidden" style="margin:0 10px 10px;background:#fffbeb;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1px solid #fde68a;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span style="font-size:11px;font-weight:bold;color:#92400e;">📌 NOTE PARTAGEE</span>
-            <button onclick="saveNote()" style="background:#f59e0b;color:white;border:none;padding:5px 12px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">SAUVEGARDER</button>
-        </div>
-        <textarea id="note-input" rows="3" placeholder="Ecrire une note visible par tous les admins..." style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #fde68a;border-radius:8px;font-size:12px;resize:vertical;background:white;"></textarea>
-        <div id="note-author" style="font-size:10px;color:#92400e;margin-top:5px;text-align:right;"></div>
     </div>
     <div id="v-admin" class="table-container">
         <table>
@@ -1034,35 +1024,6 @@ function applyWeekPicker() {
     document.getElementById('week-picker').classList.add('hidden');
     fetchHolidays(state.curY);
     render();
-}
-function toggleNote() {
-    var zone = document.getElementById('note-zone');
-    zone.classList.toggle('hidden');
-    if (!zone.classList.contains('hidden')) loadNote();
-}
-function loadNote() {
-    db.ref('note_partagee').once('value', function(snap) {
-        var d = snap.val() || {};
-        document.getElementById('note-input').value = d.text || '';
-        if (d.text) {
-            var dt = d.ts ? new Date(d.ts) : null;
-            var dtStr = dt ? ' le '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' a '+String(dt.getHours()).padStart(2,'0')+'h'+String(dt.getMinutes()).padStart(2,'0') : '';
-            document.getElementById('note-author').textContent = 'Derniere modif par ' + (d.who||'?').toUpperCase() + dtStr;
-        } else {
-            document.getElementById('note-author').textContent = '';
-        }
-    });
-}
-function saveNote() {
-    var txt = document.getElementById('note-input').value.trim();
-    db.ref('note_partagee').set({ text: txt, who: state.curU, ts: Date.now() })
-        .then(function() {
-            showToast('Note sauvegardee !');
-            var dt = new Date();
-            var dtStr = ' le '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+' a '+String(dt.getHours()).padStart(2,'0')+'h'+String(dt.getMinutes()).padStart(2,'0');
-            document.getElementById('note-author').textContent = 'Derniere modif par ' + state.curU.toUpperCase() + dtStr;
-        })
-        .catch(function() { showToast('Erreur sauvegarde', 'error'); });
 }
 function changeWeek(v) {
     state.curW += v;
