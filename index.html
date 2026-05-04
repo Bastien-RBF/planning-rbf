@@ -1139,6 +1139,7 @@ function loadLastReports() {
         h += "</div>";
         el.innerHTML = h;
     }, function(err) { console.error(err); });
+}
 function editOldReport(date, id) {
     db.ref('pointages_v18/'+date+'/'+id).once('value', function(snap) {
         var r = snap.val(); state.curRepId=id; state.activeT=r.type==='POINTAGE'?'pointage':'journalier';
