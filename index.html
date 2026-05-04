@@ -1088,7 +1088,7 @@ function openMediatheque() {
                 + '</div>'
                 + '<div style="display:flex;gap:6px;flex-shrink:0;">'
                 + '<a href="'+f.url+'" target="_blank" style="background:#eff6ff;color:var(--blue);border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;text-decoration:none;">VOIR</a>'
-                + '<button onclick="deleteMedia(this.parentElement.parentElement)" data-path="'+f.fbPath+'" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">SUP.</button>'
+                + '<button onclick="deleteMedia(this)" data-path="'+f.fbPath+'" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">SUP.</button>'
                 + '</div></div>';
         });
         document.getElementById('media-content').innerHTML = html;
@@ -1122,7 +1122,7 @@ function getPublicId(url) {
     return m ? m[1] : '';
 }
 function deleteMedia(btn) {
-    var row = btn.parentElement.parentElement;
+    var row = btn.closest('div[style*="display:flex;align-items:center"]') || btn.parentElement.parentElement.parentElement;
     var fbPath = btn.getAttribute('data-path');
     showConfirm('Supprimer ce fichier ?', function() {
         db.ref(fbPath).remove().then(function() {
