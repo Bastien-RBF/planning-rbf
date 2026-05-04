@@ -815,7 +815,7 @@ function openEd(k) {
     document.getElementById('e-depot').checked  = !!d.toDepot;
     document.getElementById('e-conge').checked  = !!d.isConge;
     var isJN       = k.includes('jadiel') || k.includes('nicola');
-    var isTruck    = k.includes('interne') || k.includes('externe') || k.includes('cedric') || k.includes('3t500');
+    var isTruck    = k.includes('interne') || k.includes('externe') || k.includes('cedric');
     var canHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers') && !k.includes('3t500');
     document.getElementById('zone-matos').classList.toggle('hidden', !isJN);
     document.getElementById('zone-truck').classList.toggle('hidden', !isTruck);
