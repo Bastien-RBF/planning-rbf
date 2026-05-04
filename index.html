@@ -296,17 +296,11 @@
         <button onclick="saveTask()"    class="btn-main" style="background:var(--blue);color:white;margin-bottom:8px;">SAUVEGARDER</button>
         <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-bottom:8px;">
     <div style="font-size:10px;font-weight:bold;color:var(--blue);margin-bottom:8px;">COPIER / DEPLACER VERS :</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
-        <div>
-            <div style="font-size:9px;color:#64748b;margin-bottom:3px;">ANNÉE</div>
-            <select id="cm-year-ed" onchange="fillCmWeeksEd()" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;"></select>
-        </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
         <div>
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">SEMAINE</div>
-            <select id="cm-week-ed" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;"></select>
+            <select id="cm-week-ed" onchange="updateCmPreview()" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;"></select>
         </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
         <div>
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">PERSONNE</div>
             <select id="cm-user-ed" onchange="updateCmSlots();updateCmPreview();" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
@@ -901,50 +895,35 @@ function closeEditor() { document.getElementById('editor-overlay').style.display
    COPIER / DEPLACER
 ========================================= */
 function updateCmPreview() {
-    var yel = document.getElementById('cm-year-ed');
     var wel = document.getElementById('cm-week-ed');
     var del = document.getElementById('cm-day-ed');
     var uel = document.getElementById('cm-user-ed');
-    if (!yel || !wel || !del) return;
-    var y = parseInt(yel.value);
+    if (!wel || !del) return;
     var w = parseInt(wel.value);
     var d = parseInt(del.value);
     var u = uel ? uel.value.toUpperCase() : '';
-    var dt = getDateFromWeek(w, y, d);
+    var dt = getDateFromWeek(w, state.curY, d);
     var days = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
-    var dateStr = days[d]+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+y;
+    var dateStr = days[d]+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+state.curY;
     var prev = document.getElementById('cm-preview');
     if (prev) prev.textContent = '→ '+u+' — '+dateStr;
-}
-function fillCmWeeksEd() {
-    var y    = parseInt(document.getElementById('cm-year-ed').value);
-    var maxW = getWeek(new Date(y, 11, 28));
-    var wsel = document.getElementById('cm-week-ed');
-    var curW = state.curW;
-    wsel.innerHTML = '';
-    for (var w = 1; w <= maxW; w++) {
-        var opt = document.createElement('option');
-        var d0  = getDateFromWeek(w, y, 0);
-        opt.value = w;
-        opt.textContent = 'S'+w+' ('+String(d0.getDate()).padStart(2,'0')+'/'+String(d0.getMonth()+1).padStart(2,'0')+')';
-        if (w === curW) opt.selected = true;
-        wsel.appendChild(opt);
-    }
-    updateCmPreview();
 }
 function openCopyMove() {
     if (!state.curK) return;
     var parts = state.curK.split('_');
-    // Init année
-    var ysel = document.getElementById('cm-year-ed');
-    ysel.innerHTML = '';
-    for (var y = state.curY - 1; y <= state.curY + 1; y++) {
+    // Remplir les semaines de l'année en cours
+    var wsel = document.getElementById('cm-week-ed');
+    var maxW = getWeek(new Date(state.curY, 11, 28));
+    wsel.innerHTML = '';
+    for (var w = 1; w <= maxW; w++) {
         var opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        if (y === state.curY) opt.selected = true;
-        ysel.appendChild(opt);
+        var d0  = getDateFromWeek(w, state.curY, 0);
+        var d4  = getDateFromWeek(w, state.curY, 4);
+        opt.value = w;
+        opt.textContent = 'S'+w+' ('+String(d0.getDate()).padStart(2,'0')+'/'+String(d0.getMonth()+1).padStart(2,'0')+' - '+String(d4.getDate()).padStart(2,'0')+'/'+String(d4.getMonth()+1).padStart(2,'0')+')';
+        if (w === state.curW) opt.selected = true;
+        wsel.appendChild(opt);
     }
-    fillCmWeeksEd();
     // Pre-remplir les autres champs
     var userEl = document.getElementById('cm-user-ed');
     var dayEl  = document.getElementById('cm-day-ed');
@@ -976,8 +955,8 @@ function executeCopyMove(mode) {
     var user  = document.getElementById('cm-user-ed').value;
     var day   = document.getElementById('cm-day-ed').value;
     var slot  = document.getElementById('cm-slot-ed').value;
-    var destY = parseInt(document.getElementById('cm-year-ed').value);
     var destW = parseInt(document.getElementById('cm-week-ed').value);
+    var destY = state.curY;
     var destKey = destY+'_'+destW+'_'+user+'_'+day+'_s'+slot;
     if (destKey === state.curK) { showToast('Source et destination identiques', 'error'); return; }
 
