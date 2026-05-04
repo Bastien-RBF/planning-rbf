@@ -1088,7 +1088,7 @@ function openMediatheque() {
                 + '</div>'
                 + '<div style="display:flex;gap:6px;flex-shrink:0;">'
                 + '<a href="'+f.url+'" target="_blank" style="background:#eff6ff;color:var(--blue);border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;text-decoration:none;">VOIR</a>'
-                + '<button onclick="deleteMedia(''+f.fbPath+'',''+f.publicId+'',this.parentElement.parentElement)" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">SUP.</button>'
+                + '<button onclick="deleteMedia(this.parentElement.parentElement)" data-path="'+f.fbPath+'" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">SUP.</button>'
                 + '</div></div>';
         });
         document.getElementById('media-content').innerHTML = html;
@@ -1121,13 +1121,13 @@ function getPublicId(url) {
     var m = url.match(/\/upload\/(?:v\d+\/)?(.+?)(\.[^.]+)?$/);
     return m ? m[1] : '';
 }
-function deleteMedia(fbPath, publicId, row) {
+function deleteMedia(btn) {
+    var row = btn.parentElement.parentElement;
+    var fbPath = btn.getAttribute('data-path');
     showConfirm('Supprimer ce fichier ?', function() {
-        // Supprimer de Firebase (on retire juste la référence)
-        // Note : la suppression Cloudinary nécessite une signature serveur — on supprime juste la référence
         db.ref(fbPath).remove().then(function() {
             if (row) row.style.display = 'none';
-            showToast('Référence supprimée. Supprimer aussi dans Cloudinary si besoin.');
+            showToast('Reference supprimee dans l\'appli.');
         }).catch(function() { showToast('Erreur suppression', 'error'); });
     }, 'Confirmer suppression');
 }
