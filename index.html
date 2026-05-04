@@ -1184,14 +1184,20 @@ function openReport(t, isEdit) {
 function saveReport() {
     var d = document.getElementById('rep-date').value;
     if (!d) { showToast('Selectionnez une date', 'error'); return; }
+    // Désactiver le bouton pour éviter les doubles clics
+    var btn = document.querySelector('#report-overlay .btn-main');
+    if (btn) { btn.disabled = true; btn.textContent = 'Envoi...'; }
     var id = state.curRepId || (state.curU+'_'+Date.now());
     var r  = {user:state.curU, type:state.activeT==='pointage'?'POINTAGE':'VOYAGE', date:d};
     if (state.activeT==='pointage') { r.debut=document.getElementById('p-start').value; r.fin=document.getElementById('p-end').value; r.p_pause=document.getElementById('p-pause').value; }
     else { r.txt=document.getElementById('rj-text').value; }
     if (state.repFiles && state.repFiles.length) r.files = state.repFiles;
     db.ref('pointages_v18/'+d+'/'+id).set(r)
-        .then(function() { showToast('Enregistre'); closeReport(); })
-        .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
+        .then(function() { showToast('Enregistre !'); closeReport(); })
+        .catch(function(err) {
+            console.error(err); showToast('Erreur', 'error');
+            if (btn) { btn.disabled = false; btn.textContent = 'ENREGISTRER'; }
+        });
 }
 function closeReport() { document.getElementById('report-overlay').style.display='none'; }
 function deleteReport() {
