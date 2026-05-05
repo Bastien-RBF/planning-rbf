@@ -1247,21 +1247,29 @@ function deleteReport() {
     }, 'Supprimer');
 }
 function loadLastReports() {
+    var weekDates = [];
+    for (var dd=0; dd<5; dd++) {
+        var dt = getDateFromWeek(getWeek(new Date()), new Date().getFullYear(), dd);
+        weekDates.push(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'));
+    }
     db.ref('pointages_v18').limitToLast(30).on('value', function(snap) {
         var all = snap.val()||{}, reps=[];
-        for (var date in all) for (var id in all[date])
-            if (all[date][id].user===state.curU) reps.push(Object.assign({},all[date][id],{id:id,date:date}));
+        for (var date in all) {
+            if (weekDates.indexOf(date) === -1) continue;
+            for (var id in all[date])
+                if (all[date][id].user===state.curU) reps.push(Object.assign({},all[date][id],{id:id,date:date}));
+        }
         reps.sort(function(a,b){return b.date.localeCompare(a.date);});
-        var recent = reps.slice(0,3);
-        var h = "<b>VOS DERNIERS ENREGISTREMENTS :</b><div style='margin-top:5px;'>";
-        if (!recent.length) h += "<div style='color:#94a3b8;font-size:11px;padding:5px 0;'>Aucun enregistrement recent.</div>";
-        else recent.forEach(function(r) {
+        var el = document.getElementById('last-reps-list');
+        if (!reps.length) { el.innerHTML = ''; return; }
+        var h = "<b>VOS ENREGISTREMENTS CETTE SEMAINE :</b><div style='margin-top:5px;'>";
+        reps.forEach(function(r) {
             h += '<div style="background:#f8fafc;padding:6px;border-radius:6px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">'
-                +'<span>'+r.date.split('-')[2]+'/'+r.date.split('-')[1]+' - '+(r.type==='POINTAGE'?'Pointage':'Journal')+'</span>'
+                +'<span>'+r.date.split('-')[2]+'/'+r.date.split('-')[1]+' — '+(r.type==='POINTAGE'?'Pointage':'Journal')+'</span>'
                 +'<button onclick="editOldReport(\''+r.date+'\',\''+r.id+'\')" style="background:white;border:1px solid #ddd;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;">MODIFIER</button></div>';
         });
         h += "</div>";
-        document.getElementById('last-reps-list').innerHTML = h;
+        el.innerHTML = h;
     }, function(err) { console.error(err); });
 }
 function editOldReport(date, id) {
