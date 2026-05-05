@@ -902,9 +902,10 @@ function updateCmPreview() {
     var w = parseInt(wel.value);
     var d = parseInt(del.value);
     var u = uel ? uel.value.toUpperCase() : '';
-    var dt = getDateFromWeek(w, state.curY, d);
+    var y = state.curY || new Date().getFullYear();
+    var dt = getDateFromWeek(w, y, d);
     var days = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
-    var dateStr = days[d]+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+state.curY;
+    var dateStr = days[d]+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+y;
     var prev = document.getElementById('cm-preview');
     if (prev) prev.textContent = '→ '+u+' — '+dateStr;
 }
@@ -913,15 +914,17 @@ function openCopyMove() {
     var parts = state.curK.split('_');
     // Remplir les semaines de l'année en cours
     var wsel = document.getElementById('cm-week-ed');
-    var maxW = getWeek(new Date(state.curY, 11, 28));
+    var curY = state.curY || new Date().getFullYear();
+    var curW = state.curW || getWeek(new Date());
+    var maxW = getWeek(new Date(curY, 11, 28));
     wsel.innerHTML = '';
     for (var w = 1; w <= maxW; w++) {
         var opt = document.createElement('option');
-        var d0  = getDateFromWeek(w, state.curY, 0);
-        var d4  = getDateFromWeek(w, state.curY, 4);
+        var d0  = getDateFromWeek(w, curY, 0);
+        var d4  = getDateFromWeek(w, curY, 4);
         opt.value = w;
-        opt.textContent = 'S'+w+' ('+String(d0.getDate()).padStart(2,'0')+'/'+String(d0.getMonth()+1).padStart(2,'0')+' - '+String(d4.getDate()).padStart(2,'0')+'/'+String(d4.getMonth()+1).padStart(2,'0')+')';
-        if (w === state.curW) opt.selected = true;
+        opt.textContent = 'S'+w+' ('+String(d0.getDate()).padStart(2,'0')+'/'+String(d0.getMonth()+1).padStart(2,'0')+' — '+String(d4.getDate()).padStart(2,'0')+'/'+String(d4.getMonth()+1).padStart(2,'0')+')';
+        if (w === curW) opt.selected = true;
         wsel.appendChild(opt);
     }
     // Pre-remplir les autres champs
