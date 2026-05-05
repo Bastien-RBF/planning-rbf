@@ -14,6 +14,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
         :root { --blue:#1b2e58; --yellow:#f9c311; --success:#10b981; --danger:#ef4444; --bg:#f3f4f6; }
         * { box-sizing:border-box; }
@@ -386,7 +387,15 @@ var OS_WORKER_URL = "https://rbf-notifs.bastien38dominguez.workers.dev";
 
 
 
-firebase.initializeApp({ databaseURL:"https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/" });
+firebase.initializeApp({
+    apiKey: "AIzaSyB8f5_NGtHX6iPp-reUolnxHH6Du2mUJks",
+    authDomain: "rbf-transport.firebaseapp.com",
+    databaseURL: "https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app/",
+    projectId: "rbf-transport",
+    storageBucket: "rbf-transport.firebasestorage.app",
+    messagingSenderId: "857293034627",
+    appId: "1:857293034627:web:dfa3390ee0a798638f77b6"
+});
 var db = firebase.database();
 
 /* =========================================
@@ -603,12 +612,31 @@ function fmtDate(d) {
 /* =========================================
    AUTH
 ========================================= */
+var USER_EMAILS = {
+    admin  : 'admin@rbf-transport.fr',
+    interne: 'interne@rbf-transport.fr',
+    cedric : 'cedric@rbf-transport.fr',
+    jadiel : 'jadiel@rbf-transport.fr',
+    nicola : 'nicola@rbf-transport.fr',
+    depot  : 'depot@rbf-transport.fr'
+};
+
 function askCode(u) {
-    var p = prompt("CODE " + u.toUpperCase());
+    var p = prompt('CODE ' + u.toUpperCase());
     if (p === null) return;
-    var codes = {admin:'2026',depot:'5555',interne:'1111',cedric:'2222',jadiel:'3333',nicola:'4444'};
-    if (p === codes[u]) { localStorage.setItem('rbf_u', u); login(u); }
-    else showToast('Code incorrect', 'error');
+    var email = USER_EMAILS[u];
+    if (!email) { showToast('Utilisateur inconnu', 'error'); return; }
+    // Afficher un loader pendant la connexion
+    showToast('Connexion...');
+    firebase.auth().signInWithEmailAndPassword(email, p)
+        .then(function() {
+            localStorage.setItem('rbf_u', u);
+            login(u);
+        })
+        .catch(function(err) {
+            console.error('Auth error:', err.code);
+            showToast('Code incorrect', 'error');
+        });
 }
 function login(u) {
     state.curU = u;
@@ -666,7 +694,10 @@ function login(u) {
         checkTodayConge();
     }, function(err) { console.error(err); showToast('Erreur connexion', 'error'); });
 }
-function logout() { localStorage.removeItem('rbf_u'); location.reload(); }
+function logout() {
+    localStorage.removeItem('rbf_u');
+    firebase.auth().signOut().catch(function(){}).finally(function(){ location.reload(); });
+}
 
 
 /* =========================================
