@@ -1035,6 +1035,24 @@ function uploadFile(input) {
     var pz = document.getElementById('upload-progress-zone');
     pz.innerHTML = '<div class="upload-progress"><div class="spinner"></div> Envoi en cours...</div>';
     var fd = new FormData();
+    // Compresser les images avant upload si c'est une image
+    var imgExts = ['jpg','jpeg','png','webp','gif'];
+    var ext1 = fileName.split('.').pop().toLowerCase();
+    if (imgExts.indexOf(ext1) !== -1 && fileObj.size > 500000) {
+        compressAndUpload(fileObj, fileName, function(compressedFile) {
+            var fd2 = new FormData();
+            fd2.append('file', compressedFile);
+            fd2.append('upload_preset', 'rbf-preset');
+            fetch('https://api.cloudinary.com/v1_1/dixdmejal/upload', {method:'POST', body:fd2})
+                .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+                .then(function(data){
+                    pz.innerHTML='';
+                    if(data.secure_url){files.push({name:fileName,url:data.secure_url});renderFiles();showToast('Fichier ajoute!');}
+                    else{console.error('Cloudinary:',data.error);showToast('Erreur upload','error');}
+                }).catch(function(err){pz.innerHTML='';console.error(err);showToast('Erreur reseau','error');});
+        });
+        return;
+    }
     fd.append('file', fileObj);
     fd.append('upload_preset', 'rbf-preset');
     fetch('https://api.cloudinary.com/v1_1/dixdmejal/upload', {method:'POST', body:fd})
@@ -1373,9 +1391,26 @@ function uploadRepFile(input) {
     var pz = document.getElementById('rep-upload-progress');
     pz.innerHTML = '<div class="upload-progress"><div class="spinner"></div> Envoi en cours...</div>';
     var fd = new FormData();
+    var ext2r = file.name.split('.').pop().toLowerCase();
+    var imgExts2 = ['jpg','jpeg','png','webp','gif'];
+    input.value = '';
+    if (imgExts2.indexOf(ext2r) !== -1 && file.size > 500000) {
+        compressAndUpload(file, fileName, function(compressedFile) {
+            var fd2 = new FormData();
+            fd2.append('file', compressedFile);
+            fd2.append('upload_preset', 'rbf-preset');
+            fetch('https://api.cloudinary.com/v1_1/dixdmejal/upload', {method:'POST', body:fd2})
+                .then(function(r){return r.json();})
+                .then(function(data){
+                    pz.innerHTML='';
+                    if(data.secure_url){if(!state.repFiles)state.repFiles=[];state.repFiles.push({name:fileName,url:data.secure_url});renderRepFiles();showToast('Fichier ajoute!');}
+                    else{showToast('Erreur upload','error');}
+                }).catch(function(){pz.innerHTML='';showToast('Erreur reseau','error');});
+        });
+        return;
+    }
     fd.append('file', file);
     fd.append('upload_preset', 'rbf-preset');
-    input.value = ''; // vider APRES avoir sauvegarde le fichier
     fetch('https://api.cloudinary.com/v1_1/dixdmejal/upload', {method:'POST', body:fd})
         .then(function(r){
             if (!r.ok) throw new Error('HTTP '+r.status);
@@ -1537,6 +1572,30 @@ function doXlsxCopy() {
     btn.textContent = '✓ Copie !'; btn.style.background = '#166534';
     setTimeout(function(){ btn.textContent = '📋 Copier'; btn.style.background = '#1b6cb8'; }, 2000);
 }
+// Compression images avant upload (réduit la taille de 60-70%)
+function compressAndUpload(file, fileName, callback) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var img = new Image();
+        img.onload = function() {
+            var canvas = document.createElement('canvas');
+            var maxW = 1920, maxH = 1920;
+            var w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            if (h > maxH) { w = Math.round(w * maxH / h); h = maxH; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            canvas.toBlob(function(blob) {
+                var compFile = new File([blob], fileName, {type:'image/jpeg'});
+                console.log('Compression: '+Math.round(file.size/1024)+'Ko → '+Math.round(compFile.size/1024)+'Ko');
+                callback(compFile);
+            }, 'image/jpeg', 0.80); // qualité 80% — bon compromis taille/qualité
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 function calcDur(s,e,p) { if(!s||!e) return 0; var st=new Date("2000-01-01 "+s), en=new Date("2000-01-01 "+e); return Math.max(0,(en-st)/60000-parseInt(p||0)); }
 function fmtMin(m) { return Math.floor(m/60)+"h"+String(m%60).padStart(2,'0'); }
 
