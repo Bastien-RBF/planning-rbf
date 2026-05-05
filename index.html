@@ -1268,7 +1268,25 @@ function loadLastReports() {
                 +'<span>'+r.date.split('-')[2]+'/'+r.date.split('-')[1]+' — '+(r.type==='POINTAGE'?'Pointage':'Journal')+'</span>'
                 +'<button onclick="editOldReport(\''+r.date+'\',\''+r.id+'\')" style="background:white;border:1px solid #ddd;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;">MODIFIER</button></div>';
         });
-        h += "</div>";
+        h += "</div><div style='text-align:center;margin-top:6px;'><button onclick='loadAllReports()' style='background:none;border:none;color:#94a3b8;font-size:10px;cursor:pointer;text-decoration:underline;'>Voir les semaines précédentes</button></div>";
+        el.innerHTML = h;
+    }, function(err) { console.error(err); });
+}
+function loadAllReports() {
+    db.ref('pointages_v18').limitToLast(100).once('value', function(snap) {
+        var all = snap.val()||{}, reps=[];
+        for (var date in all) for (var id in all[date])
+            if (all[date][id].user===state.curU) reps.push(Object.assign({},all[date][id],{id:id,date:date}));
+        reps.sort(function(a,b){return b.date.localeCompare(a.date);});
+        var el = document.getElementById('last-reps-list');
+        if (!reps.length) { el.innerHTML = '<div style="color:#94a3b8;font-size:11px;">Aucun enregistrement.</div>'; return; }
+        var h = "<b>TOUS LES ENREGISTREMENTS :</b><div style='margin-top:5px;'>";
+        reps.forEach(function(r) {
+            h += '<div style="background:#f8fafc;padding:6px;border-radius:6px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">'
+                +'<span>'+r.date.split('-')[2]+'/'+r.date.split('-')[1]+'/'+r.date.split('-')[0].slice(2)+' — '+(r.type==='POINTAGE'?'Pointage':'Journal')+'</span>'
+                +'<button onclick="editOldReport(\''+r.date+'\',\''+r.id+'\')" style="background:white;border:1px solid #ddd;padding:2px 6px;border-radius:4px;font-size:9px;cursor:pointer;">MODIFIER</button></div>';
+        });
+        h += "</div><div style='text-align:center;margin-top:6px;'><button onclick='loadLastReports()' style='background:none;border:none;color:#94a3b8;font-size:10px;cursor:pointer;text-decoration:underline;'>Revenir à cette semaine</button></div>";
         el.innerHTML = h;
     }, function(err) { console.error(err); });
 }
