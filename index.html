@@ -1617,7 +1617,19 @@ colorOpts.forEach(function(c) {
 /* =========================================
    INIT
 ========================================= */
-if (state.curU) login(state.curU);
+// Vérifier la session Firebase au démarrage
+firebase.auth().onAuthStateChanged(function(user) {
+    var saved = localStorage.getItem('rbf_u');
+    if (user && saved) {
+        // Session valide — connecter directement sans demander le code
+        state.curU = saved;
+        login(saved);
+    } else {
+        // Session expirée ou pas connecté — nettoyer et afficher l'écran de connexion
+        localStorage.removeItem('rbf_u');
+        state.curU = null;
+    }
+});
 
 /* =========================================
    PWA
