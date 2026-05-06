@@ -106,7 +106,7 @@
         <div style="background:#f8fafc;padding:15px;border-radius:12px;margin-bottom:15px;">
             <label style="font-size:10px;font-weight:bold;display:block;margin-bottom:6px;">PERSONNE :</label>
             <select id="cm-user-modal" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:12px;">
-                <option value="interne">INTERNE</option>
+                <option value="interne">DAMIEN</option>
                 <option value="externe">EXTERNE</option>
                 <option value="cedric">CEDRIC</option>
                 <option value="divers">DIVERS</option>
@@ -155,8 +155,8 @@
             <img src="logo.png" alt="RBF" style="width:150px;margin-bottom:20px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <button class="btn-main" style="background:var(--blue);color:white;grid-column:span 2;" onclick="askCode('admin')">BUREAU / RH</button>
-                <button class="btn-main" style="background:var(--success);color:white;grid-column:span 2;" onclick="askCode('depot')">DEPOT / PREPA</button>
-                <button class="btn-main" style="background:#3b82f6;color:white;" onclick="askCode('interne')">INTERNE</button>
+                <button class="btn-main" style="background:var(--success);color:white;grid-column:span 2;" onclick="askCode('depot')">STEPHANE</button>
+                <button class="btn-main" style="background:#3b82f6;color:white;" onclick="askCode('interne')">DAMIEN</button>
                 <button class="btn-main" style="background:#f59e0b;color:white;" onclick="askCode('cedric')">CEDRIC</button>
                 <button class="btn-main" style="background:#8b5cf6;color:white;" onclick="askCode('jadiel')">JADIEL</button>
                 <button class="btn-main" style="background:#64748b;color:white;" onclick="askCode('nicola')">NICOLA</button>
@@ -305,7 +305,7 @@
         <div>
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">PERSONNE</div>
             <select id="cm-user-ed" onchange="updateCmSlots();updateCmPreview();" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
-                <option value="interne">INTERNE</option><option value="externe">EXTERNE</option>
+                <option value="interne">DAMIEN</option><option value="externe">EXTERNE</option>
                 <option value="cedric">CEDRIC</option><option value="divers">DIVERS</option>
                 <option value="instal">INSTAL</option><option value="3t500">3T500</option>
                 <option value="jadiel">JADIEL</option><option value="nicola">NICOLA</option>
@@ -778,7 +778,8 @@ function renderAdminView(hList) {
     var isDepot = state.curU === 'depot';
     var h = "";
     ALL_USERS.forEach(function(u) {
-        h += '<tr><td class="user-cell">'+u.id.toUpperCase()+'</td>';
+        var dNmap={interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'3T500'};
+        h += '<tr><td class="user-cell">'+(dNmap[u.id]||u.id.toUpperCase())+'</td>';
         for (var dI = 0; dI < 5; dI++) {
             h += '<td>';
             for (var s = 1; s <= u.s; s++) {
