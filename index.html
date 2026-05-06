@@ -1481,6 +1481,7 @@ function rhChangeWeek(v) {
     renderRH();
 }
 function renderRH() {
+    var dNames2={interne:'DAMIEN',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',depot:'STEPHANE'};
     var msel=document.getElementById('rh-month-select'); var month=msel?msel.value:'';
     // Pour les rapports : filtrer par semaine
     var weekDates = [];
@@ -1503,7 +1504,7 @@ function renderRH() {
         var users=['interne','cedric','jadiel','nicola','depot'], html='';
         users.forEach(function(user) {
             var reps=(ud[user]||[]).sort(function(a,b){return a.date.localeCompare(b.date);}), total=0;
-            html+='<div class="rh-user-section"><div class="rh-user-header"><span>'+user.toUpperCase()+'</span>'+(state.rhMode==='HEURES'?'<span class="rh-total-badge" id="t-'+user+'"></span>':'')+'</div>';
+            html+='<div class="rh-user-section"><div class="rh-user-header"><span>'+(dNames2[user]||user.toUpperCase())+'</span>'+(state.rhMode==='HEURES'?'<span class="rh-total-badge" id="t-'+user+'"></span>':'')+'</div>';
             if (state.rhMode==='HEURES') {
                 html+='<div style="overflow-x:auto;"><table class="rh-table">';
                 reps.forEach(function(r) {
