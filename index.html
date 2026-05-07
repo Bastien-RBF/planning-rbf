@@ -464,7 +464,7 @@ function subscribeToNotifications() {
                     } catch(e) {}
                 }
                 return Promise.all(removes).then(function() {
-                    return db.ref('push_subs/' + state.curU).set({
+                    return db.ref('push_subs/' + state.curU + '_' + DEVICE_ID).set({
                         sub : JSON.stringify(sub),
                         user: state.curU,
                         role: state.curU,
@@ -529,7 +529,8 @@ function sendTargetedPush(key, taskData, action) {
 
                 // On utilise la CLE Firebase (u) comme source de verite du role,
                 // pas le champ "role" qui peut etre corrompu (ex: 'admin' au lieu de 'interne')
-                var realRole = u;
+                // Format clé: role_deviceId — extraire juste le role
+                var realRole = u.split('_')[0];
 
                 if (realRole === 'admin') {
                     allSubs.push(s);
@@ -666,7 +667,7 @@ function login(u) {
                     db.ref('push_subs').once('value').then(function(snap) {
                         var d = snap.val() || {};
                         for (var u in d) {
-                            if (u === state.curU) continue;
+                            if (u === state.curU + '_' + DEVICE_ID) continue;
                             try {
                                 var s = JSON.parse(d[u].sub || '{}');
                                 if (s.endpoint === endpoint) {
@@ -674,7 +675,7 @@ function login(u) {
                                 }
                             } catch(e) {}
                         }
-                        db.ref('push_subs/' + state.curU).set({
+                        db.ref('push_subs/' + state.curU + '_' + DEVICE_ID).set({
                             sub : JSON.stringify(sub),
                             user: state.curU,
                             role: state.curU,
