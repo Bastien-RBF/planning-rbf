@@ -1156,8 +1156,7 @@ function getListeData() {
         var textarea   = div.querySelector('textarea');
         var label = labelInput ? labelInput.value.trim() : '';
         var raw   = textarea ? textarea.value.trim() : '';
-        var items = raw ? raw.split('
-').map(function(l){ return l.trim(); }).filter(function(l){ return l; }) : [];
+        var items = raw ? raw.split('\n').map(function(l){ return l.trim(); }).filter(function(l){ return l; }) : [];
         if (label || items.length > 0) tours.push({ label: label, items: items });
     });
     return {
