@@ -286,6 +286,10 @@
             <button onclick="openAddChantier()" title="Ajouter un chantier" style="width:34px;height:34px;border-radius:8px;border:none;background:var(--success);color:white;font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;">+</button>
             <button onclick="deleteChantier()" title="Supprimer ce chantier" style="width:34px;height:34px;border-radius:8px;border:none;background:#ef4444;color:white;font-size:22px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
         </div>
+        <!-- Zone saisie libre chantier -->
+        <div id="zone-chantier-libre" class="hidden" style="margin-bottom:8px;">
+            <input type="text" id="e-chantier-libre-input" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #ddd;font-size:12px;" placeholder="Nom du chantier (ex: MAIRIE DE GRENOBLE, PRIVÉ...)">
+        </div>
         <!-- Zone Fournisseur / Autre -->
         <div id="zone-autre-chantier" class="hidden" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:8px;">
             <div style="font-size:10px;font-weight:bold;color:#92400e;margin-bottom:6px;">📍 FOURNISSEUR / AUTRE</div>
@@ -1367,6 +1371,7 @@ function loadChantiers(callback) {
             sel.appendChild(opt);
         });
         var sep = document.createElement('option'); sep.disabled = true; sep.textContent = '──────────────'; sel.appendChild(sep);
+        var libre = document.createElement('option'); libre.value = '__libre__'; libre.textContent = '✏️ Saisie libre'; sel.appendChild(libre);
         var autre = document.createElement('option'); autre.value = '__autre__'; autre.textContent = '📍 Autre / Fournisseur'; sel.appendChild(autre);
         if (curVal) sel.value = curVal;
         if (callback) callback();
@@ -1379,6 +1384,16 @@ function onChantierSel() {
     var zoneAutre = document.getElementById('zone-autre-chantier');
     var adresseEl = document.getElementById('e-adresse');
     var chantierHidden = document.getElementById('e-chantier');
+    var zoneLibreCh = document.getElementById('zone-chantier-libre');
+    if (val === '__libre__') {
+        if (zoneLibreCh) zoneLibreCh.classList.remove('hidden');
+        zoneAutre.classList.add('hidden');
+        adresseEl.style.display = '';
+        adresseEl.value = ''; chantierHidden.value = '';
+        var inp = document.getElementById('e-chantier-libre-input');
+        if (inp) { inp.oninput = function(){ chantierHidden.value = inp.value.trim().toUpperCase(); }; setTimeout(function(){ inp.focus(); }, 100); }
+        return;
+    } else if (zoneLibreCh) { zoneLibreCh.classList.add('hidden'); }
     if (val === '__autre__') {
         zoneAutre.classList.remove('hidden');
         adresseEl.style.display = 'none';
@@ -1442,7 +1457,7 @@ function loadFournisseurs(callback) {
             sel.appendChild(opt);
         });
         var sep = document.createElement('option'); sep.disabled = true; sep.textContent = '──────────────'; sel.appendChild(sep);
-        var autre = document.createElement('option'); autre.value = '__libre__'; autre.textContent = '✏️ Saisie libre'; sel.appendChild(autre);
+        var libre2 = document.createElement('option'); libre2.value = '__libre__'; libre2.textContent = '✏️ Saisie libre'; sel.appendChild(libre2);
         if (curVal) sel.value = curVal;
         if (callback) callback();
     });
