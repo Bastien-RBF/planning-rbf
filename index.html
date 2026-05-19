@@ -509,6 +509,12 @@ firebase.initializeApp({
     appId: "1:857293034627:web:dfa3390ee0a798638f77b6"
 });
 var db = firebase.database();
+var LISTES_CACHE = {}; // clés des missions ayant une liste de transport
+db.ref('listes_transport').on('value', function(snap) {
+    LISTES_CACHE = {};
+    var d = snap.val() || {};
+    for (var k in d) { if (d[k] && d[k].tours && d[k].tours.length > 0) LISTES_CACHE[k] = true; }
+});
 
 // ID unique par appareil — permet plusieurs appareils par utilisateur
 if (!localStorage.getItem('rbf_device_id')) {
@@ -924,7 +930,8 @@ function renderAdminView(hList) {
                     dta.files.forEach(function(f) { filesHtml += fileTagHtml(f, true); });
                     filesHtml += '</div>';
                 }
-                h += '<div class="slot '+(dta.text||dta.isConge?'filled':'')+' '+(dta.toDepot?'is-to-depot':'')+' '+(dta.isConge?'is-conge':'')+'" style="'+st+'" onclick="openEd(\''+k+'\')">'+txt+filesHtml+'</div>';
+                var ltBadge = LISTES_CACHE[k] ? '<span style="float:right;background:#10b981;color:white;font-size:8px;padding:1px 4px;border-radius:4px;margin-left:4px;">📋</span>' : '';
+                h += '<div class="slot '+(dta.text||dta.isConge?'filled':'')+' '+(dta.toDepot?'is-to-depot':'')+' '+(dta.isConge?'is-conge':'')+'" style="'+st+'" onclick="openEd(\''+k+'\')">'+ltBadge+txt+filesHtml+'</div>';
             }
             h += '</td>';
         }
