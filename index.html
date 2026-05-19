@@ -28,7 +28,7 @@
         .search-container { background:white; padding:12px 15px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
         #search-input { flex:1; min-width:120px; padding:10px; border-radius:10px; border:2px solid #f1f5f9; outline:none; font-size:14px; background:#f8fafc; }
         .table-container { padding:5px 10px; overflow-x:auto; }
-        table { width:100%; border-collapse:separate; border-spacing:0; background:white; border-radius:12px; overflow:hidden; min-width:820px; border:1px solid #e2e8f0; }
+        table { width:100%; border-collapse:separate; border-spacing:0; background:white; border-radius:12px; overflow:hidden; min-width:980px; border:1px solid #e2e8f0; }
         th { background:var(--blue); color:white; padding:12px 5px; font-size:11px; font-weight:700; border-bottom:2px solid var(--yellow); }
         td { border-bottom:1px solid #f1f5f9; border-right:1px solid #f1f5f9; padding:6px; vertical-align:top; }
         /* Separateurs epais entre les lignes */
@@ -82,6 +82,14 @@
         .file-tag-img  { background:#dbeafe; color:#1e40af; border:1px solid #93c5fd; }
         .file-tag-xlsx { background:#dcfce7; color:#166534; border:1px solid #86efac; }
         .file-tag-other{ background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; }
+        @media (orientation: landscape) and (max-width: 1024px) {
+            table { min-width:0 !important; }
+            .slot { padding:3px !important; font-size:8px !important; min-height:16px !important; line-height:1.3 !important; margin-bottom:2px !important; }
+            .user-cell { font-size:8px !important; padding:4px 2px !important; }
+            th { padding:4px 2px !important; font-size:9px !important; }
+            td { padding:2px !important; }
+        }
+    
     </style>
 </head>
 <body>
@@ -315,7 +323,7 @@
             <div style="font-size:9px;color:#64748b;margin-bottom:3px;">JOUR</div>
             <select id="cm-day-ed" onchange="updateCmPreview()" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
                 <option value="0">LUN</option><option value="1">MAR</option><option value="2">MER</option>
-                <option value="3">JEU</option><option value="4">VEN</option>
+                <option value="3">JEU</option><option value="4">VEN</option><option value="5">SAM</option>
             </select>
         </div>
         <div>
