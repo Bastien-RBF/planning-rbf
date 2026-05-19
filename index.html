@@ -1123,22 +1123,31 @@ function openListeTransport() {
 function addTourLT(label, items) {
     LT_TOUR_COUNT++;
     var n = LT_TOUR_COUNT;
-    var defaultLabels = ['1ER TOUR','2ÈME TOUR','3ÈME TOUR','4ÈME TOUR','5ÈME TOUR'];
-    var tourLabel = label || defaultLabels[n-1] || (n+'ÈME TOUR');
-    var tourItems = (items && Array.isArray(items)) ? items.join('
-') : (items || '');
+    var defaultLabels = ['1ER TOUR','2EME TOUR','3EME TOUR','4EME TOUR','5EME TOUR'];
+    var tourLabel = label || defaultLabels[n-1] || (n+'EME TOUR');
+    var tourItems = (items && Array.isArray(items)) ? items.join('\n') : (items || '');
     var container = document.getElementById('lt-tours-container');
     var div = document.createElement('div');
     div.id = 'lt-tour-'+n;
     div.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:10px;';
-    div.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-        +'<input type="text" value="'+tourLabel+'" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ddd;font-size:12px;font-weight:bold;color:#1b2e58;" placeholder="Nom du tour">'
-        +'<button onclick="document.getElementById('lt-tour-'+n+'').remove();LT_TOUR_COUNT--;" style="width:28px;height:28px;border-radius:6px;border:none;background:#fee2e2;color:#991b1b;font-size:16px;cursor:pointer;flex-shrink:0;line-height:1;">✕</button>'
-        +'</div>'
-        +'<textarea placeholder="Un article par ligne&#10;Ex: 1 CONTAINER COSTA&#10;2 BANCHES ST20..." style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #ddd;font-size:11px;min-height:80px;resize:vertical;font-family:monospace;">'+tourItems+'</textarea>';
+    var labelInput = document.createElement('input');
+    labelInput.type = 'text'; labelInput.value = tourLabel;
+    labelInput.style.cssText = 'flex:1;padding:6px;border-radius:6px;border:1px solid #ddd;font-size:12px;font-weight:bold;color:#1b2e58;';
+    labelInput.placeholder = 'Nom du tour';
+    var delBtn = document.createElement('button');
+    delBtn.textContent = 'X';
+    delBtn.style.cssText = 'width:28px;height:28px;border-radius:6px;border:none;background:#fee2e2;color:#991b1b;font-size:14px;cursor:pointer;flex-shrink:0;';
+    delBtn.onclick = function() { div.remove(); };
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;';
+    row.appendChild(labelInput); row.appendChild(delBtn);
+    var ta = document.createElement('textarea');
+    ta.placeholder = 'Un article par ligne - Ex: 1 CONTAINER COSTA';
+    ta.style.cssText = 'width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #ddd;font-size:11px;min-height:80px;resize:vertical;font-family:monospace;';
+    ta.value = tourItems;
+    div.appendChild(row); div.appendChild(ta);
     container.appendChild(div);
 }
-
 function getListeData() {
     var tours = [];
     var container = document.getElementById('lt-tours-container');
