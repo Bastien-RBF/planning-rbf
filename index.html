@@ -122,7 +122,7 @@
                 <option value="cedric">CEDRIC</option>
                 <option value="divers">DIVERS</option>
                 <option value="instal">INSTAL</option>
-                <option value="3t500">3T500</option>
+                <option value="3t500">DEPOT (3T500)</option>
                 <option value="jadiel">JADIEL</option>
                 <option value="nicola">NICOLA</option>
             </select>
@@ -345,7 +345,7 @@
             <select id="cm-user-ed" onchange="updateCmSlots();updateCmPreview();" style="padding:6px;border-radius:6px;border:1px solid #ddd;font-size:10px;width:100%;">
                 <option value="interne">DAMIEN</option><option value="externe">EXTERNE</option>
                 <option value="cedric">CEDRIC</option><option value="divers">DIVERS</option>
-                <option value="instal">INSTAL</option><option value="3t500">3T500</option>
+                <option value="instal">INSTAL</option><option value="3t500">DEPOT (3T500)</option>
                 <option value="jadiel">JADIEL</option><option value="nicola">NICOLA</option>
             </select>
         </div>
@@ -903,7 +903,7 @@ function renderAdminView(hList) {
     var isDepot = state.curU === 'depot';
     var h = "";
     ALL_USERS.forEach(function(u) {
-        var dNmap={interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'3T500'};
+        var dNmap={interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'DEPOT (3T500)'};
         h += '<tr><td class="user-cell">'+(dNmap[u.id]||u.id.toUpperCase())+'</td>';
         for (var dI = 0; dI < 6; dI++) {
             h += '<td>';
