@@ -1182,42 +1182,129 @@ function downloadListeExcel() {
     if (!window.XLSX) { showToast('SheetJS non chargé', 'error'); return; }
 
     var wb = XLSX.utils.book_new();
-    var rows = [];
+    var ws = {};
+    var r = 1; // ligne courante (1-indexé)
 
-    // Entête
-    rows.push(['', '', '', 'CHANTIER : ', lt.chantier]);
-    rows.push(['', '', '', 'DATE DE TRANSPORT : ', lt.date ? new Date(lt.date).toLocaleDateString('fr-FR') : '']);
-    rows.push(['', '', '', 'TRANSPORT : ', lt.chauffeur, 'X', '']);
-    rows.push(['', 'LISTINGS MATERIELS TRANSPORTES']);
-    rows.push(['', '', 'ADRESSE : ' + lt.adresse]);
-    rows.push([]);
+    // Helper : écrire une cellule avec style
+    function cell(row, col, val, s) {
+        var addr = XLSX.utils.encode_cell({r: row-1, c: col-1});
+        ws[addr] = { v: val, t: typeof val === 'number' ? 'n' : 's', s: s || {} };
+    }
+    function merge(r1, c1, r2, c2) {
+        if (!ws['!merges']) ws['!merges'] = [];
+        ws['!merges'].push({s:{r:r1-1,c:c1-1}, e:{r:r2-1,c:c2-1}});
+    }
 
-    // Tours
+    // Styles
+    var sBold    = { font: { bold: true, sz: 11 } };
+    var sBoldBlue= { font: { bold: true, sz: 11, color: {rgb:'1B2E58'} } };
+    var sLabel   = { font: { bold: true, sz: 10, color: {rgb:'444444'} }, alignment: {horizontal:'right'} };
+    var sVal     = { font: { bold: true, sz: 11, color: {rgb:'1B2E58'} } };
+    var sYellow  = { font: { bold: true, sz: 13, color: {rgb:'000000'} }, fill: {patternType:'solid', fgColor:{rgb:'FFFF00'}}, alignment: {horizontal:'center', vertical:'center'} };
+    var sRed     = { font: { bold: true, sz: 11, color: {rgb:'CC0000'}, underline: true }, alignment: {horizontal:'left'} };
+    var sItem    = { font: { bold: true, sz: 11 }, border: {bottom:{style:'dotted',color:{rgb:'CCCCCC'}}} };
+    var sBox     = { font: { sz: 14 }, alignment: {horizontal:'center', vertical:'center'}, border: {top:{style:'thin',color:{rgb:'000000'}},bottom:{style:'thin',color:{rgb:'000000'}},left:{style:'thin',color:{rgb:'000000'}},right:{style:'thin',color:{rgb:'000000'}}} };
+    var sTourHdr = { font: { bold: true, sz: 11, color: {rgb:'1B2E58'} }, fill: {patternType:'solid', fgColor:{rgb:'E8F0FE'}} };
+
+    // Ligne 1 : vide
+    r = 1;
+
+    // Lignes 2-4 : entête avec infos
+    cell(2, 1, 'ROSSET', { font: {bold:true, sz:14, color:{rgb:'1B2E58'}} });
+    cell(3, 1, 'BOULON', { font: {bold:true, sz:14, color:{rgb:'1B2E58'}} });
+    cell(4, 1, '& FILS', { font: {bold:true, sz:12, color:{rgb:'1B2E58'}} });
+    merge(2,1,4,2);
+
+    cell(2, 4, 'CHANTIER :', sLabel);
+    cell(2, 5, (lt.chantier || '').toUpperCase(), sVal);
+    merge(2,5,2,7);
+
+    cell(3, 4, 'DATE DE TRANSPORT :', sLabel);
+    // Formater la date
+    var dateStr = lt.date ? (function(){
+        var d = new Date(lt.date);
+        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        var mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+        return jours[d.getDay()]+' '+d.getDate()+' '+mois[d.getMonth()]+' '+d.getFullYear();
+    })() : '';
+    cell(3, 5, dateStr, sVal);
+    merge(3,5,3,7);
+
+    cell(4, 4, 'TRANSPORT :', sLabel);
+    var chauf = (lt.chauffeur || 'INTERNE').toUpperCase();
+    cell(4, 5, chauf === 'INTERNE' ? 'INTERNE' : 'INTERNE', { font:{sz:11} });
+    cell(4, 6, chauf === 'INTERNE' ? 'X' : '',  sBox);
+    cell(4, 7, 'EXTERNE',  { font:{sz:11} });
+    cell(4, 8, chauf !== 'INTERNE' ? 'X' : '', sBox);
+
+    // Ligne 6 : LISTINGS MATERIELS TRANSPORTES
+    r = 6;
+    cell(r, 1, 'LISTINGS MATERIELS TRANSPORTES', sYellow);
+    merge(r,1,r,9);
+
+    // Ligne 7 : vide
+    r = 7;
+    cell(r, 1, '', {});
+
+    // Ligne 8 : Adresse
+    r = 8;
+    cell(r, 1, 'ADRESSE CHANTIER : ' + (lt.adresse || '(non renseignée)'), sRed);
+    merge(r,1,r,9);
+
+    // Ligne 9 : vide
+    r = 9;
+
+    // Tours et items
+    r = 10;
     lt.tours.forEach(function(tour) {
-        rows.push(['', '', tour.label + ' :']);
-        rows.push([]);
-        tour.items.forEach(function(item) {
-            rows.push(['', '', '', item]);
-            rows.push([]);
+        // Label du tour
+        r++;
+        cell(r, 1, '', {});
+        cell(r, 2, '', {});
+        cell(r, 3, (tour.label || '').toUpperCase() + ' :', sTourHdr);
+        merge(r,3,r,9);
+        r++;
+
+        (tour.items || []).forEach(function(item) {
+            r++;
+            cell(r, 2, '', sBox);  // case à cocher vide
+            cell(r, 3, item.toUpperCase(), sItem);
+            merge(r,3,r,9);
+            r++;
+            cell(r, 2, '', { border:{bottom:{style:'dotted',color:{rgb:'DDDDDD'}}} }); // ligne vide entre items
         });
     });
 
-    var ws = XLSX.utils.aoa_to_sheet(rows);
+    // Largeurs colonnes (en chars)
+    ws['!cols'] = [
+        {wch:1},   // A - marge
+        {wch:3},   // B - case à cocher
+        {wch:35},  // C - contenu principal
+        {wch:20},  // D - labels
+        {wch:25},  // E - valeurs
+        {wch:8},   // F - case transport
+        {wch:10},  // G - EXTERNE
+        {wch:8},   // H - case externe
+    ];
 
-    // Largeurs colonnes
-    ws['!cols'] = [{wch:3},{wch:3},{wch:30},{wch:25},{wch:30},{wch:5},{wch:10}];
+    // Hauteurs lignes header
+    ws['!rows'] = [];
+    ws['!rows'][1] = {hpt: 25};
+    ws['!rows'][2] = {hpt: 25};
+    ws['!rows'][3] = {hpt: 25};
+    ws['!rows'][5] = {hpt: 30};
 
-    // Style basique sur les titres (gras simulé via commentaire - SheetJS lite ne supporte pas les styles)
-    XLSX.utils.book_append_sheet(wb, ws, 'Feuil1');
+    // Référence de plage
+    ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:r+2,c:9}});
 
-    var nomFichier = 'Transport_' + lt.chantier.replace(/[^a-zA-Z0-9]/g,'_') + '_' + (lt.date || '').replace(/-/g,'') + '.xlsx';
+    XLSX.utils.book_append_sheet(wb, ws, 'Transport');
+    var nomFichier = 'Transport_' + (lt.chantier || '').replace(/[^a-zA-Z0-9]/g,'_').toUpperCase() + '_' + (lt.date || '').replace(/-/g,'') + '.xlsx';
     XLSX.writeFile(wb, nomFichier);
     showToast('Excel téléchargé !');
-    // Sauvegarder aussi dans Firebase
     saveListeTransport();
 }
 
-// ── VUE LISTE TRANSPORT (chauffeurs) ─────────────────────────────────────
+
 function viewListeTransport(key) {
     db.ref('listes_transport/'+key).once('value', function(snap) {
         var lt = snap.val();
