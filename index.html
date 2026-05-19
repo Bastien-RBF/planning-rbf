@@ -288,7 +288,8 @@
         </div>
         <!-- Zone saisie libre chantier -->
         <div id="zone-chantier-libre" class="hidden" style="margin-bottom:8px;">
-            <input type="text" id="e-chantier-libre-input" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #ddd;font-size:12px;" placeholder="Nom du chantier (ex: MAIRIE DE GRENOBLE, PRIVÉ...)">
+            <input type="text" id="e-chantier-libre-input" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #ddd;font-size:12px;margin-bottom:6px;" placeholder="Nom du chantier (ex: MAIRIE DE GRENOBLE...)">
+            <input type="text" id="e-chantier-adresse-libre-input" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #ddd;font-size:12px;" placeholder="Adresse (optionnel)">
         </div>
         <!-- Zone Fournisseur / Autre -->
         <div id="zone-autre-chantier" class="hidden" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:8px;">
@@ -1391,7 +1392,9 @@ function onChantierSel() {
         adresseEl.style.display = '';
         adresseEl.value = ''; chantierHidden.value = '';
         var inp = document.getElementById('e-chantier-libre-input');
+        var inpAdr = document.getElementById('e-chantier-adresse-libre-input');
         if (inp) { inp.oninput = function(){ chantierHidden.value = inp.value.trim().toUpperCase(); }; setTimeout(function(){ inp.focus(); }, 100); }
+        if (inpAdr) { inpAdr.oninput = function(){ adresseEl.value = inpAdr.value.trim(); }; }
         return;
     } else if (zoneLibreCh) { zoneLibreCh.classList.add('hidden'); }
     if (val === '__autre__') {
