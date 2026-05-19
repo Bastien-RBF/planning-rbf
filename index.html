@@ -275,8 +275,24 @@
 <div id="editor-overlay">
     <div class="editor-box">
         <h3 style="margin-top:0;color:var(--blue);text-align:center;font-size:16px;">Edition Mission</h3>
-        <input type="text" id="e-chantier" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;" placeholder="Chantier">
-        <input type="text" id="e-adresse" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;" placeholder="Adresse du chantier (ex: 12 rue de la Paix, Paris)">
+        <!-- CHANTIER SELECT + BOUTONS -->
+        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center;">
+            <select id="e-chantier-sel" onchange="onChantierSel()" style="flex:1;padding:9px;border-radius:8px;border:1px solid #ddd;background:#f8fafc;font-size:12px;min-width:0;">
+                <option value="">-- Choisir un chantier --</option>
+            </select>
+            <button onclick="openAddChantier()" title="Ajouter un chantier" style="width:34px;height:34px;border-radius:8px;border:none;background:var(--success);color:white;font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;">+</button>
+            <button onclick="deleteChantier()" title="Supprimer ce chantier" style="width:34px;height:34px;border-radius:8px;border:none;background:#ef4444;color:white;font-size:22px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
+        </div>
+        <!-- Champs libres Autre / Fournisseur -->
+        <div id="zone-autre-chantier" class="hidden" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div style="font-size:10px;font-weight:bold;color:#92400e;margin-bottom:6px;">📍 ADRESSE LIBRE / FOURNISSEUR</div>
+            <input type="text" id="e-chantier-libre" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #fde68a;margin-bottom:6px;font-size:12px;" placeholder="Nom (ex: SAMSE Grenoble, Kiloutou...)">
+            <input type="text" id="e-adresse-libre" style="width:100%;box-sizing:border-box;padding:8px;border-radius:6px;border:1px solid #fde68a;font-size:12px;" placeholder="Adresse complète">
+        </div>
+        <!-- Adresse auto-remplie -->
+        <input type="text" id="e-adresse" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;background:#f0f9ff;font-size:12px;" placeholder="Adresse (auto-remplie)" readonly>
+        <!-- Chantier caché pour compatibilité -->
+        <input type="hidden" id="e-chantier" value="">
         <div id="zone-truck" class="hidden">
             <label style="font-size:10px;font-weight:bold;color:var(--blue);">VEHICULE :</label>
             <select id="e-truck" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;background:#f8fafc;">
@@ -356,6 +372,19 @@
             <button onclick="window.open(document.getElementById('xlsx-url-input').value,'_blank')" style="background:#166534;color:white;border:none;padding:10px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;">🌐 Ouvrir</button>
             <button onclick="document.getElementById('xlsx-modal').style.display='none'" style="background:#f1f5f9;color:#64748b;border:none;padding:10px;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;">✕ Fermer</button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL AJOUTER CHANTIER -->
+<div id="add-chantier-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.8);display:none;align-items:center;justify-content:center;z-index:20000;">
+    <div style="background:white;border-radius:16px;padding:20px;width:90%;max-width:400px;">
+        <h3 style="margin-top:0;color:var(--blue);font-size:15px;">➕ Ajouter un chantier</h3>
+        <label style="font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">NOM DU CHANTIER :</label>
+        <input type="text" id="new-chantier-nom" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:12px;font-size:13px;" placeholder="Ex: MICHELLIÈRES, DIDEROT LABS...">
+        <label style="font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">ADRESSE :</label>
+        <input type="text" id="new-chantier-adresse" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:16px;font-size:13px;" placeholder="Ex: 12 rue Diderot, Saint-Martin-d&#39;Hères">
+        <button onclick="saveNewChantier()" class="btn-main" style="background:var(--success);color:white;margin-bottom:8px;">ENREGISTRER</button>
+        <button onclick="document.getElementById('add-chantier-overlay').style.display='none'" style="width:100%;border:none;background:none;color:#94a3b8;cursor:pointer;padding:8px;">Annuler</button>
     </div>
 </div>
 
@@ -879,7 +908,7 @@ function openEd(k) {
     document.getElementById('e-adresse').value  = d.adresse  || '';
     var selC = document.getElementById('e-chantier-sel');
     if (selC) { selC.value = d.chantier || ''; }
-    document.getElementById('zone-autre-chantier').classList.add('hidden');
+    var zac = document.getElementById('zone-autre-chantier'); if(zac) zac.classList.add('hidden');
     document.getElementById('e-adresse').style.display = '';
     document.getElementById('e-input').value    = d.text     || '';
     document.getElementById('e-matos').value    = d.matos    || '';
