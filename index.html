@@ -877,6 +877,10 @@ function openEd(k) {
     state.selectedCol  = d.col  || 'default';
     document.getElementById('e-chantier').value = d.chantier || '';
     document.getElementById('e-adresse').value  = d.adresse  || '';
+    var selC = document.getElementById('e-chantier-sel');
+    if (selC) { selC.value = d.chantier || ''; }
+    document.getElementById('zone-autre-chantier').classList.add('hidden');
+    document.getElementById('e-adresse').style.display = '';
     document.getElementById('e-input').value    = d.text     || '';
     document.getElementById('e-matos').value    = d.matos    || '';
     document.getElementById('e-truck').value    = d.truck    || '';
@@ -893,6 +897,13 @@ function openEd(k) {
     });
     renderFiles();
     openCopyMove();
+    loadChantiers(function() {
+        var cur = document.getElementById('e-chantier').value;
+        if (cur) {
+            var sel = document.getElementById('e-chantier-sel');
+            if (sel) { sel.value = cur; if (sel.value !== cur) sel.value = ''; }
+        }
+    });
     document.getElementById('editor-overlay').style.display = 'flex';
 }
 
@@ -901,8 +912,16 @@ function saveTask() {
     var isNew    = !window.data[state.curK];
     var taskData = {
         text    : isConge ? '' : document.getElementById('e-input').value,
-        chantier: isConge ? '' : document.getElementById('e-chantier').value,
-        adresse : isConge ? '' : document.getElementById('e-adresse').value,
+        chantier: isConge ? '' : (function() {
+            var sel = document.getElementById('e-chantier-sel');
+            if (sel && sel.value === '__autre__') return (document.getElementById('e-chantier-libre').value || '').trim().toUpperCase();
+            return document.getElementById('e-chantier').value;
+        })(),
+        adresse : isConge ? '' : (function() {
+            var sel = document.getElementById('e-chantier-sel');
+            if (sel && sel.value === '__autre__') return (document.getElementById('e-adresse-libre').value || '').trim();
+            return document.getElementById('e-adresse').value;
+        })(),
         matos   : isConge ? '' : document.getElementById('e-matos').value,
         toDepot : isConge ? false : document.getElementById('e-depot').checked,
         isConge : isConge,
@@ -942,6 +961,81 @@ function closeEditor() { document.getElementById('editor-overlay').style.display
 /* =========================================
    COPIER / DEPLACER
 ========================================= */
+// ── GESTION CHANTIERS ────────────────────────────────────────────────────
+var CHANTIERS_CACHE = {};
+
+function loadChantiers(callback) {
+    db.ref('chantiers_rbf').on('value', function(snap) {
+        CHANTIERS_CACHE = snap.val() || {};
+        var sel = document.getElementById('e-chantier-sel');
+        if (!sel) { if (callback) callback(); return; }
+        var curVal = sel.value;
+        sel.innerHTML = '<option value="">-- Choisir un chantier --</option>';
+        Object.keys(CHANTIERS_CACHE).sort().forEach(function(k) {
+            var opt = document.createElement('option');
+            opt.value = k; opt.textContent = k;
+            sel.appendChild(opt);
+        });
+        var sep = document.createElement('option'); sep.disabled = true; sep.textContent = '──────────────'; sel.appendChild(sep);
+        var autre = document.createElement('option'); autre.value = '__autre__'; autre.textContent = '📍 Autre / Fournisseur'; sel.appendChild(autre);
+        if (curVal) sel.value = curVal;
+        if (callback) callback();
+    });
+}
+
+function onChantierSel() {
+    var sel = document.getElementById('e-chantier-sel');
+    var val = sel ? sel.value : '';
+    var zoneAutre = document.getElementById('zone-autre-chantier');
+    var adresseEl = document.getElementById('e-adresse');
+    var chantierHidden = document.getElementById('e-chantier');
+    if (val === '__autre__') {
+        zoneAutre.classList.remove('hidden');
+        adresseEl.style.display = 'none';
+        chantierHidden.value = ''; adresseEl.value = '';
+    } else if (val && CHANTIERS_CACHE[val]) {
+        zoneAutre.classList.add('hidden');
+        adresseEl.style.display = '';
+        adresseEl.value = CHANTIERS_CACHE[val].adresse || '';
+        chantierHidden.value = val;
+    } else {
+        zoneAutre.classList.add('hidden');
+        adresseEl.style.display = '';
+        adresseEl.value = ''; chantierHidden.value = '';
+    }
+}
+
+function openAddChantier() {
+    document.getElementById('new-chantier-nom').value = '';
+    document.getElementById('new-chantier-adresse').value = '';
+    document.getElementById('add-chantier-overlay').style.display = 'flex';
+    setTimeout(function(){ document.getElementById('new-chantier-nom').focus(); }, 100);
+}
+
+function saveNewChantier() {
+    var nom = document.getElementById('new-chantier-nom').value.trim().toUpperCase();
+    var adresse = document.getElementById('new-chantier-adresse').value.trim();
+    if (!nom) { showToast('Entrez un nom de chantier', 'error'); return; }
+    db.ref('chantiers_rbf/' + nom).set({ nom: nom, adresse: adresse })
+        .then(function() {
+            document.getElementById('add-chantier-overlay').style.display = 'none';
+            showToast('Chantier ajouté !');
+            document.getElementById('e-chantier-sel').value = nom;
+            onChantierSel();
+        }).catch(function() { showToast('Erreur sauvegarde', 'error'); });
+}
+
+function deleteChantier() {
+    var sel = document.getElementById('e-chantier-sel');
+    var val = sel ? sel.value : '';
+    if (!val || val === '__autre__' || val === '') { showToast('Sélectionner un chantier à supprimer', 'error'); return; }
+    showConfirm('Supprimer le chantier ' + val + ' ?', function() {
+        db.ref('chantiers_rbf/' + val).remove()
+            .then(function() { showToast('Chantier supprimé'); })
+            .catch(function() { showToast('Erreur suppression', 'error'); });
+    }, 'Confirmer suppression');
+}
+
 function updateCmPreview() {
     var wel = document.getElementById('cm-week-ed');
     var del = document.getElementById('cm-day-ed');
