@@ -1186,7 +1186,7 @@ function downloadListeExcel() {
 
     try {
         // Charger le template
-        var wb = XLSX.read(TEMPLATE_B64, { type: 'base64' });
+        var wb = XLSX.read(TEMPLATE_B64, { type: 'base64', cellStyles: true, bookVBA: true, cellNF: true });
         var ws = wb.Sheets[wb.SheetNames[0]];
 
         // Helper écrire sans écraser le style existant
@@ -1237,7 +1237,15 @@ function downloadListeExcel() {
 
         // Télécharger
         var nom = 'Transport_' + (lt.chantier || '').replace(/[^a-zA-Z0-9]/g,'_').toUpperCase() + '_' + (lt.date || '').replace(/-/g,'') + '.xlsx';
-        XLSX.writeFile(wb, nom);
+        // Écrire en préservant tous les éléments du fichier original
+        var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64', cellStyles: true, bookVBA: true });
+        // Créer un lien de téléchargement
+        var link = document.createElement('a');
+        link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + wbout;
+        link.download = nom;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         showToast('Excel telecharge !');
         saveListeTransport();
 
