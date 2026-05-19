@@ -208,7 +208,7 @@
         <table>
             <thead><tr>
                 <th class="user-cell" style="width:7%;">NOM</th>
-                <th id="h0" style="width:18.6%;">LUN</th><th id="h1" style="width:18.6%;">MAR</th><th id="h2" style="width:18.6%;">MER</th><th id="h3" style="width:18.6%;">JEU</th><th id="h4" style="width:18.6%;">VEN</th>
+                <th id="h0" style="width:15.5%;">LUN</th><th id="h1" style="width:15.5%;">MAR</th><th id="h2" style="width:15.5%;">MER</th><th id="h3" style="width:15.5%;">JEU</th><th id="h4" style="width:15.5%;">VEN</th><th id="h5" style="width:15.5%;">SAM</th>
             </tr></thead>
             <tbody id="b-admin"></tbody>
         </table>
@@ -732,9 +732,9 @@ async function fetchHolidays(y) {
 function render() {
     document.getElementById('wk-disp').innerHTML =
         '<span style="font-size:10px;opacity:0.6;">ANNEE '+state.curY+'</span><br>SEMAINE '+state.curW;
-    var days = ["LUN","MAR","MER","JEU","VEN"];
+    var days = ["LUN","MAR","MER","JEU","VEN","SAM"];
     var hList = {};
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 6; i++) {
         var d   = getDateFromWeek(state.curW, state.curY, i);
         var iso = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
         var lbl = fmtDate(d);
@@ -795,7 +795,7 @@ function renderAdminView(hList) {
     ALL_USERS.forEach(function(u) {
         var dNmap={interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'3T500'};
         h += '<tr><td class="user-cell">'+(dNmap[u.id]||u.id.toUpperCase())+'</td>';
-        for (var dI = 0; dI < 5; dI++) {
+        for (var dI = 0; dI < 6; dI++) {
             h += '<td>';
             for (var s = 1; s <= u.s; s++) {
                 var k   = state.curY+'_'+state.curW+'_'+u.id+'_'+dI+'_s'+s;
@@ -835,7 +835,7 @@ function renderDriverView(days, hList) {
     document.getElementById('v-admin').classList.add('hidden');
     v.innerHTML = "";
     var maxS = (state.curU === 'jadiel' || state.curU === 'nicola') ? 2 : 4;
-    for (var dI = 0; dI < 5; dI++) {
+    for (var dI = 0; dI < 6; dI++) {
         var dD   = getDateFromWeek(state.curW, state.curY, dI);
         var cards = "";
         for (var s = 1; s <= maxS; s++) {
