@@ -6,17 +6,12 @@ self.addEventListener('push', function(event) {
     var title = 'RBF Planning';
     var body  = 'Mise a jour du planning';
     var icon  = '/planning-rbf/icon.png.png';
-    var requireInteract = true; // true par défaut (mobile)
 
     if (event.data) {
         try {
-            // Lire UNE SEULE FOIS et extraire tout
             var d = event.data.json();
             title = d.title || title;
             body  = d.body  || d.message || body;
-            if (typeof d.requireInteraction !== 'undefined') {
-                requireInteract = d.requireInteraction;
-            }
         } catch(e) {
             try {
                 var txt = event.data.text();
@@ -24,13 +19,14 @@ self.addEventListener('push', function(event) {
                     var d2 = JSON.parse(txt);
                     title = d2.title || title;
                     body  = d2.body  || body;
-                    if (typeof d2.requireInteraction !== 'undefined') {
-                        requireInteract = d2.requireInteraction;
-                    }
                 }
             } catch(e2) {}
         }
     }
+
+    // Détecter mobile directement dans le Service Worker
+    var ua = (self.navigator && self.navigator.userAgent) || '';
+    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
 
     event.waitUntil(
         self.registration.showNotification(title, {
@@ -38,7 +34,7 @@ self.addEventListener('push', function(event) {
             icon              : icon,
             badge             : icon,
             vibrate           : [200, 100, 200],
-            requireInteraction: requireInteract,
+            requireInteraction: isMobile,
             data              : { url: 'https://bastien-rbf.github.io/planning-rbf/' }
         })
     );
