@@ -24,13 +24,24 @@ self.addEventListener('push', function(event) {
         }
     }
 
+    // requireInteraction : true sur mobile (depuis payload), false sur PC
+    var requireInteract = true;
+    if (event.data) {
+        try {
+            var pd = event.data.json();
+            if (typeof pd.requireInteraction !== 'undefined') {
+                requireInteract = pd.requireInteraction;
+            }
+        } catch(e) {}
+    }
+
     event.waitUntil(
         self.registration.showNotification(title, {
             body             : body,
             icon             : icon,
             badge            : icon,
             vibrate          : [200, 100, 200],
-            requireInteraction: true,
+            requireInteraction: requireInteract,
             data             : { url: 'https://bastien-rbf.github.io/planning-rbf/' }
         })
     );

@@ -54,11 +54,17 @@ export default {
                 return new Response(JSON.stringify({ error: 'Aucun abonne' }), { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } });
             }
 
-            const payload = JSON.stringify({ title, body: message });
             let sent = 0, errors = 0;
 
             for (const sub of subscriptions) {
                 try {
+                    // requireInteraction = true sur mobile, false sur PC (disparaît auto)
+                    const isMobile = sub.mobile !== false;
+                    const payload = JSON.stringify({
+                        title,
+                        body: message,
+                        requireInteraction: isMobile
+                    });
                     const vapidToken = await generateVapidToken(sub.endpoint);
                     const resp = await fetch(sub.endpoint, {
                         method : 'POST',
@@ -70,7 +76,7 @@ export default {
                         },
                         body: new TextEncoder().encode(payload)
                     });
-                    console.log('Push to', sub.endpoint.substring(0,50), ':', resp.status);
+                    console.log('Push to', sub.endpoint.substring(0,50), '(mobile:'+isMobile+'):', resp.status);
                     if (resp.status < 300) sent++;
                     else errors++;
                 } catch(e) {

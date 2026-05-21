@@ -593,11 +593,13 @@ function subscribeToNotifications() {
                     } catch(e) {}
                 }
                 return Promise.all(removes).then(function() {
+                    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
                     return db.ref('push_subs/' + state.curU + '_' + DEVICE_ID).set({
-                        sub : JSON.stringify(sub),
-                        user: state.curU,
-                        role: state.curU,
-                        ts  : Date.now()
+                        sub   : JSON.stringify(sub),
+                        user  : state.curU,
+                        role  : state.curU,
+                        mobile: isMobile,
+                        ts    : Date.now()
                     });
                 });
             });
@@ -804,11 +806,13 @@ function login(u) {
                                 }
                             } catch(e) {}
                         }
+                        var isMobile2 = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
                         db.ref('push_subs/' + state.curU + '_' + DEVICE_ID).set({
-                            sub : JSON.stringify(sub),
-                            user: state.curU,
-                            role: state.curU,
-                            ts  : Date.now()
+                            sub   : JSON.stringify(sub),
+                            user  : state.curU,
+                            role  : state.curU,
+                            mobile: isMobile2,
+                            ts    : Date.now()
                         });
                     });
                 } else {
@@ -2213,11 +2217,18 @@ colorOpts.forEach(function(c) {
 firebase.auth().onAuthStateChanged(function(user) {
     var saved = localStorage.getItem('rbf_u');
     if (user && saved) {
-        // Session valide — connecter directement sans demander le code
         state.curU = saved;
         login(saved);
+        // Migration silencieuse : ajouter le champ mobile si absent
+        var subKey = saved + '_' + DEVICE_ID;
+        db.ref('push_subs/' + subKey).once('value', function(snap) {
+            var d = snap.val();
+            if (d && typeof d.mobile === 'undefined') {
+                var isMobileMig = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+                db.ref('push_subs/' + subKey + '/mobile').set(isMobileMig);
+            }
+        });
     } else {
-        // Session expirée ou pas connecté — nettoyer et afficher l'écran de connexion
         localStorage.removeItem('rbf_u');
         state.curU = null;
     }
