@@ -934,37 +934,20 @@ function renderAdminView(hList) {
                 if (dta.isConge)       txt = 'CONGE';
                 else if (dta.chantier) txt = '<b>'+trk+'['+dta.chantier.toUpperCase()+']</b><br>'+dta.text;
                 else                   txt = dta.text || '...';
-                // Adresse : texte simple pour admin, lien Maps cliquable pour dépôt
-                if (dta.adresse) {
-                    if (isDepot) {
-                        var mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(dta.adresse);
-                        txt += '<div style="font-size:8px;margin-top:2px;"><a href="'+mapsUrl+'" target="_blank" onclick="event.stopPropagation();" style="color:#1b6cb8;font-weight:bold;text-decoration:none;">📍 NAVIGUER : '+dta.adresse+'</a></div>';
-                    } else {
-                        txt += '<div style="font-size:8px;color:#94a3b8;margin-top:2px;">📍 '+dta.adresse+'</div>';
-                    }
-                }
+                if (dta.adresse) txt += '<div style="font-size:8px;color:#94a3b8;margin-top:2px;">📍 '+dta.adresse+'</div>';
                 // Matos pour admin uniquement
                 if (state.curU === 'admin' && dta.matos) {
                     txt += '<div style="border-top:1px dashed #ccc;margin-top:4px;padding-top:4px;font-size:9px;color:#166534;">'+dta.matos+'</div>';
                 }
-                // Fichiers : admin et dépôt
+                // Fichiers cliquables (admin uniquement)
                 var filesHtml = '';
-                if (dta.files && dta.files.length > 0) {
+                if (state.curU === 'admin' && dta.files && dta.files.length > 0) {
                     filesHtml = '<div style="border-top:1px dashed #cbd5e1;margin-top:5px;padding-top:4px;">';
-                    dta.files.forEach(function(f) { filesHtml += fileTagHtml(f, isDepot ? false : true); });
+                    dta.files.forEach(function(f) { filesHtml += fileTagHtml(f, true); });
                     filesHtml += '</div>';
                 }
-                // Badge liste de transport : simple badge admin, bouton cliquable dépôt
-                var ltBadge = '';
-                if (LISTES_CACHE[k]) {
-                    if (isDepot) {
-                        ltBadge = '<span style="float:right;background:#10b981;color:white;font-size:8px;padding:1px 4px;border-radius:4px;margin-left:4px;cursor:pointer;" onclick="event.stopPropagation();viewListeTransport(\''+k+'\');">📋 LISTE</span>';
-                    } else {
-                        ltBadge = '<span style="float:right;background:#10b981;color:white;font-size:8px;padding:1px 4px;border-radius:4px;margin-left:4px;">📋</span>';
-                    }
-                }
-                var cardClick = isDepot ? '' : 'onclick="openEd(\''+k+'\')"';
-                h += '<div class="slot '+(dta.text||dta.isConge?'filled':'')+' '+(dta.toDepot?'is-to-depot':'')+' '+(dta.isConge?'is-conge':'')+'" style="'+st+'" '+cardClick+'>'+ltBadge+txt+filesHtml+'</div>';
+                var ltBadge = LISTES_CACHE[k] ? '<span style="float:right;background:#10b981;color:white;font-size:8px;padding:1px 4px;border-radius:4px;margin-left:4px;">📋</span>' : '';
+                h += '<div class="slot '+(dta.text||dta.isConge?'filled':'')+' '+(dta.toDepot?'is-to-depot':'')+' '+(dta.isConge?'is-conge':'')+'" style="'+st+'" onclick="openEd(\''+k+'\')">'+ltBadge+txt+filesHtml+'</div>';
             }
             h += '</td>';
         }
@@ -1301,10 +1284,10 @@ function viewListeTransport(key) {
 
         // Créer l'overlay via DOM (évite les problèmes de quotes)
         var overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:20px;box-sizing:border-box;';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:10px;box-sizing:border-box;';
 
         var box = document.createElement('div');
-        box.style.cssText = 'background:white;border-radius:16px;max-width:600px;margin:auto;overflow:hidden;';
+        box.style.cssText = 'background:white;border-radius:16px;max-width:600px;width:100%;margin:auto;overflow:hidden;box-sizing:border-box;';
 
         // Header
         var hdr = document.createElement('div');
@@ -1350,7 +1333,7 @@ function viewListeTransport(key) {
         infoRows.forEach(function(row) {
             var tr = document.createElement('tr');
             var td1 = document.createElement('td'); td1.style.cssText = 'padding:3px 8px;font-weight:bold;color:#64748b;white-space:nowrap;'; td1.textContent = row[0];
-            var td2 = document.createElement('td'); td2.style.cssText = 'padding:3px 8px;font-weight:bold;color:#1b2e58;'; td2.textContent = row[1];
+            var td2 = document.createElement('td'); td2.style.cssText = 'padding:3px 8px;font-weight:bold;color:#1b2e58;word-break:break-word;max-width:0;width:100%;'; td2.textContent = row[1];
             tr.appendChild(td1); tr.appendChild(td2); info.appendChild(tr);
         });
         body.appendChild(info);
