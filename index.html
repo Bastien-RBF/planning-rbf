@@ -679,10 +679,15 @@ function sendTargetedPush(key, taskData, action) {
         if (!targets.length) { console.log('Aucun destinataire push'); return; }
         console.log('Push:', targets.length, 'dest (admin:'+allSubs.length+', chauffeur:'+driverSubs.length+', depot:'+depotSubs.length+')');
 
-        fetch(PUSH_WORKER_URL, {
-            method : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body   : JSON.stringify({ subscriptions: targets, title: title, message: body })
+        // Sauvegarder le message dans Firebase avant d'envoyer le push
+        // Le Service Worker le lira via l'API REST Firebase
+        db.ref('last_push').set({ title: title, message: body, ts: Date.now() })
+        .then(function() {
+            return fetch(PUSH_WORKER_URL, {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body   : JSON.stringify({ subscriptions: targets })
+            });
         })
         .then(function(r){return r.json();})
         .then(function(d){ console.log('Push OK:', d.sent, 'envoyes,', d.errors, 'erreurs'); })
