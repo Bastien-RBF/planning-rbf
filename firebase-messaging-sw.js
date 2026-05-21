@@ -1,41 +1,57 @@
 // ================================================
 // RBF Planning — Service Worker Web Push
+// Push vide : le SW lit le message depuis Firebase REST
 // ================================================
 
+var FIREBASE_DB_URL = 'https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app';
+
 self.addEventListener('push', function(event) {
-    var title = 'RBF Planning';
-    var body  = 'Mise a jour du planning';
-    var icon  = '/planning-rbf/icon.png.png';
+    var defaultTitle = 'RBF Planning';
+    var defaultBody  = 'Mise a jour du planning';
+    var icon         = '/planning-rbf/icon.png.png';
 
-    if (event.data) {
-        try {
-            var d = event.data.json();
-            title = d.title || title;
-            body  = d.body  || d.message || body;
-        } catch(e) {
-            try {
-                var txt = event.data.text();
-                if (txt) {
-                    var d2 = JSON.parse(txt);
-                    title = d2.title || title;
-                    body  = d2.body  || body;
-                }
-            } catch(e2) {}
-        }
-    }
-
-    // Détecter mobile directement dans le Service Worker
-    var ua = (self.navigator && self.navigator.userAgent) || '';
-    var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
-
-    event.waitUntil(
-        self.registration.showNotification(title, {
+    function showNotif(title, body) {
+        var ua       = (self.navigator && self.navigator.userAgent) || '';
+        var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+        return self.registration.showNotification(title, {
             body              : body,
             icon              : icon,
             badge             : icon,
             vibrate           : [200, 100, 200],
             requireInteraction: isMobile,
             data              : { url: 'https://bastien-rbf.github.io/planning-rbf/' }
+        });
+    }
+
+    // Si le push contient déjà un payload (test DevTools), l'utiliser directement
+    if (event.data) {
+        try {
+            var d = event.data.json();
+            event.waitUntil(showNotif(d.title || defaultTitle, d.body || d.message || defaultBody));
+            return;
+        } catch(e) {
+            try {
+                var txt = event.data.text();
+                if (txt) {
+                    var d2 = JSON.parse(txt);
+                    event.waitUntil(showNotif(d2.title || defaultTitle, d2.body || defaultBody));
+                    return;
+                }
+            } catch(e2) {}
+        }
+    }
+
+    // Push vide — lire le dernier message dans Firebase via REST (pas de SDK nécessaire)
+    event.waitUntil(
+        fetch(FIREBASE_DB_URL + '/last_push.json')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var title = (d && d.title)   || defaultTitle;
+            var body  = (d && d.message) || defaultBody;
+            return showNotif(title, body);
+        })
+        .catch(function() {
+            return showNotif(defaultTitle, defaultBody);
         })
     );
 });
