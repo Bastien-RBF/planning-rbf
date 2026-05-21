@@ -663,12 +663,14 @@ function sendTargetedPush(key, taskData, action) {
                 // Format clé: role_deviceId — extraire juste le role
                 var realRole = u.split('_')[0];
 
+                // Ajouter le champ mobile au push sub pour le Cloudflare Worker
+                var subWithMobile = Object.assign({}, s, { mobile: data[u].mobile !== false });
                 if (realRole === 'admin') {
-                    allSubs.push(s);
+                    allSubs.push(subWithMobile);
                 } else if (realRole === userId && isFuture) {
-                    driverSubs.push(s);
+                    driverSubs.push(subWithMobile);
                 } else if (realRole === 'depot' && taskData.toDepot && isFuture) {
-                    depotSubs.push(s);
+                    depotSubs.push(subWithMobile);
                 }
             } catch(e) {}
         }
