@@ -322,6 +322,18 @@
                 <option value="🏗️ GRUE / SPECIAL">🏗️ GRUE / SPECIAL</option>
             </select>
         </div>
+        <!-- Transporteur externe -->
+        <div id="zone-transporteur" class="hidden" style="margin-bottom:10px;">
+            <label style="font-size:10px;font-weight:bold;color:var(--blue);display:block;margin-bottom:4px;">TRANSPORTEUR EXTERNE :</label>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <select id="e-transporteur-sel" onchange="onTransporteurSel()" style="flex:1;padding:9px;border-radius:8px;border:1px solid #ddd;background:#f8fafc;font-size:12px;min-width:0;">
+                    <option value="">-- Choisir un transporteur --</option>
+                </select>
+                <button onclick="openAddTransporteur()" title="Ajouter" style="width:34px;height:34px;border-radius:8px;border:none;background:var(--success);color:white;font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;">+</button>
+                <button onclick="deleteTransporteur()" title="Supprimer" style="width:34px;height:34px;border-radius:8px;border:none;background:#ef4444;color:white;font-size:22px;cursor:pointer;flex-shrink:0;line-height:1;">−</button>
+            </div>
+            <input type="text" id="e-transporteur-libre" class="hidden" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #ddd;font-size:12px;margin-top:6px;" placeholder="Nom du transporteur (saisie libre)">
+        </div>
         <textarea id="e-input" style="height:60px;padding:10px;border-radius:8px;border:1px solid #ddd;resize:vertical;" placeholder="Mission"></textarea>
         <div id="zone-matos" class="hidden">
             <textarea id="e-matos" style="height:50px;border:1px solid var(--success);padding:10px;border-radius:8px;margin-top:10px;resize:vertical;" placeholder="Logistique"></textarea>
@@ -442,6 +454,17 @@
             <button onclick="saveListeTransport()" class="btn-main" style="background:#1b2e58;color:white;margin:0;">💾 SAUVEGARDER</button>
             <button onclick="downloadListeExcel()" class="btn-main" style="background:var(--success);color:white;margin:0;">⬇️ TÉLÉCHARGER EXCEL</button>
         </div>
+    </div>
+</div>
+
+<!-- MODAL AJOUTER TRANSPORTEUR -->
+<div id="add-transporteur-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.8);display:none;align-items:center;justify-content:center;z-index:20000;">
+    <div style="background:white;border-radius:16px;padding:20px;width:90%;max-width:380px;">
+        <h3 style="margin-top:0;color:var(--blue);font-size:15px;">➕ Ajouter un transporteur</h3>
+        <label style="font-size:11px;font-weight:bold;display:block;margin-bottom:4px;">NOM DU TRANSPORTEUR :</label>
+        <input type="text" id="new-transporteur-nom" style="width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:16px;font-size:13px;" placeholder="Ex: TRANSPORTS MARTIN, DHL..." onkeydown="if(event.key==='Enter')saveNewTransporteur()">
+        <button onclick="saveNewTransporteur()" style="width:100%;background:var(--blue);color:white;border:none;padding:12px;border-radius:8px;font-weight:bold;font-size:13px;cursor:pointer;margin-bottom:8px;">AJOUTER</button>
+        <button onclick="document.getElementById('add-transporteur-overlay').style.display='none'" style="width:100%;border:none;background:none;color:#94a3b8;cursor:pointer;padding:8px;">Annuler</button>
     </div>
 </div>
 
@@ -935,7 +958,10 @@ function renderAdminView(hList) {
                 var trk = dta.truck ? '<span style="font-size:8px;opacity:0.7;">'+dta.truck+'</span> ' : '';
                 var txt = '';
                 if (dta.isConge)       txt = 'CONGE';
-                else if (dta.chantier) txt = '<b>'+trk+'['+dta.chantier.toUpperCase()+']</b><br>'+dta.text;
+                else if (dta.chantier) {
+                    var trspLabel = (k.includes('externe') && dta.transporteur) ? ' <span style="background:#dbeafe;color:#1e40af;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">'+dta.transporteur+'</span>' : '';
+                    txt = '<b>'+trk+'['+dta.chantier.toUpperCase()+']</b>'+trspLabel+'<br>'+dta.text;
+                }
                 else                   txt = dta.text || '...';
                 // Adresse : texte simple pour admin, lien Maps cliquable pour dépôt
                 if (dta.adresse) {
@@ -1038,9 +1064,15 @@ function openEd(k) {
     var isJN       = k.includes('jadiel') || k.includes('nicola');
     var isTruck    = k.includes('interne') || k.includes('externe') || k.includes('cedric');
     var canHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers') && !k.includes('3t500');
+    var isExterne  = k.includes('externe');
     document.getElementById('zone-matos').classList.toggle('hidden', !isJN);
     document.getElementById('zone-truck').classList.toggle('hidden', !isTruck);
     document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHoliday);
+    document.getElementById('zone-transporteur').classList.toggle('hidden', !isExterne);
+    if (isExterne) loadTransporteurs(function() {
+        var tSel = document.getElementById('e-transporteur-sel');
+        if (tSel && d.transporteur) { tSel.value = d.transporteur; onTransporteurSel(); }
+    });
     document.querySelectorAll('.color-opt').forEach(function(o) {
         o.classList.toggle('active', (o.dataset.col || 'default') === state.selectedCol);
     });
@@ -1085,7 +1117,13 @@ function saveTask() {
         isConge : isConge,
         col     : isConge ? '#fef3c7' : state.selectedCol,
         files   : isConge ? [] : state.currentFiles,
-        truck   : (!document.getElementById('zone-truck').classList.contains('hidden') && !isConge) ? document.getElementById('e-truck').value : ''
+        truck        : (!document.getElementById('zone-truck').classList.contains('hidden') && !isConge) ? document.getElementById('e-truck').value : '',
+        transporteur : (function() {
+            if (document.getElementById('zone-transporteur').classList.contains('hidden') || isConge) return '';
+            var tSel = document.getElementById('e-transporteur-sel');
+            if (tSel && tSel.value === '__libre__') return (document.getElementById('e-transporteur-libre').value || '').trim().toUpperCase();
+            return tSel ? tSel.value : '';
+        })()
     };
     db.ref('planning_v18/'+state.curK).set(taskData)
         .then(function() {
@@ -1119,6 +1157,69 @@ function closeEditor() { document.getElementById('editor-overlay').style.display
 /* =========================================
    COPIER / DEPLACER
 ========================================= */
+// ── GESTION TRANSPORTEURS ───────────────────────────────────────────────
+var TRANSPORTEURS_CACHE = {};
+
+function loadTransporteurs(callback) {
+    db.ref('transporteurs_rbf').on('value', function(snap) {
+        TRANSPORTEURS_CACHE = snap.val() || {};
+        var sel = document.getElementById('e-transporteur-sel');
+        if (!sel) { if (callback) callback(); return; }
+        var curVal = sel.value;
+        sel.innerHTML = '<option value="">-- Choisir un transporteur --</option>';
+        Object.keys(TRANSPORTEURS_CACHE).sort().forEach(function(k) {
+            var opt = document.createElement('option');
+            opt.value = k; opt.textContent = k;
+            sel.appendChild(opt);
+        });
+        var sep = document.createElement('option'); sep.disabled = true; sep.textContent = '──────────────'; sel.appendChild(sep);
+        var libre = document.createElement('option'); libre.value = '__libre__'; libre.textContent = '✏️ Saisie libre'; sel.appendChild(libre);
+        if (curVal) sel.value = curVal;
+        if (callback) callback();
+    });
+}
+
+function onTransporteurSel() {
+    var sel = document.getElementById('e-transporteur-sel');
+    var libreInp = document.getElementById('e-transporteur-libre');
+    if (!sel || !libreInp) return;
+    if (sel.value === '__libre__') {
+        libreInp.classList.remove('hidden');
+        setTimeout(function(){ libreInp.focus(); }, 100);
+    } else {
+        libreInp.classList.add('hidden');
+    }
+}
+
+function openAddTransporteur() {
+    document.getElementById('new-transporteur-nom').value = '';
+    document.getElementById('add-transporteur-overlay').style.display = 'flex';
+    setTimeout(function(){ document.getElementById('new-transporteur-nom').focus(); }, 100);
+}
+
+function saveNewTransporteur() {
+    var nom = document.getElementById('new-transporteur-nom').value.trim().toUpperCase();
+    if (!nom) { showToast('Entrez un nom de transporteur', 'error'); return; }
+    db.ref('transporteurs_rbf/' + nom).set({ nom: nom })
+        .then(function() {
+            document.getElementById('add-transporteur-overlay').style.display = 'none';
+            showToast('Transporteur ajouté !');
+            var sel = document.getElementById('e-transporteur-sel');
+            if (sel) { sel.value = nom; onTransporteurSel(); }
+        }).catch(function() { showToast('Erreur sauvegarde', 'error'); });
+}
+
+function deleteTransporteur() {
+    var sel = document.getElementById('e-transporteur-sel');
+    var val = sel ? sel.value : '';
+    if (!val || val === '__libre__' || val === '') { showToast('Sélectionner un transporteur à supprimer', 'error'); return; }
+    showConfirm('Supprimer le transporteur ' + val + ' ?', function() {
+        db.ref('transporteurs_rbf/' + val).remove()
+            .then(function() { showToast('Transporteur supprimé'); })
+            .catch(function() { showToast('Erreur suppression', 'error'); });
+    }, 'Confirmer suppression');
+}
+
 // ── GESTION CHANTIERS ────────────────────────────────────────────────────
 // ── LISTE DE TRANSPORT ───────────────────────────────────────────────────
 var LT_CUR_KEY = null;
