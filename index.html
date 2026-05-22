@@ -414,7 +414,10 @@
             <span style="font-weight:bold;font-size:15px;">📋 LISTE DE TRANSPORT</span>
             <div style="display:flex;gap:8px;align-items:center;">
                 <button onclick="printListeTransportAdmin()" style="background:#f59e0b;color:#1b2e58;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;">🖨️ IMPRIMER</button>
+                <div style="display:flex;gap:8px;align-items:center;">
+                <button onclick="deleteListeTransport()" style="background:#ef4444;color:white;border:none;padding:7px 12px;border-radius:6px;font-size:11px;font-weight:bold;cursor:pointer;">🗑️ SUPPRIMER LA LISTE</button>
                 <button onclick="document.getElementById('liste-transport-overlay').style.display='none'" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;">✕</button>
+            </div>
             </div>
         </div>
         <!-- Infos mission -->
@@ -1141,14 +1144,29 @@ function saveTask() {
 
 function deleteTask() {
     var old = window.data[state.curK] || {};
-    // Suppression directe - un seul clic
-    db.ref('planning_v18/'+state.curK).remove()
+    var key = state.curK;
+    db.ref('planning_v18/'+key).remove()
         .then(function() {
-            sendTargetedPush(state.curK, old, 'ANNULEE');
+            // Supprimer aussi la liste de transport associée si elle existe
+            return db.ref('listes_transport/'+key).remove();
+        })
+        .then(function() {
+            sendTargetedPush(key, old, 'ANNULEE');
             closeEditor();
             showToast('Mission supprimee');
         })
         .catch(function(err) { console.error(err); showToast('Erreur suppression', 'error'); });
+}
+
+function deleteListeTransport() {
+    showConfirm('Supprimer la liste de transport de cette mission ?', function() {
+        db.ref('listes_transport/'+state.curK).remove()
+            .then(function() {
+                document.getElementById('liste-transport-overlay').style.display = 'none';
+                showToast('Liste de transport supprimée');
+            })
+            .catch(function() { showToast('Erreur suppression', 'error'); });
+    }, 'Confirmer suppression');
 }
 
 function closeEditor() { document.getElementById('editor-overlay').style.display = 'none'; }
@@ -1847,28 +1865,14 @@ function executeCopyMove(mode) {
     var label = mode === 'move' ? 'deplace' : 'copie';
 
     var doExec = function() {
-        var srcKey = state.curK;
         db.ref('planning_v18/'+destKey).set(srcData)
             .then(function() {
-                if (mode === 'move') return db.ref('planning_v18/'+srcKey).remove();
-            })
-            .then(function() {
-                // Copier/déplacer aussi la liste de transport associée
-                return db.ref('listes_transport/'+srcKey).once('value');
-            })
-            .then(function(ltSnap) {
-                var lt = ltSnap.val();
-                if (!lt) return Promise.resolve();
-                // Copier la liste vers la nouvelle clé
-                return db.ref('listes_transport/'+destKey).set(lt)
-                    .then(function() {
-                        // Si déplacement : supprimer l'ancienne liste
-                        if (mode === 'move') return db.ref('listes_transport/'+srcKey).remove();
-                    });
+                if (mode === 'move') return db.ref('planning_v18/'+state.curK).remove();
             })
             .then(function() {
                 sendTargetedPush(destKey, srcData, mode==='move' ? 'DEPLACEE' : 'COPIEE');
-                if (mode === 'move') sendTargetedPush(srcKey, srcData, 'RETIREE');
+                // Si déplacement : notifier aussi la personne d'origine que la tâche lui a été retirée
+                if (mode === 'move') sendTargetedPush(state.curK, srcData, 'RETIREE');
                 closeEditor();
                 showToast('Mission '+label+'e !');
             })
