@@ -1139,7 +1139,7 @@ function printListeTransportAdmin() {
         });
         tours.push({ label: label, items: items });
     });
-    viewListeTransportFromData({ chantier: chantier, date: date, chauffeur: chauffeur, adresse: adresse, tours: tours });
+    showListeTransportModal({ chantier: chantier, date: date, chauffeur: chauffeur, adresse: adresse, tours: tours });
 }
 
 function viewListeTransportFromData(lt) {
@@ -1402,110 +1402,105 @@ function viewListeTransport(key) {
             showToast('Aucune liste de transport pour cette mission');
             return;
         }
-
-        function formatDateFR(dateStr) {
-            if (!dateStr) return '';
-            var d = new Date(dateStr);
-            if (isNaN(d)) return dateStr;
-            var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-            var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-            return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
-        }
-
-        var isInterne = !lt.chauffeur || lt.chauffeur.toUpperCase() === 'INTERNE';
-
-        // CSS : écran = vue simple, impression = vue Excel
-        var printStyle = document.getElementById('rbf-print-style') || document.createElement('style');
-        printStyle.id = 'rbf-print-style';
-        printStyle.textContent = '@media print { body > *:not(#rbf-lt-overlay){display:none!important;} #rbf-lt-overlay{background:transparent!important;padding:0!important;position:static!important;overflow:visible!important;} #rbf-lt-overlay > div{box-shadow:none!important;border-radius:0!important;max-width:100%!important;} .rbf-screen-only{display:none!important;} .rbf-print-only{display:block!important;} }';
-        document.head.appendChild(printStyle);
-
-        var overlay = document.createElement('div');
-        overlay.id = 'rbf-lt-overlay';
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:10px;box-sizing:border-box;';
-
-        var box = document.createElement('div');
-        box.style.cssText = 'background:white;border-radius:16px;max-width:640px;width:100%;margin:auto;overflow:hidden;box-sizing:border-box;';
-
-        // ── VUE ÉCRAN (simple, comme avant) ──
-        var screenDiv = document.createElement('div');
-        screenDiv.className = 'rbf-screen-only';
-
-        // Header bleu
-        var hdr = document.createElement('div');
-        hdr.style.cssText = 'background:#1b2e58;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;';
-        var hdrTitle = document.createElement('span');
-        hdrTitle.style.cssText = 'font-weight:bold;font-size:14px;';
-        hdrTitle.textContent = '📋 LISTE DE TRANSPORT';
-        var hdrBtns = document.createElement('div');
-        hdrBtns.style.cssText = 'display:flex;gap:8px;align-items:center;';
-        var printBtn = document.createElement('button');
-        printBtn.innerHTML = '🖨️ IMPRIMER';
-        printBtn.style.cssText = 'background:#f59e0b;color:#1b2e58;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;';
-        printBtn.onclick = function() { window.print(); };
-        var closeBtn = document.createElement('button');
-        closeBtn.textContent = '✕';
-        closeBtn.style.cssText = 'background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;';
-        closeBtn.onclick = function() { overlay.remove(); printStyle.textContent = ''; };
-        hdrBtns.appendChild(printBtn); hdrBtns.appendChild(closeBtn);
-        hdr.appendChild(hdrTitle); hdr.appendChild(hdrBtns);
-        screenDiv.appendChild(hdr);
-
-        // Corps écran
-        var screenBody = document.createElement('div');
-        screenBody.style.cssText = 'padding:20px;font-family:Arial,sans-serif;';
-
-        // Titre société
-        var titre = document.createElement('div');
-        titre.style.cssText = 'text-align:center;margin-bottom:16px;';
-        titre.innerHTML = '<h2 style="margin:0 0 4px;color:#1b2e58;font-size:18px;">ROSSET BOULON & FILS</h2><h3 style="margin:0;font-size:14px;font-weight:normal;">LISTE DE TRANSPORT</h3>';
-        screenBody.appendChild(titre);
-
-        // Tableau infos
-        var info = document.createElement('table');
-        info.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;';
-        [['CHANTIER :', lt.chantier||''], ['DATE :', formatDateFR(lt.date)], ['CHAUFFEUR :', lt.chauffeur||''], ['ADRESSE :', lt.adresse||'']].forEach(function(row) {
-            var tr = document.createElement('tr');
-            var td1 = document.createElement('td'); td1.style.cssText = 'padding:3px 8px;font-weight:bold;color:#64748b;white-space:nowrap;'; td1.textContent = row[0];
-            var td2 = document.createElement('td'); td2.style.cssText = 'padding:3px 8px;font-weight:bold;color:#1b2e58;word-break:break-word;max-width:0;width:100%;'; td2.textContent = row[1];
-            tr.appendChild(td1); tr.appendChild(td2); info.appendChild(tr);
-        });
-        screenBody.appendChild(info);
-
-        // Titre listings
-        var listTitle = document.createElement('h4');
-        listTitle.style.cssText = 'color:#1b2e58;border-bottom:2px solid #1b2e58;padding-bottom:4px;margin:0 0 12px;font-size:13px;';
-        listTitle.textContent = 'LISTINGS MATÉRIELS TRANSPORTÉS';
-        screenBody.appendChild(listTitle);
-
-        // Tours
-        lt.tours.forEach(function(tour) {
-            var tourDiv = document.createElement('div');
-            tourDiv.style.cssText = 'margin-bottom:14px;';
-            var tourLabel = document.createElement('div');
-            tourLabel.style.cssText = 'font-weight:bold;font-size:13px;color:#1b2e58;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin-bottom:6px;';
-            tourLabel.textContent = tour.label || '';
-            tourDiv.appendChild(tourLabel);
-            (tour.items || []).forEach(function(item) {
-                var itemDiv = document.createElement('div');
-                itemDiv.style.cssText = 'padding:4px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;';
-                itemDiv.textContent = '• ' + item;
-                tourDiv.appendChild(itemDiv);
-            });
-            screenBody.appendChild(tourDiv);
-        });
-        screenDiv.appendChild(screenBody);
-
-        // ── VUE IMPRESSION (mise en page Excel, cachée à l'écran) ──
-        var printDiv = buildPrintBody(lt, isInterne, formatDateFR);
-        printDiv.className = 'rbf-print-only';
-        printDiv.style.display = 'none'; // caché à l'écran
-
-        box.appendChild(screenDiv);
-        box.appendChild(printDiv);
-        overlay.appendChild(box);
-        document.body.appendChild(overlay);
+        showListeTransportModal(lt);
     });
+}
+
+function showListeTransportModal(lt) {
+    function formatDateFR(dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr);
+        if (isNaN(d)) return dateStr;
+        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        var mois = ['janvier','\u00e9vrier','mars','avril','mai','juin','juillet','ao\u00fbt','septembre','octobre','novembre','d\u00e9cembre'];
+        return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
+    }
+    var isInterne = !lt.chauffeur || lt.chauffeur.toUpperCase().indexOf('EXTERNE') === -1;
+
+    // CSS print/screen injecté une seule fois
+    if (!document.getElementById('rbf-print-style')) {
+        var s = document.createElement('style');
+        s.id = 'rbf-print-style';
+        s.textContent =
+            '@media screen { #rbf-print-area { display:none !important; } }' +
+            '@media print {' +
+            '  body > *:not(#rbf-lt-overlay) { display:none !important; }' +
+            '  #rbf-lt-overlay { position:static !important; background:transparent !important; padding:0 !important; overflow:visible !important; height:auto !important; }' +
+            '  #rbf-lt-overlay > div { border-radius:0 !important; max-width:100% !important; box-shadow:none !important; overflow:visible !important; }' +
+            '  #rbf-screen-area { display:none !important; }' +
+            '  #rbf-print-area { display:block !important; }' +
+            '}';
+        document.head.appendChild(s);
+    }
+
+    var oldOverlay = document.getElementById('rbf-lt-overlay');
+    if (oldOverlay) oldOverlay.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'rbf-lt-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:10px;box-sizing:border-box;';
+
+    var box = document.createElement('div');
+    box.style.cssText = 'background:white;border-radius:16px;max-width:640px;width:100%;margin:auto;overflow:hidden;box-sizing:border-box;';
+
+    // ── VUE ECRAN (simple, visible seulement a l'ecran) ──
+    var screenArea = document.createElement('div');
+    screenArea.id = 'rbf-screen-area';
+
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'background:#1b2e58;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;';
+    hdr.innerHTML = '<span style="font-weight:bold;font-size:14px;">\uD83D\uDCCB LISTE DE TRANSPORT</span>';
+    var hdrBtns = document.createElement('div');
+    hdrBtns.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    var printBtn = document.createElement('button');
+    printBtn.textContent = 'Imprimer';
+    printBtn.style.cssText = 'background:#f59e0b;color:#1b2e58;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;';
+    printBtn.onclick = function() { window.print(); };
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '\u2715';
+    closeBtn.style.cssText = 'background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;';
+    closeBtn.onclick = function() { overlay.remove(); };
+    hdrBtns.appendChild(printBtn); hdrBtns.appendChild(closeBtn);
+    hdr.appendChild(hdrBtns);
+    screenArea.appendChild(hdr);
+
+    var screenBody = document.createElement('div');
+    screenBody.style.cssText = 'padding:20px;font-family:Arial,sans-serif;';
+    screenBody.innerHTML = '<div style="text-align:center;margin-bottom:16px;"><h2 style="margin:0 0 4px;color:#1b2e58;font-size:18px;">ROSSET BOULON & FILS</h2><h3 style="margin:0;font-size:14px;font-weight:normal;">LISTE DE TRANSPORT</h3></div>';
+
+    var infoTbl = document.createElement('table');
+    infoTbl.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;';
+    [['CHANTIER :', lt.chantier||''], ['DATE :', formatDateFR(lt.date)], ['CHAUFFEUR :', lt.chauffeur||''], ['ADRESSE :', lt.adresse||'']].forEach(function(row) {
+        var tr = document.createElement('tr');
+        var td1 = document.createElement('td'); td1.style.cssText='padding:3px 8px;font-weight:bold;color:#64748b;white-space:nowrap;'; td1.textContent=row[0];
+        var td2 = document.createElement('td'); td2.style.cssText='padding:3px 8px;font-weight:bold;color:#1b2e58;word-break:break-word;max-width:0;width:100%;'; td2.textContent=row[1];
+        tr.appendChild(td1); tr.appendChild(td2); infoTbl.appendChild(tr);
+    });
+    screenBody.appendChild(infoTbl);
+
+    var listTitle = document.createElement('h4');
+    listTitle.style.cssText = 'color:#1b2e58;border-bottom:2px solid #1b2e58;padding-bottom:4px;margin:0 0 12px;font-size:13px;';
+    listTitle.textContent = 'LISTINGS MAT\u00c9RIELS TRANSPORT\u00c9S';
+    screenBody.appendChild(listTitle);
+
+    (lt.tours||[]).forEach(function(tour) {
+        var tDiv = document.createElement('div'); tDiv.style.cssText='margin-bottom:14px;';
+        var tLbl = document.createElement('div'); tLbl.style.cssText='font-weight:bold;font-size:13px;color:#1b2e58;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin-bottom:6px;'; tLbl.textContent=tour.label||'';
+        tDiv.appendChild(tLbl);
+        (tour.items||[]).forEach(function(item){ var d=document.createElement('div'); d.style.cssText='padding:4px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;'; d.textContent='\u2022 '+item; tDiv.appendChild(d); });
+        screenBody.appendChild(tDiv);
+    });
+    screenArea.appendChild(screenBody);
+
+    // ── VUE IMPRESSION (mise en page Excel, cachee a l'ecran par CSS) ──
+    var printArea = buildPrintBody(lt, isInterne, formatDateFR);
+    printArea.id = 'rbf-print-area';
+    printArea.removeAttribute('style'); // retirer padding inline, le CSS gere
+
+    box.appendChild(screenArea);
+    box.appendChild(printArea);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 }
 
 var CHANTIERS_CACHE = {};
