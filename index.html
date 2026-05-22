@@ -1847,14 +1847,28 @@ function executeCopyMove(mode) {
     var label = mode === 'move' ? 'deplace' : 'copie';
 
     var doExec = function() {
+        var srcKey = state.curK;
         db.ref('planning_v18/'+destKey).set(srcData)
             .then(function() {
-                if (mode === 'move') return db.ref('planning_v18/'+state.curK).remove();
+                if (mode === 'move') return db.ref('planning_v18/'+srcKey).remove();
+            })
+            .then(function() {
+                // Copier/déplacer aussi la liste de transport associée
+                return db.ref('listes_transport/'+srcKey).once('value');
+            })
+            .then(function(ltSnap) {
+                var lt = ltSnap.val();
+                if (!lt) return Promise.resolve();
+                // Copier la liste vers la nouvelle clé
+                return db.ref('listes_transport/'+destKey).set(lt)
+                    .then(function() {
+                        // Si déplacement : supprimer l'ancienne liste
+                        if (mode === 'move') return db.ref('listes_transport/'+srcKey).remove();
+                    });
             })
             .then(function() {
                 sendTargetedPush(destKey, srcData, mode==='move' ? 'DEPLACEE' : 'COPIEE');
-                // Si déplacement : notifier aussi la personne d'origine que la tâche lui a été retirée
-                if (mode === 'move') sendTargetedPush(state.curK, srcData, 'RETIREE');
+                if (mode === 'move') sendTargetedPush(srcKey, srcData, 'RETIREE');
                 closeEditor();
                 showToast('Mission '+label+'e !');
             })
