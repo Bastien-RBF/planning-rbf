@@ -1403,7 +1403,6 @@ function viewListeTransport(key) {
             return;
         }
 
-        // Formater la date en "Lundi 25 mai 2026"
         function formatDateFR(dateStr) {
             if (!dateStr) return '';
             var d = new Date(dateStr);
@@ -1415,21 +1414,12 @@ function viewListeTransport(key) {
 
         var isInterne = !lt.chauffeur || lt.chauffeur.toUpperCase() === 'INTERNE';
 
-        // Style print injecté dynamiquement
+        // CSS : écran = vue simple, impression = vue Excel
         var printStyle = document.getElementById('rbf-print-style') || document.createElement('style');
         printStyle.id = 'rbf-print-style';
-        printStyle.textContent = `
-            @media print {
-                body > *:not(#rbf-lt-overlay) { display:none !important; }
-                #rbf-lt-overlay { background:transparent !important; padding:0 !important; }
-                #rbf-lt-overlay > div { box-shadow:none !important; border-radius:0 !important; max-width:100% !important; }
-                .rbf-lt-screen-header { display:none !important; }
-                #lt-print-content { padding:0 !important; }
-            }
-        `;
+        printStyle.textContent = '@media print { body > *:not(#rbf-lt-overlay){display:none!important;} #rbf-lt-overlay{background:transparent!important;padding:0!important;position:static!important;overflow:visible!important;} #rbf-lt-overlay > div{box-shadow:none!important;border-radius:0!important;max-width:100%!important;} .rbf-screen-only{display:none!important;} .rbf-print-only{display:block!important;} }';
         document.head.appendChild(printStyle);
 
-        // Overlay
         var overlay = document.createElement('div');
         overlay.id = 'rbf-lt-overlay';
         overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:10px;box-sizing:border-box;';
@@ -1437,9 +1427,12 @@ function viewListeTransport(key) {
         var box = document.createElement('div');
         box.style.cssText = 'background:white;border-radius:16px;max-width:640px;width:100%;margin:auto;overflow:hidden;box-sizing:border-box;';
 
-        // Header écran (masqué à l'impression)
+        // ── VUE ÉCRAN (simple, comme avant) ──
+        var screenDiv = document.createElement('div');
+        screenDiv.className = 'rbf-screen-only';
+
+        // Header bleu
         var hdr = document.createElement('div');
-        hdr.className = 'rbf-lt-screen-header';
         hdr.style.cssText = 'background:#1b2e58;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;';
         var hdrTitle = document.createElement('span');
         hdrTitle.style.cssText = 'font-weight:bold;font-size:14px;';
@@ -1454,19 +1447,62 @@ function viewListeTransport(key) {
         closeBtn.textContent = '✕';
         closeBtn.style.cssText = 'background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;';
         closeBtn.onclick = function() { overlay.remove(); printStyle.textContent = ''; };
-        hdrBtns.appendChild(printBtn);
-        hdrBtns.appendChild(closeBtn);
-        hdr.appendChild(hdrTitle);
-        hdr.appendChild(hdrBtns);
+        hdrBtns.appendChild(printBtn); hdrBtns.appendChild(closeBtn);
+        hdr.appendChild(hdrTitle); hdr.appendChild(hdrBtns);
+        screenDiv.appendChild(hdr);
 
-        // Corps imprimable
-        var body = document.createElement('div');
-        body.id = 'lt-print-content';
-        body.style.cssText = 'padding:16px;font-family:Arial,sans-serif;';
+        // Corps écran
+        var screenBody = document.createElement('div');
+        screenBody.style.cssText = 'padding:20px;font-family:Arial,sans-serif;';
 
-        var body = buildPrintBody(lt, isInterne, formatDateFR);
-        box.appendChild(hdr);
-        box.appendChild(body);
+        // Titre société
+        var titre = document.createElement('div');
+        titre.style.cssText = 'text-align:center;margin-bottom:16px;';
+        titre.innerHTML = '<h2 style="margin:0 0 4px;color:#1b2e58;font-size:18px;">ROSSET BOULON & FILS</h2><h3 style="margin:0;font-size:14px;font-weight:normal;">LISTE DE TRANSPORT</h3>';
+        screenBody.appendChild(titre);
+
+        // Tableau infos
+        var info = document.createElement('table');
+        info.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;';
+        [['CHANTIER :', lt.chantier||''], ['DATE :', formatDateFR(lt.date)], ['CHAUFFEUR :', lt.chauffeur||''], ['ADRESSE :', lt.adresse||'']].forEach(function(row) {
+            var tr = document.createElement('tr');
+            var td1 = document.createElement('td'); td1.style.cssText = 'padding:3px 8px;font-weight:bold;color:#64748b;white-space:nowrap;'; td1.textContent = row[0];
+            var td2 = document.createElement('td'); td2.style.cssText = 'padding:3px 8px;font-weight:bold;color:#1b2e58;word-break:break-word;max-width:0;width:100%;'; td2.textContent = row[1];
+            tr.appendChild(td1); tr.appendChild(td2); info.appendChild(tr);
+        });
+        screenBody.appendChild(info);
+
+        // Titre listings
+        var listTitle = document.createElement('h4');
+        listTitle.style.cssText = 'color:#1b2e58;border-bottom:2px solid #1b2e58;padding-bottom:4px;margin:0 0 12px;font-size:13px;';
+        listTitle.textContent = 'LISTINGS MATÉRIELS TRANSPORTÉS';
+        screenBody.appendChild(listTitle);
+
+        // Tours
+        lt.tours.forEach(function(tour) {
+            var tourDiv = document.createElement('div');
+            tourDiv.style.cssText = 'margin-bottom:14px;';
+            var tourLabel = document.createElement('div');
+            tourLabel.style.cssText = 'font-weight:bold;font-size:13px;color:#1b2e58;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin-bottom:6px;';
+            tourLabel.textContent = tour.label || '';
+            tourDiv.appendChild(tourLabel);
+            (tour.items || []).forEach(function(item) {
+                var itemDiv = document.createElement('div');
+                itemDiv.style.cssText = 'padding:4px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;';
+                itemDiv.textContent = '• ' + item;
+                tourDiv.appendChild(itemDiv);
+            });
+            screenBody.appendChild(tourDiv);
+        });
+        screenDiv.appendChild(screenBody);
+
+        // ── VUE IMPRESSION (mise en page Excel, cachée à l'écran) ──
+        var printDiv = buildPrintBody(lt, isInterne, formatDateFR);
+        printDiv.className = 'rbf-print-only';
+        printDiv.style.display = 'none'; // caché à l'écran
+
+        box.appendChild(screenDiv);
+        box.appendChild(printDiv);
         overlay.appendChild(box);
         document.body.appendChild(overlay);
     });
