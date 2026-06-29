@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RBF Planning</title>
+    <!-- Anti-cache : évite d'avoir à faire Ctrl+F5 pour récupérer les mises à jour -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="icon" type="image/png" href="icon.png.png">
     <link rel="apple-touch-icon" href="icon.png.png">
     <link rel="manifest" href="manifest.json">
@@ -193,6 +197,9 @@
         <button class="btn-nav-admin" onclick="openRH('HEURES')">RH</button>
         <button class="btn-nav-admin" style="background:var(--success)" onclick="openRH('JOURNAL')">RAPPORTS</button>
     </div>
+    <div id="print-week-zone" class="hidden" style="padding:0 10px 10px;">
+        <button onclick="printFullWeek()" style="width:100%;background:#1b2e58;color:white;border:none;padding:12px;border-radius:12px;font-weight:bold;font-size:12px;cursor:pointer;">🖨️ IMPRIMER LA VUE COMPLÈTE (A3)</button>
+    </div>
     <div class="week-nav-bar">
         <button class="wk-btn" onclick="changeWeek(-1)">&#8249;</button>
         <div id="wk-disp" onclick="openWeekPicker()" style="cursor:pointer;" title="Cliquer pour aller a une semaine precise"></div>
@@ -344,7 +351,7 @@
         <input type="file" id="e-file" class="hidden" onchange="uploadFile(this)">
         <button onclick="document.getElementById('e-file').click()" style="width:100%;background:#f1f5f9;padding:10px;border-radius:8px;border:1px dashed #cbd5e1;margin-bottom:10px;font-size:11px;font-weight:bold;cursor:pointer;">PIECE JOINTE</button>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
-            <label style="display:flex;align-items:center;gap:8px;font-size:11px;"><input type="checkbox" id="e-depot" style="width:18px;height:18px;"> <b>DEPOT</b></label>
+            <label id="zone-depot-checkbox" style="display:flex;align-items:center;gap:8px;font-size:11px;"><input type="checkbox" id="e-depot" style="width:18px;height:18px;"> <b>DEPOT</b></label>
             <label id="zone-conge-checkbox" class="hidden" style="display:flex;align-items:center;gap:8px;font-size:11px;color:#92400e;"><input type="checkbox" id="e-conge" style="width:18px;height:18px;"> <b>CONGE</b></label>
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:10px;background:#eff6ff;padding:10px;border-radius:8px;color:var(--blue);font-weight:bold;cursor:pointer;"><input type="checkbox" id="e-recur" style="width:16px;height:16px;"> REPETER SUR TOUTE LA SEMAINE</label>
@@ -505,7 +512,7 @@
             <span id="media-stats" style="font-size:11px;opacity:0.8;"></span>
         </div>
         <div style="padding:10px 15px;background:#f8fafc;border-bottom:1px solid #e2e8f0;font-size:11px;color:#64748b;">
-            Tous les fichiers uploadés sur le site. Supprimez les anciens pour libérer de l'espace Cloudinary.
+            Tous les fichiers uploadés sur le site. Téléchargez puis supprimez les anciens pour libérer de l'espace Cloudinary.
         </div>
         <div id="media-content" style="padding:15px;overflow-y:auto;flex:1;max-height:60vh;background:white;"></div>
         <button onclick="document.getElementById('media-overlay').style.display='none'" class="btn-main" style="background:white;border-top:1px solid #eee;border-radius:0;">FERMER</button>
@@ -814,6 +821,10 @@ function login(u) {
     if (u === 'admin') {
         document.getElementById('admin-search-zone').classList.remove('hidden');
         document.getElementById('btn-notif').classList.remove('hidden');
+        document.getElementById('print-week-zone').classList.remove('hidden');
+    } else if (u === 'depot') {
+        document.getElementById('btn-notif').classList.remove('hidden');
+        document.getElementById('print-week-zone').classList.remove('hidden');
     } else {
         document.getElementById('driver-tools-zone').classList.remove('hidden');
         document.getElementById('btn-notif').classList.remove('hidden');
@@ -930,7 +941,7 @@ function fileTagHtml(f, forAdmin) {
     }
     if (forAdmin) {
         return '<a href="'+url+'" target="_blank" '
-            + 'onclick="event.stopPropagation();event.preventDefault();window.open(this.href,\'_blank\');return false;" '
+            + 'onclick="event.stopPropagation();" '
             + 'title="'+f.name+'" class="file-tag '+cls+'" '
             + 'style="position:relative;z-index:100;pointer-events:auto;">'+ico+' '+name+'</a>';
     } else {
@@ -1041,6 +1052,88 @@ function renderDriverView(days, hList) {
 }
 
 /* =========================================
+   IMPRESSION VUE COMPLETE A3 (pour le depot)
+========================================= */
+function printFullWeek() {
+    var isDepot = state.curU === 'depot';
+    var dNmap = {interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'DEPOT (3T500)'};
+    var days = ["LUNDI","MARDI","MERCREDI","JEUDI","VENDREDI","SAMEDI"];
+    var dayDates = [];
+    for (var i = 0; i < 6; i++) dayDates.push(fmtDate(getDateFromWeek(state.curW, state.curY, i)));
+
+    var html = '<div style="font-family:Arial,sans-serif;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:3px solid #1b2e58;padding-bottom:8px;">';
+    html += '<div style="font-size:20px;font-weight:bold;color:#1b2e58;">ROSSET BOULON & FILS</div>';
+    html += '<div style="font-size:16px;font-weight:bold;color:#1b2e58;">SEMAINE '+state.curW+' — '+state.curY+'</div>';
+    html += '</div>';
+
+    html += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
+    html += '<thead><tr style="background:#1b2e58;color:white;">';
+    html += '<th style="border:1px solid #1b2e58;padding:6px;width:9%;font-size:11px;">NOM</th>';
+    for (var d = 0; d < 6; d++) {
+        html += '<th style="border:1px solid #1b2e58;padding:6px;font-size:11px;">'+days[d]+' '+dayDates[d]+'</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    ALL_USERS.forEach(function(u) {
+        html += '<tr>';
+        html += '<td style="border:1px solid #94a3b8;padding:4px;font-weight:bold;background:#eef2ff;font-size:10px;vertical-align:top;">'+(dNmap[u.id]||u.id.toUpperCase())+'</td>';
+        for (var dI = 0; dI < 6; dI++) {
+            html += '<td style="border:1px solid #94a3b8;padding:4px;vertical-align:top;font-size:9px;">';
+            var cellHtml = '';
+            for (var s = 1; s <= u.s; s++) {
+                var k = state.curY+'_'+state.curW+'_'+u.id+'_'+dI+'_s'+s;
+                var dta = window.data[k] || {};
+                if (isDepot && !dta.toDepot) continue;
+                if (!dta.text && !dta.isConge) continue;
+                if (dta.isConge) { cellHtml += '<div style="margin-bottom:4px;padding:3px;background:#fef3c7;border-radius:3px;font-weight:bold;">CONGE</div>'; continue; }
+                var trk = dta.truck ? dta.truck.replace(/[\uD800-\uDFFF]/g, '').trim()+' ' : '';
+                cellHtml += '<div style="margin-bottom:5px;padding-bottom:5px;border-bottom:1px dashed #cbd5e1;">';
+                if (dta.chantier) cellHtml += '<div style="font-weight:bold;">['+dta.chantier.toUpperCase()+']</div>';
+                cellHtml += '<div>'+(trk?'<i>'+trk+'</i> ':'')+(dta.text||'')+'</div>';
+                if (dta.adresse) cellHtml += '<div style="color:#dc2626;font-size:8px;">'+dta.adresse+'</div>';
+                if (dta.transporteur) cellHtml += '<div style="color:#1e40af;font-size:8px;">'+dta.transporteur+'</div>';
+                cellHtml += '</div>';
+            }
+            html += cellHtml || '<span style="color:#cbd5e1;">—</span>';
+            html += '</td>';
+        }
+        html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    var area = document.getElementById('rbf-week-print-area');
+    if (!area) {
+        area = document.createElement('div');
+        area.id = 'rbf-week-print-area';
+        area.style.display = 'none';
+        document.body.appendChild(area);
+    }
+    area.innerHTML = html;
+
+    var s = document.getElementById('rbf-week-print-style');
+    if (!s) {
+        s = document.createElement('style');
+        s.id = 'rbf-week-print-style';
+        document.head.appendChild(s);
+    }
+    s.textContent = '@media print {'
+        + ' @page { size: A3 landscape; margin: 8mm; }'
+        + ' body > *:not(#rbf-week-print-area) { display:none !important; }'
+        + ' #rbf-week-print-area { display:block !important; }'
+        + ' }';
+
+    function onAfterWeekPrint() {
+        area.style.display = 'none';
+        window.removeEventListener('afterprint', onAfterWeekPrint);
+    }
+    window.addEventListener('afterprint', onAfterWeekPrint);
+
+    area.style.display = 'block';
+    setTimeout(function() { window.print(); }, 50);
+}
+
+/* =========================================
    EMAILS
 ========================================= */
 
@@ -1068,10 +1161,14 @@ function openEd(k) {
     var isTruck    = k.includes('interne') || k.includes('externe') || k.includes('cedric');
     var canHoliday = !k.includes('externe') && !k.includes('instal') && !k.includes('divers') && !k.includes('3t500');
     var isExterne  = k.includes('externe');
+    var is3t500    = k.includes('3t500');
     document.getElementById('zone-matos').classList.toggle('hidden', !isJN);
     document.getElementById('zone-truck').classList.toggle('hidden', !isTruck);
     document.getElementById('zone-conge-checkbox').classList.toggle('hidden', !canHoliday);
     document.getElementById('zone-transporteur').classList.toggle('hidden', !isExterne);
+    // Pour la ligne DEPOT (3T500) : toujours visible cote depot, pas besoin de cocher la case
+    var zoneDepotCb = document.getElementById('zone-depot-checkbox');
+    if (zoneDepotCb) zoneDepotCb.classList.toggle('hidden', is3t500);
     if (isExterne) loadTransporteurs(function() {
         var tSel = document.getElementById('e-transporteur-sel');
         if (tSel && d.transporteur) { tSel.value = d.transporteur; onTransporteurSel(); }
@@ -1095,6 +1192,7 @@ function openEd(k) {
 function saveTask() {
     var isConge  = document.getElementById('e-conge').checked;
     var isNew    = !window.data[state.curK];
+    var is3t500K = state.curK.includes('3t500');
     var taskData = {
         text    : isConge ? '' : document.getElementById('e-input').value,
         chantier: isConge ? '' : (function() {
@@ -1116,7 +1214,9 @@ function saveTask() {
             return document.getElementById('e-adresse').value;
         })(),
         matos   : isConge ? '' : document.getElementById('e-matos').value,
-        toDepot : isConge ? false : document.getElementById('e-depot').checked,
+        // Les missions assignees a la ligne DEPOT (3T500) sont automatiquement
+        // visibles pour Stephane, pas besoin de cocher la case DEPOT en plus.
+        toDepot : isConge ? false : (is3t500K ? true : document.getElementById('e-depot').checked),
         isConge : isConge,
         col     : isConge ? '#fef3c7' : state.selectedCol,
         files   : isConge ? [] : state.currentFiles,
@@ -1244,61 +1344,9 @@ var LT_CUR_KEY = null;
 var LT_TOUR_COUNT = 0;
 
 function printListeTransportAdmin() {
-    // Récupère les données depuis les champs de la modal admin
-    var chantier  = (document.getElementById('lt-chantier')  || {}).textContent || '';
-    var date      = (document.getElementById('lt-date')      || {}).value       || '';
-    var chauffeur = (document.getElementById('lt-transport-type') || {}).value  || 'INTERNE';
-    var adresse   = (document.getElementById('lt-adresse')   || {}).textContent || '';
-    var tours     = [];
-    document.querySelectorAll('#lt-tours-list .lt-tour').forEach(function(tourEl) {
-        var label = (tourEl.querySelector('.lt-tour-label') || {}).value || '';
-        var items = [];
-        tourEl.querySelectorAll('.lt-item-input').forEach(function(inp) {
-            if (inp.value.trim()) items.push(inp.value.trim());
-        });
-        tours.push({ label: label, items: items });
-    });
-    showListeTransportModal({ chantier: chantier, date: date, chauffeur: chauffeur, adresse: adresse, tours: tours });
-}
-
-function viewListeTransportFromData(lt) {
-    function formatDateFR(dateStr) {
-        if (!dateStr) return '';
-        var d = new Date(dateStr);
-        if (isNaN(d)) return dateStr;
-        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-        var mois  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-        return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
-    }
-    var isInterne = !lt.chauffeur || lt.chauffeur.toUpperCase().indexOf('EXTERNE') === -1;
-    var printStyle = document.getElementById('rbf-print-style') || document.createElement('style');
-    printStyle.id = 'rbf-print-style';
-    printStyle.textContent = '@media print { body > *:not(#rbf-lt-overlay) { display:none !important; } #rbf-lt-overlay { background:transparent !important; padding:0 !important; } #rbf-lt-overlay > div { box-shadow:none !important; border-radius:0 !important; max-width:100% !important; } .rbf-lt-screen-header { display:none !important; } #lt-print-content { padding:0 !important; } }';
-    document.head.appendChild(printStyle);
-    var overlay = document.createElement('div');
-    overlay.id = 'rbf-lt-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:30000;overflow-y:auto;padding:10px;box-sizing:border-box;';
-    var box = document.createElement('div');
-    box.style.cssText = 'background:white;border-radius:16px;max-width:640px;width:100%;margin:auto;overflow:hidden;box-sizing:border-box;';
-    var hdr = document.createElement('div');
-    hdr.className = 'rbf-lt-screen-header';
-    hdr.style.cssText = 'background:#1b2e58;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;';
-    hdr.innerHTML = '<span style="font-weight:bold;font-size:14px;">📋 LISTE DE TRANSPORT</span>';
-    var hdrBtns = document.createElement('div');
-    hdrBtns.style.cssText = 'display:flex;gap:8px;align-items:center;';
-    var pBtn = document.createElement('button');
-    pBtn.innerHTML = '🖨️ IMPRIMER';
-    pBtn.style.cssText = 'background:#f59e0b;color:#1b2e58;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;';
-    pBtn.onclick = function(){ window.print(); };
-    var cBtn = document.createElement('button');
-    cBtn.textContent = '✕';
-    cBtn.style.cssText = 'background:none;border:none;color:white;font-size:22px;cursor:pointer;';
-    cBtn.onclick = function(){ overlay.remove(); printStyle.textContent=''; };
-    hdrBtns.appendChild(pBtn); hdrBtns.appendChild(cBtn); hdr.appendChild(hdrBtns);
-    // Réutilise le même HTML que viewListeTransport
-    var body = buildPrintBody(lt, isInterne, formatDateFR);
-    box.appendChild(hdr); box.appendChild(body);
-    overlay.appendChild(box); document.body.appendChild(overlay);
+    // Reutilise getListeData() (deja fiable et testee) au lieu de re-parser
+    // manuellement le DOM avec des selecteurs qui ne correspondent pas au HTML reel.
+    showListeTransportModal(getListeData());
 }
 
 function buildPrintBody(lt, isInterne, formatDateFR) {
@@ -1342,6 +1390,117 @@ function buildPrintBody(lt, isInterne, formatDateFR) {
     for(var i=0;i<10;i++){var eRow=document.createElement('div');eRow.style.cssText='display:flex;align-items:center;border-bottom:1px dashed #94a3b8;padding:3px 6px;height:24px;';var eCb=document.createElement('span');eCb.style.cssText='display:inline-block;width:14px;height:14px;border:1.5px solid #1b2e58;margin-right:8px;flex-shrink:0;';eRow.appendChild(eCb);wrap.appendChild(eRow);}
     body.appendChild(wrap);
     return body;
+}
+
+function showListeTransportModal(lt) {
+    function formatDateFR(dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr);
+        if (isNaN(d)) return dateStr;
+        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+        return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
+    }
+    var isInterne = !lt.chauffeur || lt.chauffeur.toUpperCase().indexOf('EXTERNE') === -1;
+
+    if (!document.getElementById('rbf-print-style')) {
+        var s = document.createElement('style');
+        s.id = 'rbf-print-style';
+        s.textContent =
+            '@media print {' +
+            '  body > *:not(#rbf-lt-overlay) { display:none !important; }' +
+            '  #rbf-lt-overlay { position:static !important; background:transparent !important; padding:0 !important; overflow:visible !important; height:auto !important; }' +
+            '  #rbf-lt-overlay > div { border-radius:0 !important; max-width:100% !important; box-shadow:none !important; overflow:visible !important; }' +
+            '}';
+        document.head.appendChild(s);
+    }
+
+    var oldOverlay = document.getElementById('rbf-lt-overlay');
+    if (oldOverlay) oldOverlay.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'rbf-lt-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:8px;box-sizing:border-box;';
+
+    var box = document.createElement('div');
+    box.style.cssText = 'background:white;border-radius:12px;max-width:640px;width:100%;margin:0 auto;overflow-x:hidden;overflow-y:auto;box-sizing:border-box;';
+
+    // ── VUE ECRAN simple ──
+    var screenArea = document.createElement('div');
+
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'background:#1b2e58;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
+    hdr.innerHTML = '<span style="font-weight:bold;font-size:14px;">📋 LISTE DE TRANSPORT</span>';
+    var hdrBtns = document.createElement('div');
+    hdrBtns.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    var printBtn = document.createElement('button');
+    printBtn.innerHTML = '🖨️ IMPRIMER';
+    printBtn.style.cssText = 'background:#f59e0b;color:#1b2e58;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;';
+    var closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;';
+    closeBtn.onclick = function() {
+        overlay.remove();
+        window.removeEventListener('beforeprint', onBefore);
+        window.removeEventListener('afterprint', onAfter);
+    };
+    hdrBtns.appendChild(printBtn); hdrBtns.appendChild(closeBtn);
+    hdr.appendChild(hdrBtns);
+    screenArea.appendChild(hdr);
+
+    var screenBody = document.createElement('div');
+    screenBody.style.cssText = 'padding:16px;font-family:Arial,sans-serif;';
+    screenBody.innerHTML = '<div style="text-align:center;margin-bottom:16px;"><h2 style="margin:0 0 4px;color:#1b2e58;font-size:18px;">ROSSET BOULON & FILS</h2><h3 style="margin:0;font-size:14px;font-weight:normal;">LISTE DE TRANSPORT</h3></div>';
+
+    var infoTbl = document.createElement('table');
+    infoTbl.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;';
+    [['CHANTIER :', lt.chantier||''], ['DATE :', formatDateFR(lt.date)], ['CHAUFFEUR :', lt.chauffeur||''], ['ADRESSE :', lt.adresse||'']].forEach(function(row) {
+        var tr = document.createElement('tr');
+        var td1 = document.createElement('td'); td1.style.cssText='padding:3px 8px;font-weight:bold;color:#64748b;white-space:nowrap;'; td1.textContent=row[0];
+        var td2 = document.createElement('td'); td2.style.cssText='padding:3px 8px;font-weight:bold;color:#1b2e58;word-break:break-word;max-width:0;width:100%;'; td2.textContent=row[1];
+        tr.appendChild(td1); tr.appendChild(td2); infoTbl.appendChild(tr);
+    });
+    screenBody.appendChild(infoTbl);
+
+    var listTitle = document.createElement('h4');
+    listTitle.style.cssText = 'color:#1b2e58;border-bottom:2px solid #1b2e58;padding-bottom:4px;margin:0 0 12px;font-size:13px;';
+    listTitle.textContent = 'LISTINGS MATÉRIELS TRANSPORTÉS';
+    screenBody.appendChild(listTitle);
+
+    (lt.tours||[]).forEach(function(tour) {
+        var tDiv = document.createElement('div'); tDiv.style.cssText='margin-bottom:14px;';
+        var tLbl = document.createElement('div'); tLbl.style.cssText='font-weight:bold;font-size:13px;color:#1b2e58;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin-bottom:6px;'; tLbl.textContent=tour.label||'';
+        tDiv.appendChild(tLbl);
+        (tour.items||[]).forEach(function(item){ var d=document.createElement('div'); d.style.cssText='padding:4px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;'; d.textContent='• '+item; tDiv.appendChild(d); });
+        screenBody.appendChild(tDiv);
+    });
+    screenArea.appendChild(screenBody);
+
+    var printArea = buildPrintBody(lt, isInterne, formatDateFR);
+    printArea.id = 'rbf-print-area';
+    printArea.style.cssText = 'display:none;padding:16px;font-family:Arial,sans-serif;';
+
+    function onBefore() { screenArea.style.display='none'; printArea.style.display='block'; }
+    function onAfter()  { screenArea.style.display='';    printArea.style.display='none'; }
+    window.addEventListener('beforeprint', onBefore);
+    window.addEventListener('afterprint',  onAfter);
+    printBtn.onclick = function() { window.print(); };
+
+    box.appendChild(screenArea);
+    box.appendChild(printArea);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+}
+
+function viewListeTransport(key) {
+    db.ref('listes_transport/'+key).once('value', function(snap) {
+        var lt = snap.val();
+        if (!lt || !lt.tours || lt.tours.length === 0) {
+            showToast('Aucune liste de transport pour cette mission');
+            return;
+        }
+        showListeTransportModal(lt);
+    });
 }
 
 function openListeTransport() {
@@ -1511,123 +1670,6 @@ function downloadListeExcel() {
         console.error('Excel error:', e);
         showToast('Erreur generation Excel', 'error');
     });
-}
-
-
-function viewListeTransport(key) {
-    db.ref('listes_transport/'+key).once('value', function(snap) {
-        var lt = snap.val();
-        if (!lt || !lt.tours || lt.tours.length === 0) {
-            showToast('Aucune liste de transport pour cette mission');
-            return;
-        }
-        showListeTransportModal(lt);
-    });
-}
-
-function showListeTransportModal(lt) {
-    function formatDateFR(dateStr) {
-        if (!dateStr) return '';
-        var d = new Date(dateStr);
-        if (isNaN(d)) return dateStr;
-        var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-        var mois = ['janvier','f\u00e9vrier','mars','avril','mai','juin','juillet','ao\u00fbt','septembre','octobre','novembre','d\u00e9cembre'];
-        return jours[d.getDay()] + ' ' + d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
-    }
-    var isInterne = !lt.chauffeur || lt.chauffeur.toUpperCase().indexOf('EXTERNE') === -1;
-
-    // CSS print injecté une seule fois
-    if (!document.getElementById('rbf-print-style')) {
-        var s = document.createElement('style');
-        s.id = 'rbf-print-style';
-        s.textContent =
-            '@media print {' +
-            '  body > *:not(#rbf-lt-overlay) { display:none !important; }' +
-            '  #rbf-lt-overlay { position:static !important; background:transparent !important; padding:0 !important; overflow:visible !important; height:auto !important; }' +
-            '  #rbf-lt-overlay > div { border-radius:0 !important; max-width:100% !important; box-shadow:none !important; overflow:visible !important; }' +
-            '}';
-        document.head.appendChild(s);
-    }
-
-    var oldOverlay = document.getElementById('rbf-lt-overlay');
-    if (oldOverlay) oldOverlay.remove();
-
-    var overlay = document.createElement('div');
-    overlay.id = 'rbf-lt-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.85);z-index:25000;overflow-y:auto;padding:8px;box-sizing:border-box;';
-
-    var box = document.createElement('div');
-    box.style.cssText = 'background:white;border-radius:12px;max-width:640px;width:100%;margin:0 auto;overflow-x:hidden;overflow-y:auto;box-sizing:border-box;';
-
-    // ── VUE ECRAN simple ──
-    var screenArea = document.createElement('div');
-
-    // Header
-    var hdr = document.createElement('div');
-    hdr.style.cssText = 'background:#1b2e58;color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
-    hdr.innerHTML = '<span style="font-weight:bold;font-size:14px;">\uD83D\uDCCB LISTE DE TRANSPORT</span>';
-    var hdrBtns = document.createElement('div');
-    hdrBtns.style.cssText = 'display:flex;gap:8px;align-items:center;';
-    var printBtn = document.createElement('button');
-    printBtn.innerHTML = '\uD83D\uDDA8\uFE0F IMPRIMER';
-    printBtn.style.cssText = 'background:#f59e0b;color:#1b2e58;border:none;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:bold;cursor:pointer;';
-    var closeBtn = document.createElement('button');
-    closeBtn.textContent = '\u2715';
-    closeBtn.style.cssText = 'background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;';
-    closeBtn.onclick = function() {
-        overlay.remove();
-        window.removeEventListener('beforeprint', onBefore);
-        window.removeEventListener('afterprint', onAfter);
-    };
-    hdrBtns.appendChild(printBtn); hdrBtns.appendChild(closeBtn);
-    hdr.appendChild(hdrBtns);
-    screenArea.appendChild(hdr);
-
-    // Corps écran
-    var screenBody = document.createElement('div');
-    screenBody.style.cssText = 'padding:16px;font-family:Arial,sans-serif;';
-    screenBody.innerHTML = '<div style="text-align:center;margin-bottom:16px;"><h2 style="margin:0 0 4px;color:#1b2e58;font-size:18px;">ROSSET BOULON & FILS</h2><h3 style="margin:0;font-size:14px;font-weight:normal;">LISTE DE TRANSPORT</h3></div>';
-
-    var infoTbl = document.createElement('table');
-    infoTbl.style.cssText = 'width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;';
-    [['CHANTIER :', lt.chantier||''], ['DATE :', formatDateFR(lt.date)], ['CHAUFFEUR :', lt.chauffeur||''], ['ADRESSE :', lt.adresse||'']].forEach(function(row) {
-        var tr = document.createElement('tr');
-        var td1 = document.createElement('td'); td1.style.cssText='padding:3px 8px;font-weight:bold;color:#64748b;white-space:nowrap;'; td1.textContent=row[0];
-        var td2 = document.createElement('td'); td2.style.cssText='padding:3px 8px;font-weight:bold;color:#1b2e58;word-break:break-word;max-width:0;width:100%;'; td2.textContent=row[1];
-        tr.appendChild(td1); tr.appendChild(td2); infoTbl.appendChild(tr);
-    });
-    screenBody.appendChild(infoTbl);
-
-    var listTitle = document.createElement('h4');
-    listTitle.style.cssText = 'color:#1b2e58;border-bottom:2px solid #1b2e58;padding-bottom:4px;margin:0 0 12px;font-size:13px;';
-    listTitle.textContent = 'LISTINGS MAT\u00c9RIELS TRANSPORT\u00c9S';
-    screenBody.appendChild(listTitle);
-
-    (lt.tours||[]).forEach(function(tour) {
-        var tDiv = document.createElement('div'); tDiv.style.cssText='margin-bottom:14px;';
-        var tLbl = document.createElement('div'); tLbl.style.cssText='font-weight:bold;font-size:13px;color:#1b2e58;background:#f1f5f9;padding:6px 10px;border-radius:6px;margin-bottom:6px;'; tLbl.textContent=tour.label||'';
-        tDiv.appendChild(tLbl);
-        (tour.items||[]).forEach(function(item){ var d=document.createElement('div'); d.style.cssText='padding:4px 10px;font-size:12px;border-bottom:1px solid #f1f5f9;'; d.textContent='\u2022 '+item; tDiv.appendChild(d); });
-        screenBody.appendChild(tDiv);
-    });
-    screenArea.appendChild(screenBody);
-
-    // ── VUE IMPRESSION (Excel) cachée par inline style ──
-    var printArea = buildPrintBody(lt, isInterne, formatDateFR);
-    printArea.id = 'rbf-print-area';
-    printArea.style.cssText = 'display:none;padding:16px;font-family:Arial,sans-serif;';
-
-    // Basculer les vues avant/après impression (fiable sur iOS Safari)
-    function onBefore() { screenArea.style.display='none'; printArea.style.display='block'; }
-    function onAfter()  { screenArea.style.display='';    printArea.style.display='none'; }
-    window.addEventListener('beforeprint', onBefore);
-    window.addEventListener('afterprint',  onAfter);
-    printBtn.onclick = function() { window.print(); };
-
-    box.appendChild(screenArea);
-    box.appendChild(printArea);
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
 }
 
 var CHANTIERS_CACHE = {};
@@ -1865,14 +1907,26 @@ function executeCopyMove(mode) {
     var label = mode === 'move' ? 'deplace' : 'copie';
 
     var doExec = function() {
+        var srcKey = state.curK;
         db.ref('planning_v18/'+destKey).set(srcData)
             .then(function() {
-                if (mode === 'move') return db.ref('planning_v18/'+state.curK).remove();
+                if (mode === 'move') return db.ref('planning_v18/'+srcKey).remove();
+            })
+            .then(function() {
+                // Copier/déplacer aussi la liste de transport associée
+                return db.ref('listes_transport/'+srcKey).once('value');
+            })
+            .then(function(ltSnap) {
+                var lt = ltSnap.val();
+                if (!lt) return Promise.resolve();
+                return db.ref('listes_transport/'+destKey).set(lt)
+                    .then(function() {
+                        if (mode === 'move') return db.ref('listes_transport/'+srcKey).remove();
+                    });
             })
             .then(function() {
                 sendTargetedPush(destKey, srcData, mode==='move' ? 'DEPLACEE' : 'COPIEE');
-                // Si déplacement : notifier aussi la personne d'origine que la tâche lui a été retirée
-                if (mode === 'move') sendTargetedPush(state.curK, srcData, 'RETIREE');
+                if (mode === 'move') sendTargetedPush(srcKey, srcData, 'RETIREE');
                 closeEditor();
                 showToast('Mission '+label+'e !');
             })
@@ -2031,14 +2085,17 @@ function openMediatheque() {
             var ext = f.name.split('.').pop().toLowerCase();
             var isImg = ['jpg','jpeg','png','webp','gif'].indexOf(ext) !== -1;
             var icon = isImg ? '🖼️' : (ext==='pdf' ? '📄' : '📊');
+            // URL forcant le telechargement (fl_attachment) quel que soit le type de fichier
+            var dlUrl = f.url.includes('cloudinary.com') ? f.url.replace('/upload/', '/upload/fl_attachment/') : f.url;
             html += '<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid #f1f5f9;">'
                 + (isImg ? '<img src="'+f.url+'" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;">' : '<span style="font-size:24px;width:40px;text-align:center;">'+icon+'</span>')
                 + '<div style="flex:1;min-width:0;">'
                 + '<div style="font-size:11px;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+f.name+'</div>'
                 + '<div style="font-size:10px;color:#94a3b8;">'+f.user.toUpperCase()+' — '+f.dateLabel+'</div>'
                 + '</div>'
-                + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+                + '<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">'
                 + '<a href="'+f.url+'" target="_blank" style="background:#eff6ff;color:var(--blue);border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;text-decoration:none;">VOIR</a>'
+                + '<a href="'+dlUrl+'" download="'+f.name+'" style="background:#dcfce7;color:#166534;border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;text-decoration:none;">💾 SAUVEGARDER</a>'
                 + '<button onclick="deleteMedia(this)" data-path="'+f.fbPath+'" style="background:#fee2e2;color:#991b1b;border:none;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">SUP.</button>'
                 + '</div></div>';
         });
