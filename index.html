@@ -546,11 +546,6 @@
 ========================================= */
 var VAPID_PUBLIC_KEY = "BCejATBh5hDLun-J4UrWt9U9VjjCM1uxqvi92X9QyWGsI0ykkwZDsr41hcA7xHUNYAt3r97NaQ3YNQlvMNOZoWc";
 var PUSH_WORKER_URL  = "https://rbf-notifs.bastien38dominguez.workers.dev";
-// Recuperez votre cle REST dans OneSignal > Settings > Keys & IDs
-// URL du Cloudflare Worker — à remplir après déploiement
-var OS_WORKER_URL = "https://rbf-notifs.bastien38dominguez.workers.dev";
-
-
 
 firebase.initializeApp({
     apiKey: "AIzaSyB8f5_NGtHX6iPp-reUolnxHH6Du2mUJks",
@@ -600,9 +595,8 @@ var ALL_USERS = [
 ];
 
 /* =========================================
-   ONESIGNAL
+   NOTIFICATIONS PUSH (Web Push natif + Cloudflare Worker)
 ========================================= */
-;
 
 function subscribeToNotifications() {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -614,7 +608,7 @@ function subscribeToNotifications() {
         }
         navigator.serviceWorker.register('/planning-rbf/firebase-messaging-sw.js')
         .then(function(swReg) {
-            // Desabonner l'ancien (fix iPhone "key error" + anciens abonnements OneSignal)
+            // Desabonner l'ancien (fix iPhone "key error" + anciens abonnements)
             return swReg.pushManager.getSubscription().then(function(existingSub) {
                 var doSub = function() {
                     return swReg.pushManager.subscribe({
