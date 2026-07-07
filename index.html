@@ -873,8 +873,34 @@ function login(u) {
                         });
                     });
                 } else {
-                    localStorage.removeItem('notifs_ok');
-                    btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS';
+                    // Abonnement expiré — tenter un re-abonnement silencieux si permission déjà accordée
+                    if (Notification.permission === 'granted') {
+                        console.log('Abonnement push expiré, tentative de re-abonnement silencieux...');
+                        swReg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlB64ToArray(VAPID_PUBLIC_KEY)
+                        }).then(function(newSub) {
+                            var isMobile3 = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+                            return db.ref('push_subs/' + state.curU + '_' + DEVICE_ID).set({
+                                sub   : JSON.stringify(newSub),
+                                user  : state.curU,
+                                role  : state.curU,
+                                mobile: isMobile3,
+                                ts    : Date.now()
+                            });
+                        }).then(function() {
+                            btn.style.background='#dcfce7'; btn.style.color='#166634'; btn.textContent='NOTIFS ON';
+                            localStorage.setItem('notifs_ok','1');
+                            console.log('Re-abonnement silencieux OK');
+                        }).catch(function(e) {
+                            console.warn('Re-abonnement silencieux échoué:', e.message);
+                            localStorage.removeItem('notifs_ok');
+                            btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS';
+                        });
+                    } else {
+                        localStorage.removeItem('notifs_ok');
+                        btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS';
+                    }
                 }
             }).catch(function() { btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS'; });
         });
@@ -1985,7 +2011,6 @@ function executeCopyMove(mode) {
 
     var days   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
     var destTxt = user.toUpperCase()+' — S'+destW+'/'+destY+' '+days[parseInt(day)]+' Slot '+slot;
-    var destExisting = window.data[destKey];
     var label = mode === 'move' ? 'deplace' : 'copie';
 
     var doExec = function() {
@@ -2015,13 +2040,26 @@ function executeCopyMove(mode) {
             .catch(function(err) { console.error(err); showToast('Erreur', 'error'); });
     };
 
-    // Toujours demander confirmation, avec avertissement si destination occupée
-    var msg = (mode==='move' ? 'Déplacer' : 'Copier') + ' vers ' + destTxt + ' ?';
-    if (destExisting && (destExisting.text || destExisting.isConge)) {
-        var preview = (destExisting.chantier ? '['+destExisting.chantier+'] ' : '') + (destExisting.text || 'Conge');
-        msg += '\n\n⚠️ Cette case est occupee : "'+preview.substring(0,40)+'"\nElle sera ecrasee.';
+    var showConfirmWithData = function(destExisting) {
+        var msg = (mode==='move' ? 'Déplacer' : 'Copier') + ' vers ' + destTxt + ' ?';
+        if (destExisting && (destExisting.text || destExisting.isConge)) {
+            var preview = (destExisting.chantier ? '['+destExisting.chantier+'] ' : '') + (destExisting.text || 'Conge');
+            msg += '\n\n⚠️ Cette case est occupee : "'+preview.substring(0,40)+'"\nElle sera ecrasee.';
+        }
+        showConfirm(msg, doExec, mode==='move' ? 'Confirmer deplacement' : 'Confirmer copie');
+    };
+
+    // Si semaine destination = semaine affichée : données déjà en mémoire
+    // Sinon : on interroge Firebase pour vérifier si la case est occupée
+    if (destW === state.curW && destY === state.curY) {
+        showConfirmWithData(window.data[destKey]);
+    } else {
+        db.ref('planning_v18/'+destKey).once('value').then(function(snap) {
+            showConfirmWithData(snap.val());
+        }).catch(function() {
+            showConfirmWithData(null);
+        });
     }
-    showConfirm(msg, doExec, mode==='move' ? 'Confirmer deplacement' : 'Confirmer copie');
 }
 
 /* =========================================

@@ -1,6 +1,7 @@
 // ================================================
 // RBF Planning — Service Worker Web Push
 // Push vide : le SW lit le message depuis Firebase REST
+// Compatible Chrome, Firefox, Edge, Safari iOS 16.4+
 // ================================================
 
 var FIREBASE_DB_URL = 'https://rbf-transport-default-rtdb.europe-west1.firebasedatabase.app';
@@ -41,7 +42,7 @@ self.addEventListener('push', function(event) {
         }
     }
 
-    // Push vide — lire le dernier message dans Firebase via REST (pas de SDK nécessaire)
+    // Push vide — lire le dernier message dans Firebase via REST
     event.waitUntil(
         fetch(FIREBASE_DB_URL + '/last_push.json')
         .then(function(r) { return r.json(); })
@@ -65,6 +66,10 @@ self.addEventListener('notificationclick', function(event) {
         })
     );
 });
+
+// Activation immédiate (important pour les mises à jour)
+self.addEventListener('install', function() { self.skipWaiting(); });
+self.addEventListener('activate', function(event) { event.waitUntil(clients.claim()); });
 
 self.addEventListener('message', function(event) {
     if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
