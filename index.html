@@ -548,6 +548,17 @@
         <div style="background:#7c3aed;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;">
             <span style="font-weight:bold;font-size:14px;">📋 JOURNAL DES MODIFICATIONS</span>
             <div style="display:flex;gap:8px;align-items:center;">
+                <select id="jm-filter-personne" onchange="loadJournalModifs()" style="padding:6px;border-radius:6px;border:none;font-size:11px;font-weight:bold;">
+                    <option value="all">Tous</option>
+                    <option value="DAMIEN">DAMIEN</option>
+                    <option value="CEDRIC">CEDRIC</option>
+                    <option value="EXTERNE">EXTERNE</option>
+                    <option value="DIVERS">DIVERS</option>
+                    <option value="INSTAL">INSTAL</option>
+                    <option value="DEPOT">DEPOT (3T500)</option>
+                    <option value="JADIEL">JADIEL</option>
+                    <option value="NICOLA">NICOLA</option>
+                </select>
                 <select id="jm-filter-week" onchange="loadJournalModifs()" style="padding:6px;border-radius:6px;border:none;font-size:11px;font-weight:bold;">
                     <option value="all">Toutes les semaines</option>
                 </select>
@@ -1453,19 +1464,38 @@ function saveHistorique(action, key, before, after) {
 function openJournalModifs() {
     var ov = document.getElementById('journal-modifs-overlay');
     ov.style.display = 'flex';
-    // Remplir le filtre par semaine
+    // Remplir le filtre par semaine — 12 semaines en arrière et 8 semaines en avance
     var sel = document.getElementById('jm-filter-week');
     sel.innerHTML = '<option value="all">Toutes les semaines</option>';
     var curY = state.curY || new Date().getFullYear();
     var curW = state.curW || getWeek(new Date());
-    for (var w = curW; w >= Math.max(1, curW - 12); w--) {
+    var maxW = getWeek(new Date(curY, 11, 28));
+
+    // Semaines futures (8 semaines en avance)
+    for (var wf = Math.min(curW + 8, maxW); wf > curW; wf--) {
         var opt = document.createElement('option');
-        var d0  = getDateFromWeek(w, curY, 0);
-        var d4  = getDateFromWeek(w, curY, 4);
-        opt.value = w + '/' + curY;
-        opt.textContent = 'S' + w + ' — ' + fmtDate(d0) + ' au ' + fmtDate(d4);
-        if (w === curW) opt.selected = true;
+        var d0f = getDateFromWeek(wf, curY, 0);
+        var d4f = getDateFromWeek(wf, curY, 4);
+        opt.value = wf + '/' + curY;
+        opt.textContent = 'S' + wf + ' — ' + fmtDate(d0f) + ' au ' + fmtDate(d4f) + ' (à venir)';
         sel.appendChild(opt);
+    }
+    // Semaine actuelle
+    var optCur = document.createElement('option');
+    var d0c = getDateFromWeek(curW, curY, 0);
+    var d4c = getDateFromWeek(curW, curY, 4);
+    optCur.value = curW + '/' + curY;
+    optCur.textContent = 'S' + curW + ' — ' + fmtDate(d0c) + ' au ' + fmtDate(d4c) + ' (cette semaine)';
+    optCur.selected = true;
+    sel.appendChild(optCur);
+    // Semaines passées (12 semaines en arrière)
+    for (var wp = curW - 1; wp >= Math.max(1, curW - 12); wp--) {
+        var opt2 = document.createElement('option');
+        var d0p  = getDateFromWeek(wp, curY, 0);
+        var d4p  = getDateFromWeek(wp, curY, 4);
+        opt2.value = wp + '/' + curY;
+        opt2.textContent = 'S' + wp + ' — ' + fmtDate(d0p) + ' au ' + fmtDate(d4p);
+        sel.appendChild(opt2);
     }
     loadJournalModifs();
 }
@@ -1473,7 +1503,8 @@ function openJournalModifs() {
 function loadJournalModifs() {
     var cont = document.getElementById('journal-modifs-content');
     cont.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;">Chargement...</div>';
-    var filterVal = document.getElementById('jm-filter-week').value;
+    var filterVal      = document.getElementById('jm-filter-week').value;
+    var filterPersonne = (document.getElementById('jm-filter-personne') || {}).value || 'all';
 
     db.ref('historique_v18').orderByChild('ts').limitToLast(200).once('value', function(snap) {
         var all = snap.val() || {};
@@ -1485,6 +1516,13 @@ function loadJournalModifs() {
             var parts = filterVal.split('/');
             var fw = parts[0], fy = parts[1];
             entries = entries.filter(function(e) { return e.semaine === fw + '/' + fy; });
+        }
+
+        // Filtrer par personne si nécessaire
+        if (filterPersonne !== 'all') {
+            entries = entries.filter(function(e) {
+                return e.personne && e.personne.toUpperCase().indexOf(filterPersonne) !== -1;
+            });
         }
 
         // Trier du plus récent au plus ancien
