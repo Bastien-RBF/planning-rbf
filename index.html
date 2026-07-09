@@ -1478,7 +1478,7 @@ function loadJournalModifs() {
     db.ref('historique_v18').orderByChild('ts').limitToLast(200).once('value', function(snap) {
         var all = snap.val() || {};
         var entries = [];
-        for (var id in all) entries.push(all[id]);
+        for (var id in all) entries.push(Object.assign({}, all[id], {_id: id}));
 
         // Filtrer par semaine si nécessaire
         if (filterVal !== 'all') {
@@ -1500,11 +1500,48 @@ function loadJournalModifs() {
             'ANNULEE'  : '#f59e0b', 'DEPLACEE' : '#8b5cf6', 'COPIEE'   : '#64748b'
         };
         var html = '';
-        entries.forEach(function(e) {
-            var d   = new Date(e.ts);
+        entries.forEach(function(e, idx) {
+            var d     = new Date(e.ts);
             var heure = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
             var date  = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
             var color = actionColors[e.action] || '#64748b';
+
+            // Données restorables : état "before" pour MODIFIEE/SUPPRIMEE, état "after" pour NOUVELLE
+            var restoreData = e.before || e.after;
+            var canRestore  = !!(restoreData && e.key);
+
+            // Fichiers joints
+            var filesHtml = '';
+            if (restoreData && restoreData.files && restoreData.files.length > 0) {
+                filesHtml = '<div style="margin-top:4px;">';
+                restoreData.files.forEach(function(f) {
+                    filesHtml += '<span style="background:#eff6ff;color:#1e40af;font-size:9px;padding:2px 6px;border-radius:4px;margin-right:4px;">📎 '+f.name+'</span>';
+                });
+                filesHtml += '</div>';
+            }
+
+            // Détail complet (masqué par défaut)
+            var detailId = 'jm-detail-' + idx;
+            var detailHtml = '';
+            if (restoreData) {
+                detailHtml += '<div id="'+detailId+'" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-top:8px;font-size:11px;">';
+                if (restoreData.chantier)     detailHtml += '<div><b>Chantier :</b> '+restoreData.chantier+'</div>';
+                if (restoreData.adresse)      detailHtml += '<div><b>Adresse :</b> '+restoreData.adresse+'</div>';
+                if (restoreData.text)         detailHtml += '<div><b>Mission :</b> '+restoreData.text+'</div>';
+                if (restoreData.truck)        detailHtml += '<div><b>Véhicule :</b> '+restoreData.truck+'</div>';
+                if (restoreData.conducteur)   detailHtml += '<div><b>Conducteur :</b> '+restoreData.conducteur+'</div>';
+                if (restoreData.transporteur) detailHtml += '<div><b>Transporteur :</b> '+restoreData.transporteur+'</div>';
+                if (restoreData.matos)        detailHtml += '<div><b>Logistique :</b> '+restoreData.matos+'</div>';
+                if (restoreData.files && restoreData.files.length > 0) {
+                    detailHtml += '<div style="margin-top:4px;"><b>Fichiers joints :</b> ';
+                    restoreData.files.forEach(function(f) {
+                        detailHtml += '<a href="'+f.url+'" target="_blank" style="color:#1b6cb8;margin-right:6px;">'+f.name+'</a>';
+                    });
+                    detailHtml += '</div>';
+                }
+                detailHtml += '</div>';
+            }
+
             html += '<div style="border-bottom:1px solid #f1f5f9;padding:10px 0;">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
                 + '<span style="background:'+color+';color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;">'+e.action+'</span>'
@@ -1512,8 +1549,17 @@ function loadJournalModifs() {
                 + '</div>'
                 + '<div style="font-size:12px;font-weight:bold;color:#1b2e58;">'+(e.chantier?'['+e.chantier+'] ':'')+(e.texte?e.texte.substring(0,50):'')+'</div>'
                 + '<div style="font-size:10px;color:#64748b;margin-top:2px;">'+e.personne+' — '+e.jour+' S'+e.semaine+' '+e.slot+'</div>'
+                + filesHtml
+                + '<div style="display:flex;gap:6px;margin-top:6px;">'
+                + '<button onclick="document.getElementById(\''+detailId+'\').style.display=document.getElementById(\''+detailId+'\').style.display===\'none\'?\'block\':\'none\'" style="background:#f1f5f9;color:#475569;border:none;padding:4px 8px;border-radius:6px;font-size:10px;cursor:pointer;">🔍 Détails</button>'
+                + (canRestore ? '<button onclick="restaurerMission(\''+e.key+'\','+idx+')" style="background:#10b981;color:white;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:bold;cursor:pointer;">↩️ Restaurer</button>' : '')
+                + '</div>'
+                + detailHtml
                 + '</div>';
         });
+
+        // Stocker les entries pour la restauration
+        window._jmEntries = entries;
         cont.innerHTML = html;
     }, function() {
         cont.innerHTML = '<div style="text-align:center;padding:20px;color:red;">Erreur de chargement.</div>';
@@ -1521,9 +1567,40 @@ function loadJournalModifs() {
 }
 
 
-/* =========================================
-   COPIER / DEPLACER
-========================================= */
+function restaurerMission(key, idx) {
+    var entries = window._jmEntries || [];
+    var entry   = entries[idx];
+    if (!entry) { showToast('Entrée introuvable', 'error'); return; }
+
+    // On restaure l'état "before" (avant la modification/suppression)
+    // Si c'est une NOUVELLE qu'on veut annuler, on supprime (before = null)
+    var restoreData = entry.before;
+    var chantier    = (restoreData && restoreData.chantier) || entry.chantier || '?';
+    var d           = new Date(entry.ts);
+    var dateStr     = String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+
+    var msg = '↩️ Restaurer la mission [' + chantier + '] ?\n\n'
+        + 'Cela va remettre la mission dans l\'état qu\'elle avait le ' + dateStr + '.\n'
+        + 'L\'état actuel de cette case sera écrasé.';
+
+    showConfirm(msg, function() {
+        var p;
+        if (restoreData) {
+            p = db.ref('planning_v18/' + key).set(restoreData);
+        } else {
+            // Cas NOUVELLE annulée : supprimer la mission
+            p = db.ref('planning_v18/' + key).remove();
+        }
+        p.then(function() {
+            saveHistorique('RESTAUREE', key, entry.after, restoreData);
+            document.getElementById('journal-modifs-overlay').style.display = 'none';
+            showToast('Mission restaurée !');
+        }).catch(function(err) {
+            console.error(err);
+            showToast('Erreur lors de la restauration', 'error');
+        });
+    }, 'Confirmer la restauration');
+}
 // ── GESTION TRANSPORTEURS ───────────────────────────────────────────────
 var TRANSPORTEURS_CACHE = {};
 
