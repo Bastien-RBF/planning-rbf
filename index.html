@@ -1467,40 +1467,37 @@ function openJournalModifs() {
     // Remplir le filtre par semaine — 12 semaines en arrière et 8 semaines en avance
     var sel = document.getElementById('jm-filter-week');
     sel.innerHTML = '<option value="all">Toutes les semaines</option>';
-    var realW = getWeek(new Date());      // vraie semaine calendaire aujourd'hui
-    var realY = new Date().getFullYear(); // vraie année aujourd'hui
+    var realW = getWeek(new Date());
+    var realY = new Date().getFullYear();
     var curY  = state.curY || realY;
     var curW  = state.curW || realW;
     var maxW  = getWeek(new Date(curY, 11, 28));
 
-    // Semaines futures (8 semaines en avance)
-    for (var wf = Math.min(curW + 8, maxW); wf > curW; wf--) {
-        var opt = document.createElement('option');
-        var d0f = getDateFromWeek(wf, curY, 0);
-        var d4f = getDateFromWeek(wf, curY, 4);
-        opt.value = wf + '/' + curY;
-        opt.textContent = 'S' + wf + ' — ' + fmtDate(d0f) + ' au ' + fmtDate(d4f) + ' (à venir)';
-        sel.appendChild(opt);
+    // Construire la liste complète : 8 semaines en avance jusqu'à 12 en arrière
+    // en s'assurant que la vraie semaine actuelle a toujours son label
+    var allWeeks = [];
+    for (var ww = Math.min(curW + 8, maxW); ww >= Math.max(1, curW - 12); ww--) {
+        allWeeks.push(ww);
     }
-    // Semaine actuelle
-    var optCur = document.createElement('option');
-    var d0c = getDateFromWeek(curW, curY, 0);
-    var d4c = getDateFromWeek(curW, curY, 4);
-    optCur.value = curW + '/' + curY;
-    // Label "cette semaine" uniquement si c'est vraiment la semaine calendaire actuelle
-    var labelCur = (curW === realW && curY === realY) ? ' (cette semaine)' : '';
-    optCur.textContent = 'S' + curW + ' — ' + fmtDate(d0c) + ' au ' + fmtDate(d4c) + labelCur;
-    optCur.selected = true;
-    sel.appendChild(optCur);
-    // Semaines passées (12 semaines en arrière)
-    for (var wp = curW - 1; wp >= Math.max(1, curW - 12); wp--) {
-        var opt2 = document.createElement('option');
-        var d0p  = getDateFromWeek(wp, curY, 0);
-        var d4p  = getDateFromWeek(wp, curY, 4);
-        opt2.value = wp + '/' + curY;
-        opt2.textContent = 'S' + wp + ' — ' + fmtDate(d0p) + ' au ' + fmtDate(d4p);
+    // Ajouter la vraie semaine actuelle si elle n'est pas déjà dans la liste
+    if (realW !== curW && allWeeks.indexOf(realW) === -1) {
+        allWeeks.push(realW);
+        allWeeks.sort(function(a, b) { return b - a; });
+    }
+
+    allWeeks.forEach(function(w) {
+        var opt2  = document.createElement('option');
+        var d0w   = getDateFromWeek(w, curY, 0);
+        var d4w   = getDateFromWeek(w, curY, 4);
+        var label = 'S' + w + ' — ' + fmtDate(d0w) + ' au ' + fmtDate(d4w);
+        if (w === realW && curY === realY)  label = '── S' + w + ' — ' + fmtDate(d0w) + ' au ' + fmtDate(d4w) + ' (semaine actuelle) ──';
+        else if (w > realW)                 label += ' (à venir)';
+        opt2.value       = w + '/' + curY;
+        opt2.textContent = label;
+        if (w === curW)  opt2.selected = true;
         sel.appendChild(opt2);
-    }
+    });
+
     loadJournalModifs();
 }
 
