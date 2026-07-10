@@ -1467,9 +1467,11 @@ function openJournalModifs() {
     // Remplir le filtre par semaine — 12 semaines en arrière et 8 semaines en avance
     var sel = document.getElementById('jm-filter-week');
     sel.innerHTML = '<option value="all">Toutes les semaines</option>';
-    var curY = state.curY || new Date().getFullYear();
-    var curW = state.curW || getWeek(new Date());
-    var maxW = getWeek(new Date(curY, 11, 28));
+    var realW = getWeek(new Date());      // vraie semaine calendaire aujourd'hui
+    var realY = new Date().getFullYear(); // vraie année aujourd'hui
+    var curY  = state.curY || realY;
+    var curW  = state.curW || realW;
+    var maxW  = getWeek(new Date(curY, 11, 28));
 
     // Semaines futures (8 semaines en avance)
     for (var wf = Math.min(curW + 8, maxW); wf > curW; wf--) {
@@ -1485,7 +1487,9 @@ function openJournalModifs() {
     var d0c = getDateFromWeek(curW, curY, 0);
     var d4c = getDateFromWeek(curW, curY, 4);
     optCur.value = curW + '/' + curY;
-    optCur.textContent = 'S' + curW + ' — ' + fmtDate(d0c) + ' au ' + fmtDate(d4c) + ' (cette semaine)';
+    // Label "cette semaine" uniquement si c'est vraiment la semaine calendaire actuelle
+    var labelCur = (curW === realW && curY === realY) ? ' (cette semaine)' : '';
+    optCur.textContent = 'S' + curW + ' — ' + fmtDate(d0c) + ' au ' + fmtDate(d4c) + labelCur;
     optCur.selected = true;
     sel.appendChild(optCur);
     // Semaines passées (12 semaines en arrière)
