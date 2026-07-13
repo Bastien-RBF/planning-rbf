@@ -1130,51 +1130,144 @@ function renderDriverView(days, hList) {
 ========================================= */
 function printFullWeek() {
     var isDepot = state.curU === 'depot';
-    var dNmap = {interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'DEPOT (3T500)'};
-    var days = ["LUNDI","MARDI","MERCREDI","JEUDI","VENDREDI","SAMEDI"];
+    var dNmap = {interne:'DAMIEN',depot:'STEPHANE',cedric:'CEDRIC',jadiel:'JADIEL',nicola:'NICOLA',externe:'EXTERNE',divers:'DIVERS',instal:'INSTAL','3t500':'DEPOT\n(3T500)'};
+    var days = ['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
     var dayDates = [];
     for (var i = 0; i < 6; i++) dayDates.push(fmtDate(getDateFromWeek(state.curW, state.curY, i)));
 
-    var html = '<div style="font-family:Arial,sans-serif;">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:3px solid #1b2e58;padding-bottom:8px;">';
-    html += '<div style="font-size:20px;font-weight:bold;color:#1b2e58;">ROSSET BOULON & FILS</div>';
-    html += '<div style="font-size:16px;font-weight:bold;color:#1b2e58;">SEMAINE '+state.curW+' — '+state.curY+'</div>';
-    html += '</div>';
+    var now = new Date();
+    var printDate = String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
+    var printTime = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
 
-    html += '<table style="width:100%;border-collapse:collapse;table-layout:fixed;">';
-    html += '<thead><tr style="background:#1b2e58;color:white;">';
-    html += '<th style="border:1px solid #1b2e58;padding:6px;width:9%;font-size:11px;">NOM</th>';
+    function truckClass(truck) {
+        if (!truck) return 'mc-default';
+        if (truck.indexOf('+R]') !== -1 || truck.indexOf('REMORQUE') !== -1) return 'mc-remorque';
+        if (truck.indexOf('[P]') !== -1 || truck.indexOf('PORTEUR') !== -1) return 'mc-porteur';
+        if (truck.indexOf('[B') !== -1 || truck.indexOf('BENNE') !== -1) return 'mc-benne';
+        if (truck.indexOf('GRUE') !== -1) return 'mc-grue';
+        return 'mc-default';
+    }
+
+    var css = '<style>'
+        + '@page{size:A3 landscape;margin:8mm}'
+        + 'body{font-family:Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+        + '.mix-header{background:white;border-bottom:4px solid #1b2e58;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}'
+        + '.mix-logo-sq{width:36px;height:36px;background:#1b2e58;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}'
+        + '.mix-logo-txt{color:#f9c311;font-size:8px;font-weight:900;text-align:center;line-height:1.2;}'
+        + '.mix-htitle{font-size:16px;font-weight:900;color:#1b2e58;letter-spacing:0.5px;}'
+        + '.mix-hsub{font-size:9px;color:#94a3b8;margin-top:1px;}'
+        + '.mix-week-badge{background:#1b2e58;color:white;padding:5px 14px;border-radius:20px;text-align:center;}'
+        + '.mix-week-num{font-size:13px;font-weight:900;}'
+        + '.mix-week-dates{font-size:9px;opacity:.7;margin-top:1px;}'
+        + '.mix-print-info{font-size:9px;color:#94a3b8;text-align:right;}'
+        + '.mix-legend{background:#f8fafc;padding:4px 14px;display:flex;gap:8px;font-size:8px;align-items:center;border-bottom:0.5px solid #e2e8f0;flex-wrap:wrap;}'
+        + '.mix-leg{padding:2px 7px;border-radius:3px;border:0.5px solid transparent;}'
+        + '.mix-table{width:100%;border-collapse:collapse;}'
+        + '.mix-table th{background:#1b2e58;color:white;padding:5px 4px;text-align:center;border:1px solid #2a3d6b;font-size:9px;}'
+        + '.mix-table th .day{font-weight:900;font-size:10px;}'
+        + '.mix-table th .date{font-weight:400;opacity:.6;font-size:9px;margin-top:1px;}'
+        + '.mix-table td{border:0.5px solid #e2e8f0;padding:3px;vertical-align:top;}'
+        + '.mix-name{background:#1b2e58 !important;color:#f9c311 !important;font-weight:900;font-size:8px;text-align:center;border-right:2px solid #1b2e58 !important;width:42px;vertical-align:middle !important;letter-spacing:0.5px;white-space:pre-line;}'
+        + '.mix-row-even td:not(.mix-name){background:#fafbff;}'
+        + '.mix-card{padding:3px 5px;border-radius:4px;margin-bottom:2px;font-size:8px;border-left:3px solid #1b2e58;}'
+        + '.mc-porteur{background:#eff6ff;border-color:#3b82f6;}'
+        + '.mc-remorque{background:#dbeafe;border-color:#1d4ed8;}'
+        + '.mc-benne{background:#fef3c7;border-color:#f59e0b;}'
+        + '.mc-grue{background:#fce7f3;border-color:#ec4899;}'
+        + '.mc-depot{background:#d1fae5;border-color:#10b981;}'
+        + '.mc-default{background:#f8fafc;border-color:#cbd5e1;}'
+        + '.mc-ch{font-weight:900;color:#1b2e58;}'
+        + '.mc-tx{color:#334155;margin-top:1px;line-height:1.3;}'
+        + '.mc-addr{color:#dc2626;font-size:7px;margin-top:1px;}'
+        + '.mc-cond{color:#7c3aed;font-size:7px;margin-top:1px;}'
+        + '.mc-trsp{background:#dbeafe;color:#1e3a8a;font-size:7px;padding:1px 3px;border-radius:2px;margin-top:2px;display:inline-block;}'
+        + '.mc-badge{background:#10b981;color:white;font-size:7px;padding:1px 4px;border-radius:2px;display:inline-block;margin-top:2px;}'
+        + '.mc-files{color:#64748b;font-size:7px;margin-top:1px;}'
+        + '.mc-conge{background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700;font-size:8px;padding:4px 5px;border-radius:4px;border-left:3px solid #f59e0b;}'
+        + '.mix-footer{background:#f8fafc;border-top:0.5px solid #e2e8f0;padding:5px 14px;display:flex;justify-content:space-between;font-size:8px;color:#94a3b8;}'
+        + '</style>';
+
+    var html = css;
+    html += '<div>';
+
+    // En-tête
+    html += '<div class="mix-header">'
+        + '<div style="display:flex;align-items:center;gap:10px;">'
+        + '<div class="mix-logo-sq"><div class="mix-logo-txt">RBF</div></div>'
+        + '<div><div class="mix-htitle">ROSSET BOULON & FILS</div>'
+        + '<div class="mix-hsub">Planning Transport — Document interne confidentiel</div></div>'
+        + '</div>'
+        + '<div class="mix-week-badge">'
+        + '<div class="mix-week-num">SEMAINE '+state.curW+' — '+state.curY+'</div>'
+        + '<div class="mix-week-dates">'+dayDates[0]+' au '+dayDates[5]+'</div>'
+        + '</div>'
+        + '<div class="mix-print-info">Imprimé le '+printDate+'<br>'+printTime+'</div>'
+        + '</div>';
+
+    // Légende
+    html += '<div class="mix-legend">'
+        + '<span style="font-weight:600;color:#475569;">Véhicules :</span>'
+        + '<span class="mix-leg" style="background:#eff6ff;color:#1e40af;border-color:#bfdbfe;">Porteur</span>'
+        + '<span class="mix-leg" style="background:#dbeafe;color:#1e3a8a;border-color:#93c5fd;">Porteur + Remorque</span>'
+        + '<span class="mix-leg" style="background:#fef3c7;color:#92400e;border-color:#fde68a;">Benne</span>'
+        + '<span class="mix-leg" style="background:#fce7f3;color:#9d174d;border-color:#f9a8d4;">Grue</span>'
+        + '<span class="mix-leg" style="background:#d1fae5;color:#065f46;border-color:#6ee7b7;">Mission dépôt</span>'
+        + '</div>';
+
+    // Tableau
+    html += '<table class="mix-table"><thead><tr>';
+    html += '<th style="width:45px;">CHAUFFEUR</th>';
     for (var d = 0; d < 6; d++) {
-        html += '<th style="border:1px solid #1b2e58;padding:6px;font-size:11px;">'+days[d]+' '+dayDates[d]+'</th>';
+        html += '<th><div class="day">'+days[d]+'</div><div class="date">'+dayDates[d]+'</div></th>';
     }
     html += '</tr></thead><tbody>';
 
-    ALL_USERS.forEach(function(u) {
-        html += '<tr>';
-        html += '<td style="border:1px solid #94a3b8;padding:4px;font-weight:bold;background:#eef2ff;font-size:10px;vertical-align:top;">'+(dNmap[u.id]||u.id.toUpperCase())+'</td>';
+    ALL_USERS.forEach(function(u, uIdx) {
+        var rowClass = uIdx % 2 === 0 ? ' class="mix-row-even"' : '';
+        html += '<tr'+rowClass+'>';
+        html += '<td class="mix-name">'+(dNmap[u.id]||u.id.toUpperCase())+'</td>';
+
         for (var dI = 0; dI < 6; dI++) {
-            html += '<td style="border:1px solid #94a3b8;padding:4px;vertical-align:top;font-size:9px;">';
+            html += '<td>';
             var cellHtml = '';
             for (var s = 1; s <= u.s; s++) {
                 var k = state.curY+'_'+state.curW+'_'+u.id+'_'+dI+'_s'+s;
                 var dta = window.data[k] || {};
                 if (isDepot && !dta.toDepot) continue;
                 if (!dta.text && !dta.isConge) continue;
-                if (dta.isConge) { cellHtml += '<div style="margin-bottom:4px;padding:3px;background:#fef3c7;border-radius:3px;font-weight:bold;">CONGE</div>'; continue; }
-                var trk = dta.truck ? dta.truck.replace(/[\uD800-\uDFFF]/g, '').trim()+' ' : '';
-                cellHtml += '<div style="margin-bottom:5px;padding-bottom:5px;border-bottom:1px dashed #cbd5e1;">';
-                if (dta.chantier) cellHtml += '<div style="font-weight:bold;">['+dta.chantier.toUpperCase()+']</div>';
-                cellHtml += '<div>'+(trk?'<i>'+trk+'</i> ':'')+(dta.text||'')+'</div>';
-                if (dta.adresse) cellHtml += '<div style="color:#dc2626;font-size:8px;">'+dta.adresse+'</div>';
-                if (dta.transporteur) cellHtml += '<div style="color:#1e40af;font-size:8px;">'+dta.transporteur+'</div>';
+
+                if (dta.isConge) {
+                    cellHtml += '<div class="mc-conge">🏖️ CONGÉ</div>';
+                    continue;
+                }
+
+                var cardClass = dta.toDepot ? 'mc-depot' : truckClass(dta.truck);
+                if (dta.col && dta.col !== 'default') cardClass = 'mc-default';
+
+                var customStyle = '';
+                if (dta.col && dta.col !== 'default') {
+                    customStyle = ' style="background:'+dta.col+';border-color:'+dta.col+';"';
+                }
+
+                cellHtml += '<div class="mix-card '+cardClass+'"'+customStyle+'>';
+                if (dta.chantier) cellHtml += '<div class="mc-ch">['+dta.chantier.toUpperCase()+']</div>';
+                if (dta.text)     cellHtml += '<div class="mc-tx">'+dta.text+'</div>';
+                if (dta.adresse)  cellHtml += '<div class="mc-addr">📍 '+dta.adresse+'</div>';
+                if (dta.conducteur) cellHtml += '<div class="mc-cond">👷 '+dta.conducteur+'</div>';
+                if (dta.transporteur) cellHtml += '<span class="mc-trsp">🚚 '+dta.transporteur+'</span>';
+                if (LISTES_CACHE[k]) cellHtml += '<span class="mc-badge">📋 LISTE</span>';
+                if (dta.files && dta.files.length > 0) cellHtml += '<div class="mc-files">📎 '+dta.files.length+' fichier(s)</div>';
                 cellHtml += '</div>';
             }
-            html += cellHtml || '<span style="color:#cbd5e1;">—</span>';
+            html += cellHtml || '<div style="color:#e2e8f0;font-size:8px;text-align:center;padding:4px;">—</div>';
             html += '</td>';
         }
         html += '</tr>';
     });
-    html += '</tbody></table></div>';
+
+    html += '</tbody></table>';
+    html += '<div class="mix-footer"><span>RBF Planning — Document interne confidentiel</span><span>bastien-rbf.github.io/planning-rbf</span></div>';
+    html += '</div>';
 
     var area = document.getElementById('rbf-week-print-area');
     if (!area) {
@@ -1191,22 +1284,20 @@ function printFullWeek() {
         s.id = 'rbf-week-print-style';
         document.head.appendChild(s);
     }
-    s.textContent = '@media print {'
-        + ' @page { size: A3 landscape; margin: 8mm; }'
-        + ' body > *:not(#rbf-week-print-area) { display:none !important; }'
-        + ' #rbf-week-print-area { display:block !important; }'
-        + ' }';
+    s.textContent = '@media print{'
+        + '@page{size:A3 landscape;margin:8mm}'
+        + 'body > *:not(#rbf-week-print-area){display:none !important}'
+        + '#rbf-week-print-area{display:block !important}'
+        + '}';
 
     function onAfterWeekPrint() {
         area.style.display = 'none';
         window.removeEventListener('afterprint', onAfterWeekPrint);
     }
     window.addEventListener('afterprint', onAfterWeekPrint);
-
     area.style.display = 'block';
     setTimeout(function() { window.print(); }, 50);
 }
-
 /* =========================================
    EMAILS
 ========================================= */
