@@ -320,6 +320,21 @@
         <input type="text" id="e-adresse" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;background:#f0f9ff;font-size:12px;" placeholder="Adresse (auto-remplie)" readonly>
         <!-- Chantier caché pour compatibilité -->
         <input type="hidden" id="e-chantier" value="">
+        <!-- 2e CHANTIER (optionnel, aller après le 1er) -->
+        <div id="zone-chantier2-toggle" style="margin-bottom:10px;">
+            <button type="button" onclick="toggleChantier2()" style="width:100%;background:#eef2ff;color:#3730a3;border:1px dashed #a5b4fc;border-radius:8px;padding:9px;font-size:12px;font-weight:bold;cursor:pointer;">➕ Ajouter un 2ᵉ chantier</button>
+        </div>
+        <div id="zone-chantier2" class="hidden" style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-size:10px;font-weight:bold;color:#3730a3;">2️⃣ 2ᵉ CHANTIER (on y va après le 1er)</span>
+                <button type="button" onclick="removeChantier2()" style="background:none;border:none;color:#ef4444;font-size:11px;cursor:pointer;">✕ retirer</button>
+            </div>
+            <select id="e-chantier2-sel" onchange="onChantier2Sel()" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #c7d2fe;background:white;font-size:12px;margin-bottom:6px;">
+                <option value="">-- Choisir un chantier --</option>
+            </select>
+            <input type="text" id="e-chantier2-libre-input" class="hidden" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #c7d2fe;font-size:12px;margin-bottom:6px;" placeholder="Nom du 2ᵉ chantier">
+            <input type="text" id="e-adresse2" style="width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #c7d2fe;background:#f0f9ff;font-size:12px;" placeholder="Adresse du 2ᵉ chantier">
+        </div>
         <div id="zone-truck" class="hidden">
             <label style="font-size:10px;font-weight:bold;color:var(--blue);">VEHICULE :</label>
             <select id="e-truck" style="padding:10px;border-radius:8px;border:1px solid #ddd;margin-bottom:10px;background:#f8fafc;">
@@ -1043,16 +1058,29 @@ function renderAdminView(hList) {
                 if (dta.isConge)       txt = 'CONGE';
                 else if (dta.chantier) {
                     var trspLabel = (k.includes('externe') && dta.transporteur) ? ' <span style="background:#dbeafe;color:#1e40af;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:bold;">'+dta.transporteur+'</span>' : '';
-                    txt = '<b>'+trk+'['+dta.chantier.toUpperCase()+']</b>'+trspLabel+'<br>'+dta.text;
+                    var ord1 = dta.chantier2 ? '1▸ ' : '';
+                    txt = '<b>'+trk+ord1+'['+dta.chantier.toUpperCase()+']</b>'+trspLabel+'<br>'+dta.text;
                 }
                 else                   txt = dta.text || '...';
-                // Adresse : texte simple pour admin, lien Maps cliquable pour dépôt
+                // Adresse (1er chantier) : texte simple pour admin, lien Maps cliquable pour dépôt
                 if (dta.adresse) {
                     if (isDepot) {
                         var mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(dta.adresse);
                         txt += '<div style="font-size:8px;margin-top:2px;"><a href="'+mapsUrl+'" target="_blank" onclick="event.stopPropagation();" style="color:#1b6cb8;font-weight:bold;text-decoration:none;">📍 NAVIGUER : '+dta.adresse+'</a></div>';
                     } else {
                         txt += '<div style="font-size:8px;color:#94a3b8;margin-top:2px;">📍 '+dta.adresse+'</div>';
+                    }
+                }
+                // 2e chantier
+                if (dta.chantier2) {
+                    txt += '<div style="font-size:9px;font-weight:bold;color:#3730a3;margin-top:3px;">2▸ ['+dta.chantier2.toUpperCase()+']</div>';
+                    if (dta.adresse2) {
+                        if (isDepot) {
+                            var mapsUrl2 = 'https://maps.google.com/?q=' + encodeURIComponent(dta.adresse2);
+                            txt += '<div style="font-size:8px;margin-top:1px;"><a href="'+mapsUrl2+'" target="_blank" onclick="event.stopPropagation();" style="color:#1b6cb8;font-weight:bold;text-decoration:none;">📍 NAVIGUER : '+dta.adresse2+'</a></div>';
+                        } else {
+                            txt += '<div style="font-size:8px;color:#94a3b8;margin-top:1px;">📍 '+dta.adresse2+'</div>';
+                        }
                     }
                 }
                 // Conducteur de travaux
@@ -1108,17 +1136,24 @@ function renderDriverView(days, hList) {
                 (dta.files || []).forEach(function(f) { fl += fileTagHtml(f, false); });
                 var truckHtml   = dta.truck ? '<div style="font-size:10px;background:#e2e8f0;display:inline-block;padding:2px 6px;border-radius:4px;margin-bottom:4px;">'+dta.truck+'</div>' : '';
                 var borderColor = (dta.col && dta.col !== 'default') ? dta.col : '#3b82f6';
-                var mapsHtml = '';
-                if (dta.adresse) {
-                    var mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(dta.adresse);
-                    mapsHtml = '<a href="'+mapsUrl+'" target="_blank" onclick="event.stopPropagation();" '
+                function mkMaps(addr, label) {
+                    var u = 'https://maps.google.com/?q=' + encodeURIComponent(addr);
+                    return '<a href="'+u+'" target="_blank" onclick="event.stopPropagation();" '
                         + 'style="display:flex;align-items:center;gap:8px;background:#1b6cb8;color:white;padding:10px 14px;border-radius:8px;margin-top:8px;text-decoration:none;font-size:12px;font-weight:bold;">'
-                        + '📍 NAVIGUER : '+dta.adresse+'</a>';
+                        + label + addr + '</a>';
+                }
+                var hasCh2   = !!dta.chantier2;
+                var ch1Title = '<b>'+(hasCh2?'1▸ ':'')+(dta.chantier?dta.chantier.toUpperCase():'')+'</b>';
+                var maps1    = dta.adresse ? mkMaps(dta.adresse, hasCh2 ? '📍 NAVIGUER (1) : ' : '📍 NAVIGUER : ') : '';
+                var ch2Html  = '';
+                if (hasCh2) {
+                    ch2Html = '<div style="margin-top:12px;border-top:1px dashed #c7d2fe;padding-top:8px;"><b style="color:#3730a3;">2▸ '+dta.chantier2.toUpperCase()+'</b></div>'
+                            + (dta.adresse2 ? mkMaps(dta.adresse2, '📍 NAVIGUER (2) : ') : '');
                 }
                 var ltKey2 = state.curY+'_'+state.curW+'_'+state.curU+'_'+dI+'_s'+s;
                 var ltBtnHtml = LISTES_CACHE[ltKey2] ? '<button onclick="viewListeTransport(\''+ltKey2+'\')" style="display:block;width:100%;margin-top:8px;padding:8px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:8px;text-align:center;font-size:11px;font-weight:bold;cursor:pointer;">📋 LISTE DE TRANSPORT</button>' : '';
                 var condHtml = dta.conducteur ? '<div style="font-size:11px;color:#7c3aed;font-weight:bold;margin-top:6px;">👷 Conducteur de travaux : '+dta.conducteur+'</div>' : '';
-                cards += '<div style="padding:15px;background:white;margin-bottom:10px;border-radius:12px;border-left:5px solid '+borderColor+';box-shadow:0 2px 5px rgba(0,0,0,0.05);">'+truckHtml+'<b>'+(dta.chantier?dta.chantier.toUpperCase():'')+'</b><p style="margin:8px 0;font-size:13px;">'+dta.text+'</p>'+(dta.matos?'<div style="background:#f0fdf4;padding:8px;border-radius:8px;font-size:11px;"><b>LOGISTIQUE :</b> '+dta.matos+'</div>':'')+condHtml+fl+mapsHtml+ltBtnHtml+'</div>';
+                cards += '<div style="padding:15px;background:white;margin-bottom:10px;border-radius:12px;border-left:5px solid '+borderColor+';box-shadow:0 2px 5px rgba(0,0,0,0.05);">'+truckHtml+ch1Title+'<p style="margin:8px 0;font-size:13px;">'+dta.text+'</p>'+(dta.matos?'<div style="background:#f0fdf4;padding:8px;border-radius:8px;font-size:11px;"><b>LOGISTIQUE :</b> '+dta.matos+'</div>':'')+condHtml+fl+maps1+ch2Html+ltBtnHtml+'</div>';
             }
         }
         v.innerHTML += '<div style="margin-bottom:15px;"><b style="color:var(--blue);font-size:15px;border-left:4px solid var(--yellow);padding-left:8px;">'+days[dI]+' '+fmtDate(dD)+'</b>'+(hList[dI]?'<span class="holiday-badge" style="display:inline-block;margin-left:10px;">'+hList[dI]+'</span>':'')+'<div style="margin-top:8px;">'+(cards||'<p style="color:#94a3b8;font-size:11px;">Aucune mission</p>')+'</div></div>';
@@ -1250,9 +1285,13 @@ function printFullWeek() {
                 }
 
                 cellHtml += '<div class="mix-card '+cardClass+'"'+customStyle+'>';
-                if (dta.chantier) cellHtml += '<div class="mc-ch">['+dta.chantier.toUpperCase()+']</div>';
+                if (dta.chantier) cellHtml += '<div class="mc-ch">'+(dta.chantier2?'1▸ ':'')+'['+dta.chantier.toUpperCase()+']</div>';
                 if (dta.text)     cellHtml += '<div class="mc-tx">'+dta.text+'</div>';
                 if (dta.adresse)  cellHtml += '<div class="mc-addr">📍 '+dta.adresse+'</div>';
+                if (dta.chantier2) {
+                    cellHtml += '<div class="mc-ch">2▸ ['+dta.chantier2.toUpperCase()+']</div>';
+                    if (dta.adresse2) cellHtml += '<div class="mc-addr">📍 '+dta.adresse2+'</div>';
+                }
                 if (dta.conducteur) cellHtml += '<div class="mc-cond">👷 '+dta.conducteur+'</div>';
                 if (dta.transporteur) cellHtml += '<span class="mc-trsp">🚚 '+dta.transporteur+'</span>';
                 if (LISTES_CACHE[k]) cellHtml += '<span class="mc-badge">📋 LISTE</span>';
@@ -1356,6 +1395,22 @@ function openEd(k) {
             var sel = document.getElementById('e-chantier-sel');
             if (sel) { sel.value = cur; if (sel.value !== cur) sel.value = ''; }
         }
+        // 2e chantier : reset systématique puis remplissage si présent
+        removeChantier2();
+        if (d.chantier2) {
+            populateChantier2Sel();
+            document.getElementById('zone-chantier2').classList.remove('hidden');
+            document.getElementById('zone-chantier2-toggle').classList.add('hidden');
+            var s2 = document.getElementById('e-chantier2-sel');
+            if (CHANTIERS_CACHE[d.chantier2]) {
+                s2.value = d.chantier2;
+            } else {
+                s2.value = '__libre__';
+                document.getElementById('e-chantier2-libre-input').classList.remove('hidden');
+                document.getElementById('e-chantier2-libre-input').value = d.chantier2;
+            }
+            document.getElementById('e-adresse2').value = d.adresse2 || '';
+        }
     });
     loadFournisseurs();
     document.getElementById('editor-overlay').style.display = 'flex';
@@ -1384,6 +1439,19 @@ function saveTask() {
                 if (selF && selF.value && FOURNISSEURS_CACHE[selF.value]) return FOURNISSEURS_CACHE[selF.value].adresse || '';
             }
             return document.getElementById('e-adresse').value;
+        })(),
+        chantier2: isConge ? '' : (function() {
+            var z = document.getElementById('zone-chantier2');
+            if (!z || z.classList.contains('hidden')) return '';
+            var s2 = document.getElementById('e-chantier2-sel');
+            if (s2 && s2.value === '__libre__') return (document.getElementById('e-chantier2-libre-input').value || '').trim().toUpperCase();
+            if (s2 && s2.value && s2.value.indexOf('__') !== 0) return s2.value;
+            return '';
+        })(),
+        adresse2 : isConge ? '' : (function() {
+            var z = document.getElementById('zone-chantier2');
+            if (!z || z.classList.contains('hidden')) return '';
+            return (document.getElementById('e-adresse2').value || '').trim();
         })(),
         matos   : isConge ? '' : document.getElementById('e-matos').value,
         // Les missions assignees a la ligne DEPOT (3T500) sont automatiquement
@@ -1663,8 +1731,10 @@ function loadJournalModifs() {
             var detailHtml = '';
             if (restoreData) {
                 detailHtml += '<div id="'+detailId+'" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;margin-top:8px;font-size:11px;">';
-                if (restoreData.chantier)     detailHtml += '<div><b>Chantier :</b> '+restoreData.chantier+'</div>';
+                if (restoreData.chantier)     detailHtml += '<div><b>Chantier :</b> '+(restoreData.chantier2?'1▸ ':'')+restoreData.chantier+'</div>';
                 if (restoreData.adresse)      detailHtml += '<div><b>Adresse :</b> '+restoreData.adresse+'</div>';
+                if (restoreData.chantier2)    detailHtml += '<div><b>2ᵉ chantier :</b> 2▸ '+restoreData.chantier2+'</div>';
+                if (restoreData.adresse2)     detailHtml += '<div><b>Adresse 2 :</b> '+restoreData.adresse2+'</div>';
                 if (restoreData.text)         detailHtml += '<div><b>Mission :</b> '+restoreData.text+'</div>';
                 if (restoreData.truck)        detailHtml += '<div><b>Véhicule :</b> '+restoreData.truck+'</div>';
                 if (restoreData.conducteur)   detailHtml += '<div><b>Conducteur :</b> '+restoreData.conducteur+'</div>';
@@ -1679,9 +1749,17 @@ function loadJournalModifs() {
                 }
                 if (e.listeTransport && e.listeTransport.tours && e.listeTransport.tours.length > 0) {
                     detailHtml += '<div style="margin-top:4px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 8px;font-size:10px;">';
-                    detailHtml += '<b>📋 Liste de transport (' + e.listeTransport.tours.length + ' tour(s)) :</b> ';
-                    e.listeTransport.tours.forEach(function(t) {
-                        detailHtml += '<span style="margin-right:8px;">' + (t.label||'?') + ' (' + (t.items||[]).length + ' article(s))</span>';
+                    detailHtml += '<div style="font-weight:bold;color:#92400e;margin-bottom:4px;">📋 Liste de transport (' + e.listeTransport.tours.length + ' tour(s))</div>';
+                    e.listeTransport.tours.forEach(function(t, ti) {
+                        detailHtml += '<div style="margin-bottom:3px;"><b>Tour '+(ti+1)+(t.label?' — '+t.label:'')+'</b>';
+                        if (t.items && t.items.length > 0) {
+                            detailHtml += '<ul style="margin:2px 0 2px 14px;padding:0;">';
+                            t.items.forEach(function(it) { detailHtml += '<li style="color:#475569;">'+it+'</li>'; });
+                            detailHtml += '</ul>';
+                        } else {
+                            detailHtml += ' <span style="color:#94a3b8;">(vide)</span>';
+                        }
+                        detailHtml += '</div>';
                     });
                     detailHtml += '</div>';
                 }
@@ -2266,6 +2344,55 @@ function onChantierSel() {
     }
 }
 
+// ── 2e CHANTIER ──────────────────────────────────────────────────────────
+function populateChantier2Sel() {
+    var sel = document.getElementById('e-chantier2-sel');
+    if (!sel) return;
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">-- Choisir un chantier --</option>';
+    Object.keys(CHANTIERS_CACHE).sort().forEach(function(k) {
+        var opt = document.createElement('option');
+        opt.value = k; opt.textContent = k;
+        sel.appendChild(opt);
+    });
+    var sep = document.createElement('option'); sep.disabled = true; sep.textContent = '──────────────'; sel.appendChild(sep);
+    var libre = document.createElement('option'); libre.value = '__libre__'; libre.textContent = '✏️ Saisie libre'; sel.appendChild(libre);
+    if (cur) sel.value = cur;
+}
+
+function toggleChantier2() {
+    populateChantier2Sel();
+    document.getElementById('zone-chantier2').classList.remove('hidden');
+    document.getElementById('zone-chantier2-toggle').classList.add('hidden');
+}
+
+function removeChantier2() {
+    document.getElementById('zone-chantier2').classList.add('hidden');
+    document.getElementById('zone-chantier2-toggle').classList.remove('hidden');
+    document.getElementById('e-chantier2-sel').value = '';
+    var lib = document.getElementById('e-chantier2-libre-input');
+    lib.value = ''; lib.classList.add('hidden');
+    document.getElementById('e-adresse2').value = '';
+}
+
+function onChantier2Sel() {
+    var sel = document.getElementById('e-chantier2-sel');
+    var val = sel ? sel.value : '';
+    var lib = document.getElementById('e-chantier2-libre-input');
+    var adr = document.getElementById('e-adresse2');
+    if (val === '__libre__') {
+        lib.classList.remove('hidden');
+        adr.value = '';
+        setTimeout(function(){ lib.focus(); }, 100);
+    } else if (val && CHANTIERS_CACHE[val]) {
+        lib.classList.add('hidden'); lib.value = '';
+        adr.value = CHANTIERS_CACHE[val].adresse || '';
+    } else {
+        lib.classList.add('hidden'); lib.value = '';
+        adr.value = '';
+    }
+}
+
 function openAddChantier() {
     document.getElementById('new-chantier-nom').value = '';
     document.getElementById('new-chantier-adresse').value = '';
@@ -2730,6 +2857,7 @@ function showHistory() {
                 key: k, date: getDateFromWeek(w,y,dI), week: w, user: p[2],
                 chantier: dta.chantier||'', text: dta.text||'', matos: dta.matos||'',
                 adresse: dta.adresse||'', truck: dta.truck||'',
+                chantier2: dta.chantier2||'', adresse2: dta.adresse2||'',
                 conducteur: dta.conducteur||'', transporteur: dta.transporteur||'',
                 files: dta.files||[], lt: lt[k]||null
             });
@@ -2769,14 +2897,19 @@ function showHistory() {
                 ltHtml += '</div>';
             }
 
-            var hasDetails = m.adresse||m.truck||m.conducteur||m.transporteur||m.matos||filesHtml||ltHtml;
+            var ch2Html = '';
+            if (m.chantier2) {
+                ch2Html = '<div style="margin-top:2px;"><b>2ᵉ chantier :</b> <span style="color:#3730a3;">2▸ '+m.chantier2+'</span></div>'
+                        + (m.adresse2?'<div style="margin-top:1px;"><b>Adresse 2 :</b> <span style="color:#dc2626;">'+m.adresse2+'</span></div>':'');
+            }
+            var hasDetails = m.adresse||m.truck||m.conducteur||m.transporteur||m.matos||m.chantier2||filesHtml||ltHtml;
 
             return '<div style="padding:12px;border-bottom:1px solid #eee;background:white;margin-bottom:8px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">'
                 + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
                 + '<span style="color:var(--blue);font-weight:800;font-size:13px;">'+fmtDate(m.date)+' <small style="opacity:0.5;">(Sem '+m.week+')</small></span>'
                 + '<span style="background:var(--blue);color:white;padding:2px 8px;border-radius:4px;font-size:10px;">'+(dNmap[m.user]||m.user.toUpperCase())+'</span>'
                 + '</div>'
-                + '<div style="color:var(--success);font-weight:bold;font-size:12px;">'+m.chantier+'</div>'
+                + '<div style="color:var(--success);font-weight:bold;font-size:12px;">'+(m.chantier2?'1▸ ':'')+m.chantier+'</div>'
                 + '<div style="font-size:12px;color:#475569;margin-top:3px;">'+m.text+'</div>'
                 + (m.files&&m.files.length>0?'<div style="font-size:10px;color:#64748b;margin-top:3px;">📎 '+m.files.length+' fichier(s) joint(s)</div>':'')
                 + (m.lt?'<div style="font-size:10px;color:#92400e;margin-top:2px;">📋 Liste de transport associée</div>':'')
@@ -2784,6 +2917,7 @@ function showHistory() {
                 + '<div id="'+detailId+'" style="display:none;margin-top:6px;background:#f8fafc;border-radius:6px;padding:8px;font-size:11px;">'
                 + (m.truck?'<div><b>Véhicule :</b> '+m.truck+'</div>':'')
                 + (m.adresse?'<div style="margin-top:2px;"><b>Adresse :</b> <span style="color:#dc2626;">'+m.adresse+'</span></div>':'')
+                + ch2Html
                 + (m.conducteur?'<div style="margin-top:2px;"><b>Conducteur :</b> <span style="color:#7c3aed;">'+m.conducteur+'</span></div>':'')
                 + (m.transporteur?'<div style="margin-top:2px;"><b>Transporteur :</b> '+m.transporteur+'</div>':'')
                 + (m.matos?'<div style="margin-top:2px;background:#f0fdf4;padding:5px;border-radius:4px;"><b>Logistique :</b> '+m.matos+'</div>':'')
