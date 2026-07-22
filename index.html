@@ -192,6 +192,16 @@
     </div>
     <div id="admin-search-zone" class="search-container hidden">
         <input type="text" id="search-input" placeholder="Rechercher..." oninput="applySearch()">
+        <select id="histo-scope" title="Cibler la recherche HISTO" style="padding:9px 6px;border-radius:10px;border:2px solid #f1f5f9;background:#f8fafc;font-size:11px;font-weight:bold;color:#475569;outline:none;">
+            <option value="all">🔍 Tout</option>
+            <option value="chantier">🏗️ Chantier</option>
+            <option value="conducteur">👷 Conducteur</option>
+            <option value="transporteur">🚚 Transporteur</option>
+            <option value="chauffeur">🧑‍✈️ Chauffeur</option>
+            <option value="mission">📝 Mission</option>
+            <option value="adresse">📍 Adresse</option>
+            <option value="liste">📋 Liste transp.</option>
+        </select>
         <button class="btn-nav-admin" style="background:#64748b" onclick="showHistory()">HISTO</button>
         <button class="btn-nav-admin" style="background:#94a3b8;font-size:9px;" onclick="openMediatheque()">MÉDIAS</button>
         <button class="btn-nav-admin" onclick="openRH('HEURES')">RH</button>
@@ -2844,6 +2854,9 @@ function toggleHistoDetail(id) {
 
 function showHistory() {
     var q = document.getElementById('search-input').value.trim().toLowerCase();
+    var scopeEl = document.getElementById('histo-scope');
+    var scope = scopeEl ? scopeEl.value : 'all';
+    var scopeLbl = scopeEl ? scopeEl.options[scopeEl.selectedIndex].text : 'Tout';
     if (!q) { showToast('Tapez un mot-cle avant de rechercher', 'info'); return; }
     document.getElementById('history-overlay').style.display = 'flex';
     document.getElementById('history-results').innerHTML = "<div style='text-align:center;padding:20px;'>Chargement...</div>";
@@ -2864,7 +2877,7 @@ function showHistory() {
             if (p.length < 4) continue;
             var y=parseInt(p[0]), w=parseInt(p[1]), dI=parseInt(p[3]);
             if (isNaN(y)||isNaN(w)||isNaN(dI)) continue;
-            // Recherche sur TOUS les champs utiles (+ nom du chauffeur/ligne)
+            // Recherche ciblée selon le filtre choisi
             var ltObj = lt[k] || null;
             var ltTxt = '';
             if (ltObj && ltObj.tours) {
@@ -2873,12 +2886,20 @@ function showHistory() {
                     (t.items||[]).forEach(function(it) { ltTxt += ' ' + it; });
                 });
             }
-            var haystack = [
+            var fields;
+            if (scope === 'chantier')          fields = [dta.chantier, dta.chantier2];
+            else if (scope === 'conducteur')   fields = [dta.conducteur];
+            else if (scope === 'transporteur') fields = [dta.transporteur];
+            else if (scope === 'chauffeur')    fields = [dNmap[p[2]] || '', p[2]];
+            else if (scope === 'mission')      fields = [dta.text, dta.matos];
+            else if (scope === 'adresse')      fields = [dta.adresse, dta.adresse2];
+            else if (scope === 'liste')        fields = [ltTxt];
+            else fields = [
                 dta.chantier, dta.text, dta.matos, dta.adresse, dta.truck,
                 dta.chantier2, dta.adresse2, dta.conducteur, dta.transporteur,
                 dNmap[p[2]] || '', p[2], ltTxt
-            ].join(' ').toLowerCase();
-            if (!haystack.includes(q)) continue;
+            ];
+            if (!fields.join(' ').toLowerCase().includes(q)) continue;
             matches.push({
                 key: k, date: getDateFromWeek(w,y,dI), week: w, user: p[2],
                 chantier: dta.chantier||'', text: dta.text||'', matos: dta.matos||'',
@@ -2891,7 +2912,7 @@ function showHistory() {
         matches.sort(function(a,b){ return b.date - a.date; });
 
         if (matches.length === 0) {
-            document.getElementById('history-results').innerHTML = "<div style='text-align:center;padding:20px;color:#94a3b8;'>Aucun résultat pour \""+q+"\"</div>";
+            document.getElementById('history-results').innerHTML = "<div style='text-align:center;padding:20px;color:#94a3b8;'>Aucun résultat pour \""+q+"\" <br><span style='font-size:11px;'>(filtre : "+scopeLbl+")</span></div>";
             return;
         }
 
