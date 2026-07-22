@@ -102,6 +102,12 @@
     </style>
 </head>
 <body>
+<!-- BANDEAU HORS-LIGNE (affiche seulement sans connexion) -->
+<div id="offline-banner" style="display:none;position:fixed;top:0;left:0;width:100%;z-index:99999;background:#b45309;color:#fff;padding:10px 14px;box-sizing:border-box;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:13px;line-height:1.35;text-align:center;">
+    <div style="font-weight:bold;font-size:15px;">📡 PAS DE CONNEXION</div>
+    <div style="margin-top:2px;">Le planning affiché n'est <b>pas à jour</b>. Il s'actualisera automatiquement dès le retour du réseau.</div>
+    <div id="offline-last-sync" style="margin-top:3px;font-size:11px;opacity:.9;"></div>
+</div>
 <div id="toast-container"></div>
 
 <!-- CONFIRM -->
@@ -882,6 +888,71 @@ function askCode(u) {
             showToast('Code incorrect', 'error');
         });
 }
+/* =========================================
+   MODE HORS-LIGNE
+   - Sauvegarde du dernier planning connu
+   - Bandeau d'alerte + reprise auto
+   ========================================= */
+var OFFLINE_KEY  = 'rbf_planning_cache';
+var OFFLINE_TS   = 'rbf_planning_cache_ts';
+var IS_OFFLINE   = false;
+
+function savePlanningCache(d) {
+    try {
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(d));
+        localStorage.setItem(OFFLINE_TS, String(Date.now()));
+    } catch(e) { /* quota depasse : on ignore, le cache est un bonus */ }
+}
+
+function loadPlanningCache() {
+    try {
+        var raw = localStorage.getItem(OFFLINE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch(e) { return null; }
+}
+
+function lastSyncLabel() {
+    var ts = parseInt(localStorage.getItem(OFFLINE_TS) || '0', 10);
+    if (!ts) return '';
+    var d = new Date(ts);
+    var p = function(n) { return n < 10 ? '0'+n : ''+n; };
+    var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+    return 'Dernière mise à jour : ' + jours[d.getDay()] + ' ' + p(d.getDate()) + '/' + p(d.getMonth()+1) + ' à ' + p(d.getHours()) + 'h' + p(d.getMinutes());
+}
+
+function setOfflineUI(off) {
+    if (IS_OFFLINE === off) return;
+    IS_OFFLINE = off;
+    var b = document.getElementById('offline-banner');
+    if (!b) return;
+    if (off) {
+        var l = document.getElementById('offline-last-sync');
+        if (l) l.textContent = lastSyncLabel();
+        b.style.display = 'block';
+        document.body.style.paddingTop = b.offsetHeight + 'px';
+    } else {
+        b.style.display = 'none';
+        document.body.style.paddingTop = '';
+        showToast('Connexion rétablie — planning à jour');
+    }
+}
+
+function initOfflineWatch() {
+    // 1) Etat reseau du navigateur (immediat)
+    if (!navigator.onLine) setOfflineUI(true);
+    window.addEventListener('offline', function() { setOfflineUI(true); });
+    window.addEventListener('online',  function() {
+        // Firebase se resynchronise seul ; on confirme via .info/connected
+        setTimeout(function() { if (navigator.onLine) setOfflineUI(false); }, 1200);
+    });
+    // 2) Etat reel de la connexion Firebase (plus fiable que navigator.onLine)
+    try {
+        db.ref('.info/connected').on('value', function(snap) {
+            setOfflineUI(snap.val() !== true);
+        });
+    } catch(e) { /* si indisponible on garde navigator.onLine */ }
+}
+
 function login(u) {
     state.curU = u;
     startListesCacheListener();
@@ -965,11 +1036,30 @@ function login(u) {
             }).catch(function() { btn.style.background='#eff6ff'; btn.style.color='var(--blue)'; btn.textContent='NOTIFS'; });
         });
     }, 1000);
+    initOfflineWatch();
+    // Affichage immediat du dernier planning connu (utile si reseau absent/lent)
+    var cached = loadPlanningCache();
+    if (cached && Object.keys(cached).length) {
+        window.data = cached;
+        render();
+    }
     db.ref('planning_v18').on('value', function(snap) {
         window.data = snap.val() || {};
+        savePlanningCache(window.data);
         render();
         checkTodayConge();
-    }, function(err) { console.error(err); showToast('Erreur connexion', 'error'); });
+    }, function(err) {
+        console.error(err);
+        // Pas de connexion : on garde le cache affiche plutot qu'un ecran vide
+        var c = loadPlanningCache();
+        if (c && Object.keys(c).length) {
+            window.data = c;
+            render();
+            setOfflineUI(true);
+        } else {
+            showToast('Erreur connexion', 'error');
+        }
+    });
 }
 function logout() {
     localStorage.removeItem('rbf_u');
