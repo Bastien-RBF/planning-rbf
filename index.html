@@ -79,6 +79,8 @@
         .spinner { width:14px; height:14px; border:2px solid #bfdbfe; border-top-color:var(--blue); border-radius:50%; animation:spin 0.8s linear infinite; flex-shrink:0; }
         @keyframes spin { to { transform:rotate(360deg); } }
         input[type="text"],input[type="time"],input[type="date"],input[type="number"],input[type="month"],textarea,select { width:100%; box-sizing:border-box; }
+        /* Filtre HISTO : compact (neutralise le width:100% global des select) */
+        .search-container #histo-scope { width:125px !important; flex:0 0 125px !important; min-width:0; }
         .hidden { display:none !important; }
         @keyframes slideUp { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
         /* Tags fichiers */
