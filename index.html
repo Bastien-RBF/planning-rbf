@@ -2860,11 +2860,25 @@ function showHistory() {
 
         for (var k in d) {
             var dta = d[k];
-            if (!((dta.chantier||'').toLowerCase().includes(q) || (dta.text||'').toLowerCase().includes(q))) continue;
             var p = k.split('_');
             if (p.length < 4) continue;
             var y=parseInt(p[0]), w=parseInt(p[1]), dI=parseInt(p[3]);
             if (isNaN(y)||isNaN(w)||isNaN(dI)) continue;
+            // Recherche sur TOUS les champs utiles (+ nom du chauffeur/ligne)
+            var ltObj = lt[k] || null;
+            var ltTxt = '';
+            if (ltObj && ltObj.tours) {
+                ltObj.tours.forEach(function(t) {
+                    ltTxt += ' ' + (t.label||'');
+                    (t.items||[]).forEach(function(it) { ltTxt += ' ' + it; });
+                });
+            }
+            var haystack = [
+                dta.chantier, dta.text, dta.matos, dta.adresse, dta.truck,
+                dta.chantier2, dta.adresse2, dta.conducteur, dta.transporteur,
+                dNmap[p[2]] || '', p[2], ltTxt
+            ].join(' ').toLowerCase();
+            if (!haystack.includes(q)) continue;
             matches.push({
                 key: k, date: getDateFromWeek(w,y,dI), week: w, user: p[2],
                 chantier: dta.chantier||'', text: dta.text||'', matos: dta.matos||'',
