@@ -67,75 +67,15 @@ self.addEventListener('notificationclick', function(event) {
     );
 });
 
-// ================================================
-// MODE HORS-LIGNE (ajout)
-// Strategie "reseau d'abord, cache en secours" :
-// tant qu'il y a du reseau, tout le monde a TOUJOURS la derniere
-// version. Le cache ne sert que si le reseau est absent.
-// ================================================
-
-var CACHE_NAME = 'rbf-planning-v1';
-var APP_SHELL  = [
-    '/planning-rbf/',
-    '/planning-rbf/index.html',
-    '/planning-rbf/icon.png.png'
-];
-
-self.addEventListener('fetch', function(event) {
-    var req = event.request;
-
-    // On ne gere que les GET de notre propre origine
-    if (req.method !== 'GET') return;
-    var url;
-    try { url = new URL(req.url); } catch(e) { return; }
-    if (url.origin !== self.location.origin) return;
-
-    // Jamais de cache pour Firebase / APIs externes (deja exclu par l'origine)
-    event.respondWith(
-        fetch(req)
-            .then(function(res) {
-                // Reseau OK : on rafraichit le cache au passage
-                if (res && res.status === 200 && res.type === 'basic') {
-                    var copy = res.clone();
-                    caches.open(CACHE_NAME).then(function(c) {
-                        c.put(req, copy).catch(function(){});
-                    });
-                }
-                return res;
-            })
-            .catch(function() {
-                // Reseau absent : on sert la version en cache
-                return caches.match(req).then(function(hit) {
-                    if (hit) return hit;
-                    // Navigation sans cache exact : on renvoie la page principale
-                    if (req.mode === 'navigate') {
-                        return caches.match('/planning-rbf/index.html');
-                    }
-                    return Response.error();
-                });
-            })
-    );
-});
-
 // Activation immédiate (important pour les mises à jour)
-self.addEventListener('install', function(event) {
-    self.skipWaiting();
-    // Pre-cache de l'appli (n'echoue pas l'installation si un fichier manque)
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(function(c) { return c.addAll(APP_SHELL).catch(function(){}); })
-            .catch(function(){})
-    );
-});
-
+self.addEventListener('install', function() { self.skipWaiting(); });
 self.addEventListener('activate', function(event) {
     event.waitUntil(
         caches.keys().then(function(keys) {
-            // Suppression des anciens caches (evite de servir une vieille version)
             return Promise.all(keys.map(function(k) {
-                if (k !== CACHE_NAME) return caches.delete(k);
+                if (k.indexOf('rbf-planning') === 0) return caches.delete(k);
             }));
-        }).then(function() { return clients.claim(); })
+        }).catch(function(){}).then(function() { return clients.claim(); })
     );
 });
 
